@@ -92,7 +92,6 @@ The ATM display must show:
 
 The system must maintain a transaction ledger that records for each transaction:
 - The user involved
-- The ATM used
 - The transaction amount
 - The transaction timestamp
 
