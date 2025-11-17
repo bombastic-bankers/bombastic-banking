@@ -1,19 +1,4 @@
-<!-- <script lang="ts">
-	import '../app.css';
-	import favicon from '$lib/assets/favicon.svg';
-
-	let { children } = $props();
-</script>
-
-<svelte:head>
-	
-</svelte:head>
-
-{@render children()} -->
-
-
-
-<script>
+<script lang="ts">
   import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
 
@@ -55,6 +40,7 @@
 
       <!-- Page-Specific Content -->
       <div class="pt-20 w-full h-full flex flex-col items-center">
+
         {@render children()}
       </div>
     </div>
