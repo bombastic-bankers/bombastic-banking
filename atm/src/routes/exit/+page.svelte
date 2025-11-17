@@ -1,0 +1,1 @@
+<h2 class="text-white text-2xl font-semibold mt-6">Bye,See You Next Time!</h2>
