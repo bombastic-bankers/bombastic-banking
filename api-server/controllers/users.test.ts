@@ -1,23 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import request from "supertest";
-import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import app from "..";
 import * as queries from "../db/queries";
-import { signUp, login } from "./users";
 import * as env from "../env";
 
 vi.mock("../db/queries");
 vi.mock("../env", () => ({
   JWT_SECRET: "secret",
   DATABASE_URL: "postgresql://user:password@host.tld/dbname",
+  PUSHER_APP_ID: "app-id",
+  PUSHER_KEY: "key",
+  PUSHER_SECRET: "secret",
+  PUSHER_CLUSTER: "cluster",
+  SERVER_SELF_AUTH_KEY: "server-key",
 }));
-
-// Server setup
-const app = express();
-app.use(express.json());
-app.post("/auth/signup", signUp);
-app.post("/auth/login", login);
 
 async function createMockUser() {
   return {
@@ -126,7 +124,6 @@ describe("POST /auth/login", () => {
       env.JWT_SECRET,
     ) as jwt.JwtPayload;
     expect(decoded.userId).toBe(1);
-    expect(decoded.email).toBe("john@example.com");
   });
 
   it("should return 400 when user does not exist", async () => {

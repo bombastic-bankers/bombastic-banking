@@ -1,7 +1,8 @@
 {
   "scripts": {
-    "dev": "tsx watch index.ts",
-    "test": "vitest"
+    "dev": "tsx watch server.ts",
+    "test": "vitest",
+    "build": "tsc"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
@@ -13,6 +14,8 @@
     "drizzle-orm": "^0.44.7",
     "prettier": "3.6.2",
     "supertest": "^7.1.4",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
     "vitest": "^4.0.10"
   },
   "dependencies": {
@@ -22,7 +25,9 @@
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
-    "tsx": "^4.20.6"
+    "pusher": "^5.2.0",
+    "pusher-js": "^8.4.0",
+    "zod": "^4.1.12"
   },
   "type": "module"
 }

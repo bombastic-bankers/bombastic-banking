@@ -1,15 +1,20 @@
 import "dotenv/config";
 
+function getEnvOrThrow(key: string): string {
+  const value = process.env[key];
+  if (!value) {
+    throw new Error(`${key} environment variable not set`);
+  }
+  return value;
+}
+
 export const PORT = process.env.PORT ? +process.env.PORT : undefined;
+export const JWT_SECRET = getEnvOrThrow("JWT_SECRET");
+export const DATABASE_URL = getEnvOrThrow("DATABASE_URL");
 
-const jwtSecret = process.env.JWT_SECRET;
-if (!jwtSecret) {
-  throw new Error("JWT_SECRET environment variable not set");
-}
-export const JWT_SECRET = jwtSecret;
+export const PUSHER_APP_ID = getEnvOrThrow("PUSHER_APP_ID");
+export const PUSHER_KEY = getEnvOrThrow("PUSHER_KEY");
+export const PUSHER_SECRET = getEnvOrThrow("PUSHER_SECRET");
+export const PUSHER_CLUSTER = getEnvOrThrow("PUSHER_CLUSTER");
 
-const databaseURL = process.env.DATABASE_URL;
-if (!databaseURL) {
-  throw new Error("DATABASE_URL environment variable not set");
-}
-export const DATABASE_URL = databaseURL;
+export const SERVER_SELF_AUTH_KEY = getEnvOrThrow("SERVER_SELF_AUTH_KEY");
