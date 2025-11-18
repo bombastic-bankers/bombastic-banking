@@ -5,6 +5,7 @@ import {
   text,
   timestamp,
   numeric,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
@@ -15,7 +16,7 @@ export const users = pgTable("users", {
   hashedPassword: text("hashed_password").notNull(),
 });
 
-export const transactionLedger = pgTable("transaction_ledger", {
+export const ledger = pgTable("transaction_ledger", {
   transactionId: serial("transaction_id").primaryKey(),
   userId: integer("user_id")
     .notNull()
@@ -25,4 +26,25 @@ export const transactionLedger = pgTable("transaction_ledger", {
     }),
   amount: numeric("amount", { precision: 10, scale: 2 }).notNull(),
   timestamp: timestamp("timestamp").defaultNow().notNull(),
+});
+
+export const atms = pgTable("atms", {
+  atmId: serial("atm_id").primaryKey(),
+  location: text("location").notNull(),
+});
+
+export const touchlessSessions = pgTable("touchless_sessions", {
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.userId, {
+      onUpdate: "cascade",
+      onDelete: "cascade",
+    }),
+  atmId: integer("atm_id")
+    .primaryKey()
+    .references(() => atms.atmId, {
+      onUpdate: "cascade",
+      onDelete: "cascade",
+    }),
+  startedAt: timestamp("started_at").defaultNow().notNull(),
 });

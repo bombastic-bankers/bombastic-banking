@@ -33,11 +33,9 @@ export async function login(req: Request, res: Response) {
     return res.status(400).json({ error: "Incorrect email or password" });
   }
 
-  const token = jwt.sign(
-    { userId: user.userId, email: user.email },
-    JWT_SECRET,
-    { expiresIn: "2h" },
-  );
+  const token = jwt.sign({ userId: user.userId }, JWT_SECRET, {
+    expiresIn: "2m",
+  });
 
   res.json({ token });
 }
