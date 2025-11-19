@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "..";
-import { touchlessSessions, ledger } from "../schema";
+import { touchlessSessions, ledger } from "../schema.js";
 
 /**
  * Initiate a touchless ATM session, returning `false`

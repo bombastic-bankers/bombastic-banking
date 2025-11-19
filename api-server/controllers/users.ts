@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import * as queries from "../db/queries";
-import { JWT_SECRET } from "../env";
+import * as queries from "../db/queries/index.js";
+import { JWT_SECRET } from "../env.js";
 import { Request, Response } from "express";
 
 export async function signUp(req: Request, res: Response) {

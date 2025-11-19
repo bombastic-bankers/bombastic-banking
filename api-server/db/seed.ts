@@ -2,7 +2,7 @@
 
 import bcrypt from "bcryptjs";
 import { db } from ".";
-import { atms, touchlessSessions, ledger, users } from "./schema";
+import { atms, touchlessSessions, ledger, users } from "./schema.js";
 
 await db.delete(users);
 await db.insert(users).values({

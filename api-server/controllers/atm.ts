@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { sendToATM, waitForATM } from "../pubsub";
-import * as queries from "../db/queries";
+import { sendToATM, waitForATM } from "../pubsub.js";
+import * as queries from "../db/queries/index.js";
 import { z } from "zod";
 
 export async function startTouchlessSession(req: Request, res: Response) {

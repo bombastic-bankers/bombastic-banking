@@ -1,13 +1,13 @@
 import express from "express";
 import cors from "cors";
-import { authenticate } from "./middleware/auth";
-import { login, signUp } from "./controllers/users";
+import { authenticate } from "./middleware/auth.js";
+import { login, signUp } from "./controllers/users.js";
 import {
   endTouchlessSession,
   startTouchlessSession,
   withdrawCash,
-} from "./controllers/atm";
-import { pusherAuth } from "./controllers/pusher";
+} from "./controllers/atm.js";
+import { pusherAuth } from "./controllers/pusher.js";
 
 const app = express();
 app.use(cors());

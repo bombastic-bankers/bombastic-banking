@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
-import { JWT_SECRET } from "../env";
+import { JWT_SECRET } from "../env.js";
 
 export function authenticate(req: Request, res: Response, next: NextFunction) {
   const auth = req.headers.authorization;
