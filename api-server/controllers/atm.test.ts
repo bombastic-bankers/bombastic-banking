@@ -29,6 +29,7 @@ describe("POST /touchless/:atmId", () => {
   });
 
   it("should start a touchless session", async () => {
+    vi.mocked(queries.atmExists).mockResolvedValue(true);
     vi.mocked(queries.startTouchlessSession).mockResolvedValue(true);
 
     const response = await request(app).post("/touchless/1");
@@ -37,7 +38,22 @@ describe("POST /touchless/:atmId", () => {
     expect(queries.startTouchlessSession).toHaveBeenCalledWith(1, 1);
   });
 
+  it("should return 400 if the ATM ID is invalid", async () => {
+    const response = await request(app).post("/touchless/123abc");
+
+    expect(response.status).toBe(400);
+  });
+
+  it("should return 404 if the ATM ID does not exist", async () => {
+    vi.mocked(queries.atmExists).mockResolvedValue(false);
+
+    const response = await request(app).post("/touchless/1");
+
+    expect(response.status).toBe(404);
+  });
+
   it("should return 409 if the ATM is already in use", async () => {
+    vi.mocked(queries.atmExists).mockResolvedValue(true);
     vi.mocked(queries.startTouchlessSession).mockResolvedValue(false);
 
     const response = await request(app).post("/touchless/1");

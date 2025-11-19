@@ -9,6 +9,10 @@ export async function startTouchlessSession(req: Request, res: Response) {
     return res.status(400).json({ message: "Invalid ATM ID" });
   }
 
+  if (!(await queries.atmExists(atmId))) {
+    return res.status(404).json({ message: "No ATM with specified ID" });
+  }
+
   const sessionStarted = await queries.startTouchlessSession(req.userId, atmId);
   await sendToATM(atmId, "start-touchless-session");
 
