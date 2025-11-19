@@ -1,7 +1,7 @@
 /** Seed the database with sample data, removing all existing data. */
 
 import bcrypt from "bcryptjs";
-import { db } from ".";
+import { db } from "./index.js";
 import { atms, touchlessSessions, ledger, users } from "./schema.js";
 
 await db.delete(users);

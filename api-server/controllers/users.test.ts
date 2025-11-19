@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import request from "supertest";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import app from "..";
+import app from "../index.js";
 import * as queries from "../db/queries/index.js";
 import * as env from "../env.js";
 
