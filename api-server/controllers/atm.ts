@@ -6,11 +6,11 @@ import { z } from "zod";
 export async function startTouchlessSession(req: Request, res: Response) {
   const atmId = +req.params.atmId;
   if (isNaN(atmId)) {
-    return res.status(400).json({ message: "Invalid ATM ID" });
+    return res.status(400).json({ error: "Invalid ATM ID" });
   }
 
   if (!(await queries.atmExists(atmId))) {
-    return res.status(404).json({ message: "No ATM with specified ID" });
+    return res.status(404).json({ error: "No ATM with specified ID" });
   }
 
   const sessionStarted = await queries.startTouchlessSession(req.userId, atmId);
@@ -18,37 +18,33 @@ export async function startTouchlessSession(req: Request, res: Response) {
 
   return sessionStarted
     ? res.status(200).send()
-    : res.status(409).json({ message: "ATM already in use" });
+    : res.status(409).json({ error: "ATM already in use" });
 }
 
 export async function endTouchlessSession(req: Request, res: Response) {
   const atmId = +req.params.atmId;
   if (isNaN(atmId)) {
-    return res.status(400).json({ message: "Invalid ATM ID" });
+    return res.status(400).json({ error: "Invalid ATM ID" });
   }
 
   const sessionEnded = await queries.endTouchlessSession(req.userId, atmId);
   return sessionEnded
     ? res.status(200).send()
-    : res.status(404).json({ message: "No such existing session" });
+    : res.status(404).json({ error: "No such existing session" });
 }
 
 export async function withdrawCash(req: Request, res: Response) {
   const atmId = +req.params.atmId;
   if (isNaN(atmId)) {
-    return res.status(400).json({ message: "Invalid ATM ID" });
+    return res.status(400).json({ error: "Invalid ATM ID" });
   }
 
-  const parsed = z
+  const { amount } = z
     .object({ amount: z.number().positive().multipleOf(0.01) })
-    .safeParse(req.body);
-  if (!parsed.success) {
-    return res.status(400).json({ message: parsed.error.issues });
-  }
-  const { amount } = parsed.data;
+    .parse(req.body);
 
   if (!(await queries.touchlessSessionExists(req.userId, atmId))) {
-    return res.status(404).json({ message: "No touchless session found" });
+    return res.status(404).json({ error: "No touchless session found" });
   }
 
   // Command the ATM to withdraw the specified amount

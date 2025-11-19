@@ -2,10 +2,19 @@ import { db } from "../index.js";
 import { ledger, users } from "../schema.js";
 import { eq, sum } from "drizzle-orm";
 
+/**
+ * Attempt to create a new user, returning `false` if
+ * the email is already in use and `true` otherwise.
+ */
 export async function createUser(
   user: typeof users.$inferInsert,
-): Promise<typeof users.$inferSelect> {
-  return (await db.insert(users).values(user).returning())[0];
+): Promise<boolean> {
+  const inserted = await db
+    .insert(users)
+    .values(user)
+    .onConflictDoNothing()
+    .returning();
+  return inserted.length > 0;
 }
 
 export async function getUserByEmail(

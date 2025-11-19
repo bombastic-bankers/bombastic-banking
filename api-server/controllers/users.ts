@@ -3,26 +3,36 @@ import jwt from "jsonwebtoken";
 import * as queries from "../db/queries/index.js";
 import { JWT_SECRET } from "../env.js";
 import { Request, Response } from "express";
+import z from "zod";
 
 export async function signUp(req: Request, res: Response) {
-  const { fullName, phoneNumber, email, password } = req.body;
+  const { fullName, phoneNumber, email, password } = z
+    .object({
+      fullName: z.string(),
+      phoneNumber: z.string(),
+      email: z.string(),
+      password: z.string(),
+    })
+    .parse(req.body);
 
-  if (!fullName || !phoneNumber || !email || !password) {
-    return res.status(400).json({ error: "Missing fields" });
-  }
-
-  const newUser = await queries.createUser({
+  const created = await queries.createUser({
     fullName,
     phoneNumber,
     email,
     hashedPassword: await bcrypt.hash(password, 10),
   });
 
-  res.status(201).json(newUser);
+  if (!created) {
+    return res.status(409).json({ error: "Email already in use" });
+  }
+
+  return res.status(201).send();
 }
 
 export async function login(req: Request, res: Response) {
-  const { email, password } = req.body;
+  const { email, password } = z
+    .object({ email: z.string(), password: z.string() })
+    .parse(req.body);
   const user = await queries.getUserByEmail(email);
 
   if (user === null) {
