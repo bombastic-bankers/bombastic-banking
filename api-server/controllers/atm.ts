@@ -53,3 +53,7 @@ export async function withdrawCash(req: Request, res: Response) {
   await queries.updateLedgerForWithdrawal(req.userId, amount);
   return res.status(200).send();
 }
+
+export async function depositCash(req: Request, res: Response) {
+  res.status(500).send();
+}
