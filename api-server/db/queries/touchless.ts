@@ -1,6 +1,14 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "../index.js";
-import { touchlessSessions, ledger } from "../schema.js";
+import { touchlessSessions, ledger, atms } from "../schema.js";
+
+/**
+ * Return whether an ATM with the specified ID exists.
+ */
+export async function atmExists(atmId: number): Promise<boolean> {
+  const result = await db.select().from(atms).where(eq(atms.atmId, atmId));
+  return result.length > 0;
+}
 
 /**
  * Initiate a touchless ATM session, returning `false`
