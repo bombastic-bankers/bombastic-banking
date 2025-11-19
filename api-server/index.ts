@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { authenticate } from "./middleware/auth.js";
-import { login, signUp } from "./controllers/users.js";
+import { getUserInfo, login, signUp } from "./controllers/users.js";
 import {
   endTouchlessSession,
   startTouchlessSession,
@@ -18,6 +18,8 @@ app.post("/auth/login", login);
 app.post("/pusher/auth", pusherAuth);
 
 app.use(authenticate);
+
+app.get("/userinfo", getUserInfo);
 
 app.post("/touchless/:atmId", startTouchlessSession);
 app.delete("/touchless/:atmId", endTouchlessSession);

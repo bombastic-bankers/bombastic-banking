@@ -39,3 +39,7 @@ export async function login(req: Request, res: Response) {
 
   res.json({ token });
 }
+
+export async function getUserInfo(req: Request, res: Response) {
+  res.send(await queries.getUserInfo(req.userId));
+}
