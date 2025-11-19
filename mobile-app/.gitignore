@@ -43,3 +43,9 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# --- GENERATED FILES ---
+# Ignore all generated plugin registration files, which are automatically created 
+# and should not be committed to version control.
+**/generated_plugin_registrant.*
+**/generated_plugins.dart
