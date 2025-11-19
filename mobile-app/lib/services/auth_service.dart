@@ -1,15 +1,33 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:flutter/services.dart'; 
-// Import the separated secure storage service (assuming it exists)
 import 'secure_storage_service.dart'; 
+import '../app_constants.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 // --- PLATFORM CHANNEL SETUP ---
-// This channel name MUST match the CHANNEL constant in MainActivity.kt
 const MethodChannel _channel = MethodChannel('com.ocbc.nfc_service/methods'); 
 
+// -------------------- NEW DATA MODEL --------------------
+/// Model to hold user's personal details fetched from the backend.
+class UserInfo {
+  final String fullName;
+  final num accountBalance; // Storing as String for direct display, including currency symbol
+
+  UserInfo({required this.fullName, required this.accountBalance});
+
+  factory UserInfo.fromJson(Map<String, dynamic> json) {
+    return UserInfo(
+      fullName: json['fullName'] as String,
+      accountBalance: json['accountBalance'] as num,
+    );
+  }
+}
+// -------------------- END DATA MODEL --------------------
+
+
 /// The main authentication and state management service class.
-/// This acts as a **Singleton** to maintain global state consistency across the application.
 class AuthService {
   // Singleton pattern implementation
   static final AuthService _instance = AuthService._internal();
@@ -24,17 +42,10 @@ class AuthService {
   final SecureStorageService _storageService = SecureStorageService();
   
   // --- Global ATM ID State Management ---
-  
-  // Stream to notify listeners about new ATM ID scans
   final StreamController<String?> _atmIdController = StreamController<String?>.broadcast();
-  
-  // Public stream for widgets to listen to
   Stream<String?> get atmIdStream => _atmIdController.stream;
-  
-  // Public getter for the current ATM ID from storage
   Future<String?> get currentAtmId => _storageService.getAtmId(); 
 
-  // --- CRITICAL FIX: Method to clear the stream event ---
   /// Immediately clears the ATM ID event from the stream by pushing a null value.
   void clearAtmId() {
     if (!_atmIdController.isClosed) {
@@ -44,13 +55,8 @@ class AuthService {
   }
 
   // --- Foreground NFC Listener Setup (Commands) ---
-  
-  /// Starts actively listening for NFC tag taps while the app is in the **foreground**.
-  /// This command tells the native Android Activity to enable Reader Mode.
   void startContinuousNfcScan() { 
     debugPrint('AuthService: NFC Platform Listener Setup Initiated (Foreground Mode).');
-    
-    // Call native code to ENABLE reader mode using the Platform Channel.
     try {
       _channel.invokeMethod('enableReaderMode');
       debugPrint('AuthService: Sent command to ENABLE native NFC Reader Mode.');
@@ -62,7 +68,6 @@ class AuthService {
   /// Stops the continuous foreground NFC scanner.
   void stopContinuousNfcScan() {
     debugPrint('AuthService: Stopping continuous NFC Scan (Foreground Mode).');
-    // Call native code to DISABLE reader mode using the Platform Channel.
     try {
       _channel.invokeMethod('disableReaderMode');
       debugPrint('AuthService: Sent command to DISABLE native NFC Reader Mode.');
@@ -72,24 +77,17 @@ class AuthService {
   }
 
   // --- NFC LISTENER (Receives data from Kotlin) ---
-  
-  /// Handles incoming method calls from the native platform channel (Kotlin/Swift).
   Future<dynamic> _handleNativeCall(MethodCall call) async {
-    // Looks for the 'tagRead' method call that Kotlin sends back
     if (call.method == 'tagRead') {
       final String? atmId = call.arguments as String?;
       if (atmId != null) {
-         // Route the received ATM ID to the internal handler
-         await _handleNfcTagRead(atmId);
+        await _handleNfcTagRead(atmId);
       }
       return true;
     }
     return null;
   }
 
-  /// This method is designed to be called by the native platform channel code 
-  /// when an ATM NFC tag is successfully read in the **foreground** reader session.
-  /// It stores the ID and notifies all Flutter listeners.
   Future<void> _handleNfcTagRead(String? atmId) async {
     if (atmId != null) {
       await _storageService.saveAtmId(atmId);
@@ -102,38 +100,117 @@ class AuthService {
   
   // --- Authentication and Single NFC Read (used in transaction flow) ---
 
-  /// Mocks the network API call to the OCBC login endpoint.
-  Future<String> login(String username, String password) async {
-    // Retaining delay to simulate network latency
-    await Future.delayed(const Duration(seconds: 2));
+  /// Performs the network API call to the login endpoint using provided credentials.
+  Future<String> authenticate(String accessCode, String pin) async {
+    const url = '$apiBaseUrl/auth/login';
+    final uri = Uri.parse(url);
 
-    const mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJvY2JjLXNnX3VzZXIxMjMiLCJpc3MiOiJvYmNjLXNnIiwiaWF0IjoxNjczMDgwODAwfQ.S9J8K0Ld_3Z3xY7T7P0mD4v2o5tE2cM1jI6P4QZ9Y1M';
-    await _storageService.saveToken(mockToken);
+    debugPrint('AuthService: Attempting login for Access Code: $accessCode');
 
-    return mockToken;
+    try {
+      final response = await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email': accessCode, 
+          'password': pin,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body); 
+        final token = body['token'];
+        
+        if (token != null) {
+          await _storageService.saveToken(token);
+          debugPrint('AuthService: Login successful. Token saved and returned.');
+          return token;
+        } else {
+          throw Exception('Login succeeded, but authentication token was missing from the response.');
+        }
+      } else {
+        String apiError = 'Authentication failed with status code ${response.statusCode}.';
+
+        try {
+          final body = jsonDecode(response.body);
+          apiError = body['error'] ?? body['message'] ?? apiError;
+        } on FormatException {
+          apiError = 'Login failed: Server returned non-JSON error body.';
+        }
+
+        debugPrint('AuthService: Final error message: $apiError');
+        throw Exception(apiError);
+      }
+    } catch (e) {
+      debugPrint('AuthService Network/Parsing Error: $e');
+      rethrow;
+    }
   }
 
-  /// Initiates a single, explicit NFC reading event and extracts the ATM ID.
+  // -------------------- NEW METHOD TO FETCH USER INFO --------------------
+  /// Fetches the user's name and account balance using the stored JWT token.
+  Future<UserInfo> fetchUserInfo() async {
+    final token = await _storageService.getToken();
+
+    if (token == null) {
+      throw Exception('Authentication token is missing. Please log in again.');
+    }
+
+    const url = '$apiBaseUrl/userinfo';
+    final uri = Uri.parse(url);
+
+    try {
+      final response = await http.get(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body); 
+        return UserInfo.fromJson(body);
+      } else if (response.statusCode == 401) {
+        throw Exception('Session expired. Please log in to refresh your token.');
+      } else {
+        String apiError = 'Failed to fetch user data with status code ${response.statusCode}.';
+        
+        try {
+          final body = jsonDecode(response.body);
+          apiError = body['error'] ?? body['message'] ?? apiError;
+        } on FormatException {
+          apiError = response.body.isNotEmpty 
+                     ? response.body 
+                     : 'Failed to fetch user data. Unknown server error.';
+        }
+        
+        throw Exception(apiError);
+      }
+    } catch (e) {
+      debugPrint('AuthService User Info Error: $e');
+      rethrow;
+    }
+  }
+  // -------------------- END NEW METHOD --------------------
+
+  /// Initiates a single NFC reading event and extracts the ATM ID.
   Future<String> readNfcTag() async {
     debugPrint('Single NFC Scan initiated (Platform Channel)...');
     
-    // Placeholder to satisfy return type while removing simulation
     const placeholderAtmId = "OCBC-ATM-SG-90210"; 
-    
-    // Simulating successful native read for function completion
     await _storageService.saveAtmId(placeholderAtmId);
 
     return placeholderAtmId;
   }
 
-  /// Helper to retrieve the token for future API calls
+  /// Retrieves stored JWT token.
   Future<String?> getAuthToken() => _storageService.getToken();
 
   /// Disposes of all resources held by the service.
   void dispose() {
     _atmIdController.close();
-    // Stop the foreground platform listeners during disposal
-    stopContinuousNfcScan(); 
+    stopContinuousNfcScan();
     debugPrint('AuthService disposed.');
   }
 }
