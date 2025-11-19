@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { authenticate } from "./middleware/auth.js";
+import { validationError, anyError } from "./middleware/error.js";
 import { getUserInfo, login, signUp } from "./controllers/users.js";
 import {
   endTouchlessSession,
@@ -24,5 +25,8 @@ app.get("/userinfo", getUserInfo);
 app.post("/touchless/:atmId", startTouchlessSession);
 app.delete("/touchless/:atmId", endTouchlessSession);
 app.post("/touchless/:atmId/withdraw", withdrawCash);
+
+app.use(validationError);
+app.use(anyError);
 
 export default app;

@@ -7,15 +7,6 @@ import * as pusher from "../pubsub.js";
 
 vi.mock("../db/queries");
 vi.mock("../pubsub");
-vi.mock("../env", () => ({
-  JWT_SECRET: "secret",
-  DATABASE_URL: "postgresql://user:password@host.tld/dbname",
-  PUSHER_APP_ID: "app-id",
-  PUSHER_KEY: "key",
-  PUSHER_SECRET: "secret",
-  PUSHER_CLUSTER: "cluster",
-  SERVER_SELF_AUTH_KEY: "server-key",
-}));
 vi.mock("../middleware/auth", () => ({
   authenticate: (req: Request, res: Response, next: NextFunction) => {
     req.userId = 1;
