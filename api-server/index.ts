@@ -4,7 +4,9 @@ import { authenticate } from "./middleware/auth.js";
 import { validationError, anyError } from "./middleware/error.js";
 import { getUserInfo, login, signUp } from "./controllers/users.js";
 import {
+  confirmCashDeposit,
   endTouchlessSession,
+  initiateCashDeposit,
   startTouchlessSession,
   withdrawCash,
 } from "./controllers/atm.js";
@@ -25,6 +27,8 @@ app.get("/userinfo", getUserInfo);
 app.post("/touchless/:atmId", startTouchlessSession);
 app.delete("/touchless/:atmId", endTouchlessSession);
 app.post("/touchless/:atmId/withdraw", withdrawCash);
+app.post("/touchless/:atmId/initiate-deposit", initiateCashDeposit);
+app.post("/touchless/:atmId/confirm-deposit", confirmCashDeposit);
 
 app.use(validationError);
 app.use(anyError);

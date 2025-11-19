@@ -47,11 +47,14 @@ export async function sendToATM(atmId: number, event: string, data?: any) {
   await pusherServer.trigger(channelName, event, data);
 }
 
-export async function waitForATM(atmId: number, event: string): Promise<any> {
+export async function waitForATM<T = any>(
+  atmId: number,
+  event: string,
+): Promise<T> {
   const channelName = atmChannelName(atmId);
 
-  return new Promise<any>((resolve, reject) => {
-    pusherClient.subscribe(channelName).bind(event, async (data: any) => {
+  return new Promise<T>((resolve, reject) => {
+    pusherClient.subscribe(channelName).bind(event, async (data: T) => {
       pusherClient.unsubscribe(channelName);
       resolve(data);
     });
