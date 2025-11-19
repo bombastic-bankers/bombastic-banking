@@ -17,7 +17,11 @@ export async function pusherAuth(req: Request, res: Response) {
   }
 
   try {
-    jwt.verify(atmKey, JWT_SECRET);
+    const payload = jwt.verify(atmKey, JWT_SECRET) as jwt.JwtPayload;
+    if (channel_name !== `private-atm-${payload.sub}`) {
+      return res.status(401).send();
+    }
+
     return res.send(pusherServer.authorizeChannel(socket_id, channel_name));
   } catch (error) {
     return res.status(401).send();
