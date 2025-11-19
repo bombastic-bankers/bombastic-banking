@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { pusherServer } from "../pubsub";
-import { JWT_SECRET, SERVER_SELF_AUTH_KEY } from "../env";
+import { pusherServer } from "../pubsub.js";
+import { JWT_SECRET, SERVER_SELF_AUTH_KEY } from "../env.js";
 
 export async function pusherAuth(req: Request, res: Response) {
   const { socket_id, channel_name } = req.body;

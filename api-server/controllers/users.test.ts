@@ -3,8 +3,8 @@ import request from "supertest";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import app from "..";
-import * as queries from "../db/queries";
-import * as env from "../env";
+import * as queries from "../db/queries/index.js";
+import * as env from "../env.js";
 
 vi.mock("../db/queries");
 vi.mock("../env", () => ({

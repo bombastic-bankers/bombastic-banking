@@ -6,7 +6,7 @@ import {
   PUSHER_SECRET,
   PUSHER_CLUSTER,
   SERVER_SELF_AUTH_KEY,
-} from "./env";
+} from "./env.js";
 
 // The API server needs both the Pusher server and client libraries because
 // the Pusher server library doesn't allow listening to client-sent events,
