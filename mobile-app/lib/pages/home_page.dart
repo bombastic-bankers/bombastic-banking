@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../app_constants.dart';
 import 'choice_page.dart';
 import 'transaction_flow_pages.dart';
+// Import the AuthService and UserInfo model
+import '../services/auth_service.dart';
 
 /// -------------------- Home Page --------------------
 class HomePage extends StatefulWidget {
@@ -13,6 +15,38 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
+  UserInfo? _userInfo;
+  bool _isLoading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserInfo();
+  }
+
+  /// Fetches the user's name and account balance on page load.
+  Future<void> _fetchUserInfo() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final info = await AuthService().fetchUserInfo();
+      setState(() {
+        _userInfo = info;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'Failed to load user data: ${e.toString().split('Exception: ').last}';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   void _onNavTap(int index) {
     if (index == 2) {
@@ -25,8 +59,34 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> pages = [
-      SingleChildScrollView(
+    // Content for the Home tab (index 0)
+    Widget homeContent;
+
+    if (_isLoading) {
+      homeContent = const Center(child: CircularProgressIndicator());
+    } else if (_error != null) {
+      homeContent = Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(_error!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.red)),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _fetchUserInfo,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    } else {
+      // Data loaded successfully
+      final String displayName = _userInfo?.fullName ?? 'User';
+      final num balance = _userInfo?.accountBalance ?? 0;
+
+      homeContent = SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -36,27 +96,26 @@ class _HomePageState extends State<HomePage> {
               children: [
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Text('Hello, John',
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                    SizedBox(height: 4),
-                    Text('Good morning', style: TextStyle(fontSize: 14, color: Colors.grey)),
+                  children: [
+                    Text('Hello, $displayName',
+                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 4),
+                    const Text('Good morning', style: TextStyle(fontSize: 14, color: Colors.grey)),
                   ],
                 ),
               ],
             ),
             const SizedBox(height: 24),
-            const SizedBox(height: 20),
 
             // Quick Actions 
             Container(
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8), 
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
               decoration: BoxDecoration(
                 color: Colors.grey[100],
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly, 
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   _quickAction(Icons.money_outlined, 'Withdraw'),
                   _quickAction(Icons.account_balance_wallet_outlined, 'Deposit'),
@@ -66,7 +125,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Account Balance Card
             Container(
               width: double.infinity,
@@ -77,18 +136,19 @@ class _HomePageState extends State<HomePage> {
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text('Savings Account', style: TextStyle(color: Colors.white70, fontSize: 14)),
-                  SizedBox(height: 8),
-                  Text('\$12,345.67',
-                      style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
-                  SizedBox(height: 4),
-                  Text('Available Balance', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                children: [
+                  const Text('Savings Account', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                  const SizedBox(height: 8),
+                  Text('$balance',
+                      style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 4),
+                  const Text('Available Balance', style: TextStyle(color: Colors.white70, fontSize: 12)),
                 ],
               ),
             ),
 
             // Transaction History
+            const SizedBox(height: 24),
             const Text('Recent Transactions', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             _transactionItem('Grocery Store', '-\$54.20', 'Nov 15, 2025'),
@@ -97,7 +157,11 @@ class _HomePageState extends State<HomePage> {
             _transactionItem('Coffee Shop', '-\$8.75', 'Nov 11, 2025'),
           ],
         ),
-      ),
+      );
+    }
+
+    final List<Widget> pages = [
+      homeContent, // The dynamic Home content
       const Center(child: Text('Plan Page (Placeholder)')),
       const SizedBox.shrink(), // ATM Services handled by nav tap
       const Center(child: Text('Pay & Transfer Page (Placeholder)')),
@@ -106,6 +170,9 @@ class _HomePageState extends State<HomePage> {
     ];
 
     return Scaffold(
+      appBar: _selectedIndex != 0 
+          ? AppBar(title: Text(_getAppBarTitle(_selectedIndex)))
+          : null,
       body: pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
@@ -125,6 +192,16 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  String _getAppBarTitle(int index) {
+    switch (index) {
+      case 1: return 'Plan';
+      case 3: return 'Pay & Transfer';
+      case 4: return 'Rewards';
+      case 5: return 'More';
+      default: return '';
+    }
+  }
+
   Widget _quickAction(IconData icon, String label) {
     return Column(
       children: [
@@ -139,11 +216,11 @@ class _HomePageState extends State<HomePage> {
           },
           child: Container(
             decoration: BoxDecoration(
-              color: brandRed.withValues(), // Using withOpacity instead of withValues()
+              color: brandRed.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             padding: const EdgeInsets.all(12),
-            child: const Icon(Icons.money_outlined, color: Colors.white, size: 28), // Simplified icon logic
+            child: Icon(icon, color: brandRed, size: 28),
           ),
         ),
         const SizedBox(height: 8),
