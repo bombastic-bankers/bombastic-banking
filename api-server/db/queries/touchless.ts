@@ -1,5 +1,5 @@
 import { and, eq } from "drizzle-orm";
-import { db } from "..";
+import { db } from "../index.js";
 import { touchlessSessions, ledger } from "../schema.js";
 
 /**

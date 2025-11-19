@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import request from "supertest";
 import { NextFunction, Request, Response } from "express";
-import app from "..";
+import app from "../index.js";
 import * as queries from "../db/queries/index.js";
 import * as pusher from "../pubsub.js";
 
