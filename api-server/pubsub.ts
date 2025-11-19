@@ -42,7 +42,7 @@ function atmChannelName(atmId: number) {
   return `private-atm-${atmId}`;
 }
 
-export async function sendToATM(atmId: number, event: string, data: any) {
+export async function sendToATM(atmId: number, event: string, data?: any) {
   const channelName = atmChannelName(atmId);
   await pusherServer.trigger(channelName, event, data);
 }

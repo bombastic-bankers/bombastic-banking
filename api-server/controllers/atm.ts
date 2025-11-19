@@ -10,6 +10,8 @@ export async function startTouchlessSession(req: Request, res: Response) {
   }
 
   const sessionStarted = await queries.startTouchlessSession(req.userId, atmId);
+  await sendToATM(atmId, "start-touchless-session");
+
   return sessionStarted
     ? res.status(200).send()
     : res.status(409).json({ message: "ATM already in use" });
