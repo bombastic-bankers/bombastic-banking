@@ -139,7 +139,7 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   const Text('Savings Account', style: TextStyle(color: Colors.white70, fontSize: 14)),
                   const SizedBox(height: 8),
-                  Text('$balance',
+                  Text('\$$balance',
                       style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
                   const Text('Available Balance', style: TextStyle(color: Colors.white70, fontSize: 12)),
