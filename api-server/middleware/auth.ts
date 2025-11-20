@@ -3,6 +3,8 @@ import { Request, Response, NextFunction } from "express";
 import { JWT_SECRET } from "../env.js";
 
 export function authenticate(req: Request, res: Response, next: NextFunction) {
+  console.log(`general auth hit`);
+
   const auth = req.headers.authorization;
 
   if (!auth || !auth.startsWith("Bearer ")) {

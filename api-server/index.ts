@@ -10,15 +10,15 @@ import {
   startTouchlessSession,
   withdrawCash,
 } from "./controllers/atm.js";
-import { pusherAuth } from "./controllers/pusher.js";
+import { ablyAuth } from "./controllers/ably.js";
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.get("/auth/ably", ablyAuth);
 app.post("/auth/signup", signUp);
 app.post("/auth/login", login);
-app.post("/pusher/auth", pusherAuth);
 
 app.use(authenticate);
 
