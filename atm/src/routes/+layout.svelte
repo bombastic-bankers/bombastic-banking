@@ -2,18 +2,26 @@
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { onMount } from 'svelte';
-	import { initChannel } from '$lib/pubsub';
 	import { goto } from '$app/navigation';
 
 	let { children } = $props();
 
 	onMount(() => {
-		const channel = initChannel();
-		console.log('Channel created');
-		channel.bind('withdraw', () => {
-			console.log('Redirecting to withdraw amt page');
-			goto('/amount/withdraw');
-		});
+		console.log('layout mounted');
+		const evtSource = new EventSource('/messaging');
+		evtSource.onmessage = (event) => {
+			console.log(`message recevied from sse: ${event.data}`);
+			const { name, data } = JSON.parse(event.data);
+			if (name === 'withdraw') {
+				goto(`/inprocess/withdraw?amount=${data.amount}`);
+			}
+		};
+		// evtSource.addEventListener('withdraw', (event) => {
+		// 	console.log(`message recevied from sse: ${event.data}`);
+		// 	if (1 || event.data === 'withdraw') {
+		// 		goto('/inprocess/withdraw?amount=');
+		// 	}
+		// });
 	});
 </script>
 

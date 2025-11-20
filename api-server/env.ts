@@ -18,3 +18,4 @@ export const PUSHER_SECRET = getEnvOrThrow("PUSHER_SECRET");
 export const PUSHER_CLUSTER = getEnvOrThrow("PUSHER_CLUSTER");
 
 export const SERVER_SELF_AUTH_KEY = getEnvOrThrow("SERVER_SELF_AUTH_KEY");
+export const ABLY_API_KEY = getEnvOrThrow("ABLY_API_KEY");
