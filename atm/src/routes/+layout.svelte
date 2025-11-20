@@ -7,21 +7,16 @@
 	let { children } = $props();
 
 	onMount(() => {
-		console.log('layout mounted');
-		const evtSource = new EventSource('/messaging');
-		evtSource.onmessage = (event) => {
-			console.log(`message recevied from sse: ${event.data}`);
-			const { name, data } = JSON.parse(event.data);
-			if (name === 'withdraw') {
-				goto(`/inprocess/withdraw?amount=${data.amount}`);
-			}
-		};
-		// evtSource.addEventListener('withdraw', (event) => {
-		// 	console.log(`message recevied from sse: ${event.data}`);
-		// 	if (1 || event.data === 'withdraw') {
-		// 		goto('/inprocess/withdraw?amount=');
-		// 	}
-		// });
+		const eventSource = new EventSource('/commands');
+
+		eventSource.addEventListener('withdraw', (event) => {
+			const { amount } = JSON.parse(event.data);
+			goto(`/inprocess/withdraw?amount=${amount}`);
+		});
+
+		eventSource.addEventListener('initiate-deposit', (event) => {
+			goto('/amount/deposit');
+		});
 	});
 </script>
 
