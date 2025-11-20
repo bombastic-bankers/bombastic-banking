@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "dev": "tsx watch listen.ts",
+    "dev": "tsx watch index.ts",
     "test": "vitest",
     "build": "tsc"
   },

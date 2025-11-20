@@ -1,23 +1,30 @@
 <script>
-  import { goto } from "$app/navigation";
-  export let next = "../withdraw-completion/deposit";
-  export let delay = 3000; 
+	import { goto } from '$app/navigation';
+	import { sendEvent } from '$lib/realtime.remote';
+	import { onMount } from 'svelte';
+	export let next = '../withdraw-completion/deposit';
+	export let delay = 3000;
 
-  setTimeout(() => goto(next), delay);
+	onMount(() => {
+		setTimeout(() => {
+			sendEvent({ name: 'deposit-collected', data: { amount: 100 } });
+			goto(next);
+		}, delay);
+	});
 </script>
 
-<div class="flex flex-col items-center mt-12">
-  <div class="w-14 h-14 border-4 border-green-500 border-t-transparent rounded-full animate-spin mb-6"></div>
+<div class="mt-12 flex flex-col items-center">
+	<div
+		class="mb-6 h-14 w-14 animate-spin rounded-full border-4 border-green-500 border-t-transparent"
+	></div>
 
-  <h2 class="text-2xl text-white font-semibold mb-2">
-    Depositing in Process...
-  </h2>
+	<h2 class="mb-2 text-2xl font-semibold text-white">Depositing in Process...</h2>
 
-  <p class="text-gray-400 text-sm mb-6">Please wait</p>
+	<p class="mb-6 text-sm text-gray-400">Please wait</p>
 
-  <div class="flex gap-2">
-    <div class="h-3 w-3 bg-green-500 rounded-full animate-bounce"></div>
-    <div class="h-3 w-3 bg-green-500 rounded-full animate-bounce delay-150"></div>
-    <div class="h-3 w-3 bg-green-500 rounded-full animate-bounce delay-300"></div>
-  </div>
+	<div class="flex gap-2">
+		<div class="h-3 w-3 animate-bounce rounded-full bg-green-500"></div>
+		<div class="h-3 w-3 animate-bounce rounded-full bg-green-500 delay-150"></div>
+		<div class="h-3 w-3 animate-bounce rounded-full bg-green-500 delay-300"></div>
+	</div>
 </div>

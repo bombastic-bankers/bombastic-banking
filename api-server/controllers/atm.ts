@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import * as messaging from "../messaging.js";
+import * as realtime from "../realtime.js";
 import * as queries from "../db/queries/index.js";
 import { z } from "zod";
 
@@ -14,7 +14,7 @@ export async function startTouchlessSession(req: Request, res: Response) {
   }
 
   const sessionStarted = await queries.startTouchlessSession(req.userId, atmId);
-  await messaging.sendToATM(atmId, "start-touchless-session");
+  await realtime.sendToATM(atmId, "start-touchless-session");
 
   return sessionStarted
     ? res.status(200).send()
@@ -30,7 +30,7 @@ export async function endTouchlessSession(req: Request, res: Response) {
   const sessionEnded = await queries.endTouchlessSession(req.userId, atmId);
 
   if (sessionEnded) {
-    await messaging.sendToATM(atmId, "end-touchless-session");
+    await realtime.sendToATM(atmId, "end-touchless-session");
     return res.status(200).send();
   }
 
@@ -54,9 +54,9 @@ export async function withdrawCash(req: Request, res: Response) {
   console.log(`sending withdraw event`);
 
   // Command the ATM to withdraw the specified amount
-  await messaging.sendToATM(atmId, "withdraw", { amount });
+  await realtime.sendToATM(atmId, "withdraw", { amount });
   // Wait for the ATM to finish withdrawing the cash
-  await messaging.waitForATM(atmId, "withdraw-ready");
+  await realtime.waitForATM(atmId, "withdraw-ready");
 
   await queries.updateLedgerForWithdrawal(req.userId, amount);
   return res.status(200).send();
@@ -73,7 +73,7 @@ export async function initiateCashDeposit(req: Request, res: Response) {
   }
 
   // Command the ATM to allow a cash deposit
-  await messaging.sendToATM(atmId, "initiate-deposit");
+  await realtime.sendToATM(atmId, "initiate-deposit");
   return res.status(200).send();
 }
 
@@ -88,9 +88,9 @@ export async function confirmCashDeposit(req: Request, res: Response) {
   }
 
   // Command the ATM to store the cash deposit
-  await messaging.sendToATM(atmId, "confirm-deposit");
+  await realtime.sendToATM(atmId, "confirm-deposit");
   // Wait for the ATM to finish counting the cash
-  const result = await messaging.waitForATM<{ amount: number }>(
+  const result = await realtime.waitForATM<{ amount: number }>(
     atmId,
     "deposit-collected",
   );
