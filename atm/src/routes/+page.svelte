@@ -1,12 +1,25 @@
-<h2 class="text-3xl text-white font-semibold mb-2">Welcome, Mike!</h2>
-<p class="text-gray-400 text-lg mb-10">Please select a transaction</p>
+<script lang="ts">
+	import { goto } from '$app/navigation';
+	import { getSSEContext } from '$lib/context';
 
-<div class="flex gap-8">
-  <a href="/amount/withdraw" class="px-10 py-4 text-xl bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
-    Withdraw
-  </a>
+	const addSSEListener = getSSEContext();
+	$effect(() =>
+		addSSEListener('withdraw', (event) => {
+			const { amount } = JSON.parse(event.data);
+			goto(`/withdraw?amount=${amount}`);
+		})
+	);
+	$effect(() =>
+		addSSEListener('initiate-deposit', () => {
+			goto('/deposit/wait');
+		})
+	);
+	$effect(() =>
+		addSSEListener('indicate-touchless', () => {
+			goto('/deposit/wait');
+		})
+	);
+</script>
 
-  <a href="/amount/deposit" class="px-10 py-4 text-xl bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
-    Deposit
-  </a>
-</div>
+<h2 class="mb-2 text-3xl font-semibold text-white">Welcome</h2>
+<p class="mb-10 text-lg text-gray-400">Tap phone or insert card</p>

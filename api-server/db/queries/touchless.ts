@@ -11,26 +11,44 @@ export async function atmExists(atmId: number): Promise<boolean> {
 }
 
 /**
- * Initiate a touchless ATM session, returning `false`
- * if the ATM is already in use and `true` otherwise.
+ * Initiate a touchless ATM session, returning `false` if the
+ * ATM is already in use by another user and `true` otherwise.
  */
-export async function startTouchlessSession(
+export async function acquireTouchlessSession(
   userId: number,
   atmId: number,
 ): Promise<boolean> {
+  // TODO: Handle non-existent userIds/atmIds
   const result = await db
     .insert(touchlessSessions)
     .values({ userId, atmId })
     .onConflictDoNothing()
     .returning();
-  return result.length > 0;
+  if (result.length > 0) {
+    return true;
+  }
+
+  // Check whether nothing was inserted because the user already has a session with that ATM, or
+  // because the ATM is already in use by another user / the user is already using another ATM.
+  const existing = await db
+    .select()
+    .from(touchlessSessions)
+    .where(
+      and(
+        eq(touchlessSessions.userId, userId),
+        eq(touchlessSessions.atmId, atmId),
+      ),
+    )
+    .limit(1);
+
+  return existing.length > 0;
 }
 
 /**
  * End a touchless ATM session, returning `false`
  * if the session does not exist and `true` otherwise.
  */
-export async function endTouchlessSession(
+export async function terminateTouchlessSession(
   userId: number,
   atmId: number,
 ): Promise<boolean> {
@@ -43,26 +61,6 @@ export async function endTouchlessSession(
       ),
     )
     .returning();
-  return result.length > 0;
-}
-
-/**
- * Return `true` if the specified touchless session exists.
- */
-export async function touchlessSessionExists(
-  userId: number,
-  atmId: number,
-): Promise<boolean> {
-  const result = await db
-    .select()
-    .from(touchlessSessions)
-    .where(
-      and(
-        eq(touchlessSessions.userId, userId),
-        eq(touchlessSessions.atmId, atmId),
-      ),
-    );
-
   return result.length > 0;
 }
 

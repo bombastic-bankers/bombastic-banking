@@ -1,28 +1,23 @@
 <script lang="ts">
 	import '../app.css';
-	import favicon from '$lib/assets/favicon.svg';
 	import { onMount } from 'svelte';
-	import { goto } from '$app/navigation';
+	import { setSSEContext } from '$lib/context';
 
 	let { children } = $props();
 
+	let eventSource: EventSource | undefined = $state(undefined);
+	setSSEContext((event, listener) => {
+		if (!eventSource) return () => {};
+		eventSource.addEventListener(event, listener);
+		return () => eventSource?.removeEventListener(event, listener);
+	});
 	onMount(() => {
-		const eventSource = new EventSource('/commands');
-
-		eventSource.addEventListener('withdraw', (event) => {
-			const { amount } = JSON.parse(event.data);
-			goto(`/inprocess/withdraw?amount=${amount}`);
-		});
-
-		eventSource.addEventListener('initiate-deposit', (event) => {
-			goto('/amount/deposit');
-		});
+		eventSource = new EventSource('/commands');
 	});
 </script>
 
 <svelte:head>
 	<title>ATM Dashboard</title>
-	<link rel="icon" href={favicon} />
 </svelte:head>
 
 <!-- Fullscreen Machine Background -->
@@ -44,16 +39,6 @@
 		<!-- Main Screen Area -->
 		<div class="relative flex w-full flex-1 flex-col items-center px-8 pt-2 pb-10 text-center">
 			<!-- <div class="flex-1 w-full flex flex-col items-center text-center px-8 pt-4 pb-10 relative"> -->
-
-			<!-- User Icon -->
-			<div class="absolute top-6 right-6 flex items-center gap-3">
-				<div
-					class="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500 text-2xl text-white"
-				>
-					👤
-				</div>
-				<p class="text-sm text-white/80">Welcome, Mike</p>
-			</div>
 
 			<!-- Page-Specific Content -->
 			<div class="flex h-full w-full flex-col items-center pt-20">
