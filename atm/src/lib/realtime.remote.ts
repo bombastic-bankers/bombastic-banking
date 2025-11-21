@@ -6,6 +6,6 @@ import z from 'zod';
 export const sendEvent = command(
 	z.object({ name: z.string(), data: z.any().optional() }),
 	async (event) => {
-		channel.publish(event.name, JSON.stringify(event.data));
+		channel.publish(event.name, event.data);
 	}
 );

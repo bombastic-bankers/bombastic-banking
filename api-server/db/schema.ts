@@ -33,18 +33,22 @@ export const atms = pgTable("atms", {
   location: text("location").notNull(),
 });
 
-export const touchlessSessions = pgTable("touchless_sessions", {
-  userId: integer("user_id")
-    .notNull()
-    .references(() => users.userId, {
-      onUpdate: "cascade",
-      onDelete: "cascade",
-    }),
-  atmId: integer("atm_id")
-    .primaryKey()
-    .references(() => atms.atmId, {
-      onUpdate: "cascade",
-      onDelete: "cascade",
-    }),
-  startedAt: timestamp("started_at").defaultNow().notNull(),
-});
+export const touchlessSessions = pgTable(
+  "touchless_sessions",
+  {
+    userId: integer("user_id")
+      .unique()
+      .references(() => users.userId, {
+        onUpdate: "cascade",
+        onDelete: "cascade",
+      }),
+    atmId: integer("atm_id")
+      .unique()
+      .references(() => atms.atmId, {
+        onUpdate: "cascade",
+        onDelete: "cascade",
+      }),
+    startedAt: timestamp("started_at").defaultNow().notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.atmId] })],
+);

@@ -3,38 +3,42 @@ import * as realtime from "../realtime.js";
 import * as queries from "../db/queries/index.js";
 import { z } from "zod";
 
-export async function startTouchlessSession(req: Request, res: Response) {
+export async function indicateTouchless(req: Request, res: Response) {
   const atmId = +req.params.atmId;
   if (isNaN(atmId)) {
     return res.status(400).json({ error: "Invalid ATM ID" });
   }
-
   if (!(await queries.atmExists(atmId))) {
     return res.status(404).json({ error: "No ATM with specified ID" });
   }
 
-  const sessionStarted = await queries.startTouchlessSession(req.userId, atmId);
-  await realtime.sendToATM(atmId, "start-touchless-session");
+  const hasSession = await queries.acquireTouchlessSession(req.userId, atmId);
+  if (!hasSession) {
+    return res
+      .status(409)
+      .json({ error: "Unable to acquire touchless session" });
+  }
 
-  return sessionStarted
-    ? res.status(200).send()
-    : res.status(409).json({ error: "ATM already in use" });
+  await realtime.sendToATM(atmId, "indicate-touchless");
+  return res.status(200).send();
 }
 
-export async function endTouchlessSession(req: Request, res: Response) {
+export async function returnToIdle(req: Request, res: Response) {
   const atmId = +req.params.atmId;
   if (isNaN(atmId)) {
     return res.status(400).json({ error: "Invalid ATM ID" });
   }
 
-  const sessionEnded = await queries.endTouchlessSession(req.userId, atmId);
-
-  if (sessionEnded) {
-    await realtime.sendToATM(atmId, "end-touchless-session");
-    return res.status(200).send();
+  const sessionEnded = await queries.terminateTouchlessSession(
+    req.userId,
+    atmId,
+  );
+  if (!sessionEnded) {
+    return res.status(404).json({ error: "No such existing session" });
   }
 
-  return res.status(404).json({ error: "No such existing session" });
+  await realtime.sendToATM(atmId, "return-to-idle");
+  return res.status(200).send();
 }
 
 export async function withdrawCash(req: Request, res: Response) {
@@ -47,8 +51,11 @@ export async function withdrawCash(req: Request, res: Response) {
     .object({ amount: z.number().positive().multipleOf(0.01) })
     .parse(req.body);
 
-  if (!(await queries.touchlessSessionExists(req.userId, atmId))) {
-    return res.status(404).json({ error: "No touchless session found" });
+  const hasSession = await queries.acquireTouchlessSession(req.userId, atmId);
+  if (!hasSession) {
+    return res
+      .status(409)
+      .json({ error: "Unable to acquire touchless session" });
   }
 
   console.log(`sending withdraw event`);
@@ -68,8 +75,11 @@ export async function initiateCashDeposit(req: Request, res: Response) {
     return res.status(400).json({ error: "Invalid ATM ID" });
   }
 
-  if (!(await queries.touchlessSessionExists(req.userId, atmId))) {
-    return res.status(404).json({ error: "No touchless session found" });
+  const hasSession = await queries.acquireTouchlessSession(req.userId, atmId);
+  if (!hasSession) {
+    return res
+      .status(409)
+      .json({ error: "Unable to acquire touchless session" });
   }
 
   // Command the ATM to allow a cash deposit
@@ -83,8 +93,11 @@ export async function confirmCashDeposit(req: Request, res: Response) {
     return res.status(400).json({ error: "Invalid ATM ID" });
   }
 
-  if (!(await queries.touchlessSessionExists(req.userId, atmId))) {
-    return res.status(404).json({ error: "No touchless session found" });
+  const hasSession = await queries.acquireTouchlessSession(req.userId, atmId);
+  if (!hasSession) {
+    return res
+      .status(409)
+      .json({ error: "Unable to acquire touchless session" });
   }
 
   // Command the ATM to store the cash deposit
