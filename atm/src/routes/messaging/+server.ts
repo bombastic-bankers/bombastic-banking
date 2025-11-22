@@ -2,8 +2,6 @@ import type { RequestHandler } from './$types';
 import { channel, realtime } from '$lib/server/ably.js';
 
 export const GET: RequestHandler = async ({ request }) => {
-	console.log(`sse endpoint hit`);
-
 	// Create a ReadableStream for SSE
 	const stream = new ReadableStream({
 		async start(controller) {

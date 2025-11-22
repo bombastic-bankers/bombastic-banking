@@ -58,8 +58,6 @@ export async function withdrawCash(req: Request, res: Response) {
       .json({ error: "Unable to acquire touchless session" });
   }
 
-  console.log(`sending withdraw event`);
-
   // Command the ATM to withdraw the specified amount
   await realtime.sendToATM(atmId, "withdraw", { amount });
   // Wait for the ATM to finish withdrawing the cash
