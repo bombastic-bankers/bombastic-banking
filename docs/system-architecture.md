@@ -13,7 +13,7 @@ For this prototype, we have no cash-related hardware, so all cash transactions a
   - [4.1. Mobile app](#41-mobile-app)
   - [4.2. ATM server](#42-atm-server)
   - [4.3. API server](#43-api-server)
-- [5. Pub/Sub messaging](#5-pubsub-messaging)
+- [5. Realtime messaging](#5-pubsub-messaging)
 
 ## 1. Touchless ATM overview
 
@@ -32,7 +32,7 @@ For this prototype, we have no cash-related hardware, so all cash transactions a
 - **ATM server:** SvelteKit.
 - **API server:** Express on Vercel.
 - **Database:** Neon Postgres.
-- **Pub/Sub:** Pusher.
+- **Realtime messaging:** Ably.
 
 ## 4. System components
 
@@ -44,7 +44,7 @@ When it reads the ATM's NTAG213 tag, it uses the API server's HTTP API to start 
 
 ### 4.2. ATM server
 
-The ATM runs a webapp server hosting its GUI. On start-up, it connects to the pub/sub system, authenticating with the `ATM_KEY` environment variable. The ATM GUI starts in its idle state, and it transitions according to commands from the pub/sub system (refer to [Pub/Sub messaging](#pubsub-messaging) below for details).
+The ATM runs a webapp server hosting its GUI. On start-up, it connects to the pub/sub system, authenticating with the `ATM_KEY` environment variable. The ATM GUI starts in its idle state, and it transitions according to commands from the pub/sub system (refer to [Realtime messaging](#realtime-messaging) below for details).
 
 ### 4.3. API server
 
@@ -55,18 +55,18 @@ The API server acts as an intermediary between the mobile app and the ATM server
 - ATM control commands from the mobile app to the ATM server.
 - ATM status updates from the ATM server to the mobile app.
 
-Refer to [Pub/Sub messaging](#pubsub-messaging) below for details.
+Refer to [Realtime messaging](#realtime-messaging) below for details.
 
-## 5. Pub/Sub messaging
+## 5. Realtime messaging
 
-The ATM server and API server communicate through a pub/sub system. The table below documents the messages sent through the pub/sub system.
+The ATM server and API server perform realtime messaging through a pub/sub system, where each ATM uses a channel named `atm:{atmId}`. The table below documents the events sent through each channel.
 
-| Event                     | Originator | Payload         | Description                                                                                             |
-| ------------------------- | ---------- | --------------- | ------------------------------------------------------------------------------------------------------- |
-| `START_TOUCHLESS_SESSION` | API server |                 | Command the ATM to indicate that a touchless session is in progress, preventing direct ATM interaction. |
-| `WITHDRAW`                | API server | Withdraw amount | Command the ATM to dispense the indicated cash amount.                                                  |
-| `WITHDRAW_READY`          | ATM        |                 | Notify the API server that the ATM has successfully dispensed cash.                                     |
-| `INITIATE_DEPOSIT`        | API server |                 | Command the ATM to prepare to receive a cash deposit.                                                   |
-| `CONFIRM_DEPOSIT`         | API server |                 | Command the ATM to receive and count deposited cash.                                                    |
-| `DEPOSIT_COLLECTED`       | ATM        | Deposit amount  | Notify the API server that the ATM has successfully received the indicated cash amount.                 |
-| `END_TOUCHLESS_SESSION`   | API server |                 | Command the ATM to return to its idle state, allowing for direct ATM interaction.                       |
+| Event                | Originator | Payload         | Description                                                  |
+| -------------------- | ---------- | --------------- | ------------------------------------------------------------ |
+| `indicate-touchless` | API server |                 | Command the ATM to indicate that a touchless session is in progress, preventing direct ATM interaction. |
+| `withdraw`           | API server | Withdraw amount | Command the ATM to dispense the indicated cash amount.       |
+| `withdraw-ready`     | ATM        |                 | Notify the API server that the ATM has successfully dispensed cash. |
+| `initiate-deposit`   | API server |                 | Command the ATM to prepare to receive a cash deposit.        |
+| `confirm-deposit`    | API server |                 | Command the ATM to receive and count deposited cash.         |
+| `deposit-collected`  | ATM        | Deposit amount  | Notify the API server that the ATM has successfully received the indicated cash amount. |
+| `return-to-idle`     | API server |                 | Command the ATM to return to its idle state, allowing for direct ATM interaction. |
