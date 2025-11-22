@@ -13,7 +13,7 @@ const MethodChannel _channel = MethodChannel('com.ocbc.nfc_service/methods');
 /// Model to hold user's personal details fetched from the backend.
 class UserInfo {
   final String fullName;
-  final num accountBalance; // Storing as String for direct display, including currency symbol
+  final num accountBalance; 
 
   UserInfo({required this.fullName, required this.accountBalance});
 
@@ -46,10 +46,12 @@ class AuthService {
   Stream<String?> get atmIdStream => _atmIdController.stream;
   Future<String?> get currentAtmId => _storageService.getAtmId(); 
 
-  /// Immediately clears the ATM ID event from the stream by pushing a null value.
+  /// Immediately clears the ATM ID event from the stream by pushing a null value 
+  /// and clearing persistent storage.
   void clearAtmId() {
     if (!_atmIdController.isClosed) {
       debugPrint('AuthService: ATM ID stream state cleared (pushed null).');
+      _storageService.deleteAtmId(); 
       _atmIdController.sink.add(null);
     }
   }
@@ -98,7 +100,7 @@ class AuthService {
     }
   }
   
-  // --- Authentication and Single NFC Read (used in transaction flow) ---
+  // --- Authentication and Info Methods ---
 
   /// Performs the network API call to the login endpoint using provided credentials.
   Future<String> authenticate(String accessCode, String pin) async {
@@ -147,13 +149,13 @@ class AuthService {
     }
   }
 
-  // -------------------- NEW METHOD TO FETCH USER INFO --------------------
   /// Fetches the user's name and account balance using the stored JWT token.
   Future<UserInfo> fetchUserInfo() async {
     final token = await _storageService.getToken();
 
     if (token == null) {
-      throw Exception('Authentication token is missing. Please log in again.');
+      // This error will be caught by HomePage and trigger the logout/redirect.
+      throw Exception('Unauthenticated: Authentication token is missing. Please log in again.'); 
     }
 
     const url = '$apiBaseUrl/userinfo';
@@ -172,7 +174,8 @@ class AuthService {
         final body = jsonDecode(response.body); 
         return UserInfo.fromJson(body);
       } else if (response.statusCode == 401) {
-        throw Exception('Session expired. Please log in to refresh your token.');
+        // Explicitly throw a recognizable error for the HomePage to handle
+        throw Exception('Unauthenticated: Session expired. Please log in to refresh your token.');
       } else {
         String apiError = 'Failed to fetch user data with status code ${response.statusCode}.';
         
@@ -192,20 +195,16 @@ class AuthService {
       rethrow;
     }
   }
-  // -------------------- END NEW METHOD --------------------
-
-  /// Initiates a single NFC reading event and extracts the ATM ID.
-  Future<String> readNfcTag() async {
-    debugPrint('Single NFC Scan initiated (Platform Channel)...');
-    
-    const placeholderAtmId = "OCBC-ATM-SG-90210"; 
-    await _storageService.saveAtmId(placeholderAtmId);
-
-    return placeholderAtmId;
-  }
 
   /// Retrieves stored JWT token.
-  Future<String?> getAuthToken() => _storageService.getToken();
+  Future<String?> getToken() => _storageService.getToken();
+
+  /// Clears the user's authentication token and ATM ID from storage.
+  Future<void> signOut() async {
+    await _storageService.deleteToken();
+    clearAtmId(); 
+    debugPrint('AuthService: User signed out. Token and ATM ID cleared.');
+  }
 
   /// Disposes of all resources held by the service.
   void dispose() {

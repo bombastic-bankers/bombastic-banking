@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // <--- NEW IMPORT for SystemNavigator
 import '../app_constants.dart';
 import 'choice_page.dart';
 import 'transaction_flow_pages.dart';
 // Import the AuthService and UserInfo model
 import '../services/auth_service.dart';
+
+import 'login_page.dart'; 
 
 /// -------------------- Home Page --------------------
 class HomePage extends StatefulWidget {
@@ -22,29 +25,75 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    // Start fetching user info and checking authentication status
     _fetchUserInfo();
   }
 
-  /// Fetches the user's name and account balance on page load.
+  /// Fetches the user's name and account balance, performing an authentication check first.
   Future<void> _fetchUserInfo() async {
+    // Safety check to ensure we only proceed if the widget is still mounted
+    if (!mounted) return;
+
     setState(() {
       _isLoading = true;
       _error = null;
     });
 
+    // Check if a valid token is present locally.
+    final String? token = await AuthService().getToken();
+    if (token == null) {
+      // If token is missing, force sign out and redirect.
+      await _handleUnauthenticatedRedirect();
+      return; 
+    }
     try {
+      // If token is present, proceed with fetching user data
       final info = await AuthService().fetchUserInfo();
-      setState(() {
-        _userInfo = info;
-      });
+      if (mounted) {
+        setState(() {
+          _userInfo = info;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _error = 'Failed to load user data: ${e.toString().split('Exception: ').last}';
-      });
+      // Check for explicit unauthenticated/invalid token messages from the API call
+      final errorString = e.toString().split('Exception: ').last;
+      if (errorString.contains('Unauthenticated') || errorString.contains('Token invalid')) {
+          // If the API confirms the token is invalid, force sign out and redirect
+          await _handleUnauthenticatedRedirect();
+          return;
+      }
+      
+      if (mounted) {
+        setState(() {
+          _error = 'Failed to load user data: $errorString';
+        });
+      }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      // Only set loading to false if the widget is still mounted and we haven't navigated away
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  /// Helper function to perform secure redirect on authentication failure.
+  Future<void> _handleUnauthenticatedRedirect() async {
+    if (mounted) {
+      // 1. Clear session data
+      await AuthService().signOut(); 
+      
+      // 2. Navigate to the login page and clear the navigation stack completely (critical for security).
+      // Note: This must happen BEFORE SystemNavigator.pop()
+      Navigator.of(context).pushAndRemoveUntil(
+        slideRoute(const LoginPage()),
+        (Route<dynamic> route) => false,
+      );
+      
+      // 3. CRITICAL FIX: Ensure any underlying native activity (like the NFC service) is closed.
+      // This is essential to prevent the native view from remaining active after the app view changes.
+      SystemNavigator.pop();
     }
   }
 
