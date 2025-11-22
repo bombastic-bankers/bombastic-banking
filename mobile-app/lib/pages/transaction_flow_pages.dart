@@ -232,6 +232,7 @@ class _NFCPromptPageState extends State<NFCPromptPage> {
       _isScanning = true;
     });
 
+    // Calls the updated startContinuousNfcScan command
     _authService.startContinuousNfcScan();
 
     _atmIdSubscription = _authService.atmIdStream.listen((atmId) {
@@ -254,6 +255,7 @@ class _NFCPromptPageState extends State<NFCPromptPage> {
 
   void _stopNFCScan() {
     if (_isScanning) {
+      // Calls the updated stopContinuousNfcScan command
       _authService.stopContinuousNfcScan();
       setState(() {
         _isScanning = false;
@@ -341,8 +343,6 @@ class _PostNfcAuthPageState extends State<PostNfcAuthPage> {
   }
 
   Future<void> _processTransactionPlaceholder() async {
-    // 1. Placeholder for the session check/biometric prompt.
-    // This delay prevents the main router guard from prematurely seeing an invalid session state.
     await Future.delayed(const Duration(milliseconds: 1500)); 
     
     // 2. SUCCESS: Session stabilized, proceed to final page.

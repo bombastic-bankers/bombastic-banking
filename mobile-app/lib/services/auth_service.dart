@@ -6,10 +6,9 @@ import '../app_constants.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-// --- PLATFORM CHANNEL SETUP ---
+// NOTE: Channel name must match the Kotlin/Android implementation
 const MethodChannel _channel = MethodChannel('com.ocbc.nfc_service/methods'); 
 
-// -------------------- NEW DATA MODEL --------------------
 /// Model to hold user's personal details fetched from the backend.
 class UserInfo {
   final String fullName;
@@ -24,8 +23,6 @@ class UserInfo {
     );
   }
 }
-// -------------------- END DATA MODEL --------------------
-
 
 /// The main authentication and state management service class.
 class AuthService {
@@ -60,7 +57,8 @@ class AuthService {
   void startContinuousNfcScan() { 
     debugPrint('AuthService: NFC Platform Listener Setup Initiated (Foreground Mode).');
     try {
-      _channel.invokeMethod('enableReaderMode');
+      // CRITICAL FIX: The method name must match the one defined in MainActivity.kt
+      _channel.invokeMethod('startContinuousNfcScan'); 
       debugPrint('AuthService: Sent command to ENABLE native NFC Reader Mode.');
     } on PlatformException catch (e) {
       debugPrint("AuthService Error: Failed to enable NFC reader mode: ${e.message}");
@@ -71,7 +69,8 @@ class AuthService {
   void stopContinuousNfcScan() {
     debugPrint('AuthService: Stopping continuous NFC Scan (Foreground Mode).');
     try {
-      _channel.invokeMethod('disableReaderMode');
+      // CRITICAL FIX: The method name must match the one defined in MainActivity.kt
+      _channel.invokeMethod('stopContinuousNfcScan'); 
       debugPrint('AuthService: Sent command to DISABLE native NFC Reader Mode.');
     } on PlatformException catch (e) {
       debugPrint("AuthService Error: Failed to disable NFC reader mode: ${e.message}");
@@ -80,7 +79,7 @@ class AuthService {
 
   // --- NFC LISTENER (Receives data from Kotlin) ---
   Future<dynamic> _handleNativeCall(MethodCall call) async {
-    if (call.method == 'tagRead') {
+    if (call.method == 'TagRead') { 
       final String? atmId = call.arguments as String?;
       if (atmId != null) {
         await _handleNfcTagRead(atmId);
@@ -90,12 +89,30 @@ class AuthService {
     return null;
   }
 
-  Future<void> _handleNfcTagRead(String? atmId) async {
-    if (atmId != null) {
-      await _storageService.saveAtmId(atmId);
+  // --- NEW: Helper function to clean the NFC payload ---
+  String _cleanNfcPayload(String rawAtmId) {
+    // The raw string comes in as 'en12345' (NDEF Text Record payload).
+    // The first two characters ('en') are the ISO 639 language code (English).
+    // We strip the first two characters to get the pure ID.
+    if (rawAtmId.length >= 2) {
+      final cleanedId = rawAtmId.substring(2);
+      debugPrint('NFC Payload Cleaned: "$rawAtmId" -> "$cleanedId"');
+      return cleanedId;
+    }
+    // Return original if it's too short to contain a language code.
+    return rawAtmId; 
+  }
+
+  Future<void> _handleNfcTagRead(String? rawAtmId) async {
+    if (rawAtmId != null) {
+      // Apply the cleaning function before using the ID
+      final cleanedAtmId = _cleanNfcPayload(rawAtmId);
+      
+      await _storageService.saveAtmId(cleanedAtmId);
       if (!_atmIdController.isClosed) {
-        _atmIdController.sink.add(atmId);
-        debugPrint('Continuous Scan Success: ATM ID $atmId pushed to stream.');
+        _atmIdController.sink.add(cleanedAtmId);
+        // Logging the cleaned ID
+        debugPrint('Continuous Scan Success: ATM ID $cleanedAtmId pushed to stream.');
       }
     }
   }
@@ -184,8 +201,8 @@ class AuthService {
           apiError = body['error'] ?? body['message'] ?? apiError;
         } on FormatException {
           apiError = response.body.isNotEmpty 
-                     ? response.body 
-                     : 'Failed to fetch user data. Unknown server error.';
+                      ? response.body 
+                      : 'Failed to fetch user data. Unknown server error.';
         }
         
         throw Exception(apiError);

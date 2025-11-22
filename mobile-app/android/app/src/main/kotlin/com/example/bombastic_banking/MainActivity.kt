@@ -8,11 +8,13 @@ import android.nfc.Tag
 import android.nfc.tech.Ndef
 import android.util.Log
 import android.os.Bundle
+import android.nfc.NdefRecord
+import java.util.Arrays
 
 class MainActivity : FlutterActivity(), NfcAdapter.ReaderCallback {
 
     // Define the channel name, matching what is used in Flutter's AuthService
-    private val CHANNEL = "com.bombasticbanking/nfc"
+    private val CHANNEL = "com.ocbc.nfc_service/methods"
 
     // Platform channel instance
     private lateinit var channel: MethodChannel
@@ -38,9 +40,7 @@ class MainActivity : FlutterActivity(), NfcAdapter.ReaderCallback {
 
     override fun onResume() {
         super.onResume()
-        // Ensure continuous reader mode is active if the channel logic wants it on
-        // We defer activation to the MethodChannel call, but keep this here for robustness
-        // if the app returns to foreground.
+        // No need to enable reader mode here, as it's controlled by Flutter's method channel calls.
     }
 
     override fun onPause() {
@@ -56,11 +56,17 @@ class MainActivity : FlutterActivity(), NfcAdapter.ReaderCallback {
 
         channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
         
+        // This handler listens for commands from Flutter (e.g., startContinuousNfcScan)
         channel.setMethodCallHandler { call, result ->
             when (call.method) {
                 "startContinuousNfcScan" -> {
-                    startNfcReaderMode()
-                    result.success(true)
+                    // Check if the NFC adapter is available before attempting to start the scan
+                    if (nfcAdapter == null) {
+                        result.error("NFC_UNAVAILABLE", "NFC adapter is not available on this device.", null)
+                    } else {
+                        startNfcReaderMode()
+                        result.success(true)
+                    }
                 }
                 "stopContinuousNfcScan" -> {
                     stopNfcReaderMode()
@@ -79,7 +85,7 @@ class MainActivity : FlutterActivity(), NfcAdapter.ReaderCallback {
         // Activate reader mode, enabling tag discovery
         nfcAdapter?.enableReaderMode(
             this,
-            this, // The callback is implemented by this activity
+            this, // The callback is implemented by this activity (onTagDiscovered)
             READER_FLAGS,
             null // Bundle of optional parameters
         )
@@ -98,30 +104,61 @@ class MainActivity : FlutterActivity(), NfcAdapter.ReaderCallback {
     override fun onTagDiscovered(tag: Tag?) {
         Log.d("NFC", "Tag discovered.")
         
+        var atmId: String? = null
+        
         // 1. Attempt to read the NDEF data from the tag
         val ndef = Ndef.get(tag)
-        val atmId: String? = if (ndef != null) {
-            ndef.connect()
-            val ndefMessage = ndef.ndefMessage
-            ndef.close()
-
-            // Assume the ATM ID is stored in the first NDEF record's payload
-            ndefMessage?.records?.firstOrNull()?.payload?.let { payload ->
-                // Assuming text/string data, strip language code if present (e.g., first byte)
-                String(payload, 1, payload.size - 1, Charsets.UTF_8).trim()
+        if (ndef != null) {
+            try {
+                ndef.connect()
+                val ndefMessage = ndef.ndefMessage
+                
+                // Process the first NDEF record
+                ndefMessage?.records?.firstOrNull()?.let { record ->
+                    val payload = record.payload
+                    
+                    atmId = if (payload != null && payload.isNotEmpty()) {
+                        // Check if it's an NDEF Text Record (RTD_TEXT)
+                        if (Arrays.equals(record.type, NdefRecord.RTD_TEXT)) {
+                            // For RTD_TEXT, the first byte is the status byte (language code length),
+                            // which must be stripped.
+                            String(payload, 1, payload.size - 1, Charsets.UTF_8).trim()
+                        } else {
+                            // For other record types (e.g., custom MIME or URI), assume the entire 
+                            // payload should be read as a UTF-8 string.
+                            String(payload, Charsets.UTF_8).trim()
+                        }
+                    } else {
+                        null
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("NFC", "Error reading NDEF tag: ${e.message}")
+            } finally {
+                try {
+                    ndef.close()
+                } catch (e: Exception) {
+                    Log.e("NFC", "Error closing NDEF connection: ${e.message}")
+                }
             }
-        } else {
-            // Fallback: If not an NDEF tag, use the unique tag ID (UID) as the ATM ID
-            tag?.id?.toHexString()
         }
 
-        // 2. Send the read ID back to Flutter
-        if (atmId != null) {
+        // 2. Fallback: If no NDEF data or NDEF connection failed, use the unique tag ID (UID)
+        if (atmId.isNullOrEmpty()) {
+            atmId = tag?.id?.toHexString()
+        }
+
+        // 3. Send the read ID back to Flutter
+        if (!atmId.isNullOrEmpty()) {
             Log.d("NFC", "ATM ID Read: $atmId")
-            // Use post to ensure the result is sent on the main thread (although not always necessary for streams)
-            channel.invokeMethod("onNfcTagRead", atmId)
+            // Crucial: Use runOnUiThread since onTagDiscovered is NOT on the main thread, 
+            // ensuring the MethodChannel invocation is thread-safe for Flutter.
+            runOnUiThread {
+                // Invoking Flutter method 'TagRead'
+                channel.invokeMethod("TagRead", atmId)
+            }
         } else {
-            Log.e("NFC", "Could not read ATM ID from tag.")
+            Log.e("NFC", "Could not read ATM ID from tag via NDEF or UID.")
         }
     }
 }
