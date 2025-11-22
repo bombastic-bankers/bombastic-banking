@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import Ably from "ably";
-import { ABLY_API_KEY, JWT_SECRET } from "../env.js";
+import { ABLY_API_KEY, JWT_ISSUER, JWT_SECRET } from "../env.js";
 
 /** Return an Ably token request that an ATM can use to authenticate to Ably. */
 export async function ablyAuth(req: Request, res: Response) {
@@ -14,11 +14,19 @@ export async function ablyAuth(req: Request, res: Response) {
   // Verify X-Token-Header as a JWT
   let atmId: string;
   try {
-    const payload = jwt.verify(atmToken, JWT_SECRET) as jwt.JwtPayload;
+    const payload = jwt.verify(atmToken, JWT_SECRET, {
+      issuer: JWT_ISSUER,
+    }) as jwt.JwtPayload;
     if (!payload.sub) {
       return res.status(401).json({ error: "Missing sub in ATM token" });
     }
-    atmId = payload.sub;
+
+    const match = payload.sub.match(/^atm\|(\d+)$/);
+    if (!match) {
+      return res.status(401).json({ error: "Invalid ATM token sub" });
+    }
+
+    atmId = match[1];
   } catch (error) {
     return res.status(401).json({ error: "Invalid ATM token" });
   }

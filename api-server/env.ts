@@ -10,5 +10,6 @@ function getEnvOrThrow(key: string): string {
 
 export const PORT = process.env.PORT ? +process.env.PORT : undefined;
 export const JWT_SECRET = getEnvOrThrow("JWT_SECRET");
+export const JWT_ISSUER = getEnvOrThrow("JWT_ISSUER");
 export const DATABASE_URL = getEnvOrThrow("DATABASE_URL");
 export const ABLY_API_KEY = getEnvOrThrow("ABLY_API_KEY");

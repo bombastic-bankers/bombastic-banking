@@ -2,7 +2,8 @@
   "scripts": {
     "dev": "tsx watch index.ts",
     "test": "vitest",
-    "build": "tsc"
+    "build": "tsc",
+    "gen-atm-token": "tsx scripts/generateATMToken.ts"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
