@@ -3,7 +3,7 @@ import Ably from 'ably';
 import { ATM_TOKEN, API_SERVER_URL } from '$env/static/private';
 
 // TODO: Validation on this
-const atmId = (jwt.decode(ATM_TOKEN) as jwt.JwtPayload).sub!;
+const atmId = (jwt.decode(ATM_TOKEN) as jwt.JwtPayload).sub!.split('|')[1];
 
 export const channel = new Ably.Realtime({
 	authUrl: `${API_SERVER_URL}/auth/ably`,
