@@ -20,50 +20,53 @@
 	<title>ATM Dashboard</title>
 </svelte:head>
 
-<!-- Fullscreen Machine Background -->
-<div class="flex h-screen w-screen items-center justify-center bg-[#111a27]">
-	<!-- ATM Frame -->
+<!-- Fullscreen machine background -->
+<div class="flex h-screen w-screen items-start justify-center bg-[#0f1a27] pt-10">
+
+
+	<!-- ATM outer frame -->
 	<div
-		class="relative flex h-[80%] w-[90%] max-w-[900px]
-           flex-col items-center rounded-3xl
-           border border-gray-700 bg-[#0c1525] shadow-xl"
+		class="relative flex h-[80%] w-[88%] max-w-[1100px]
+		flex-col items-center rounded-[32px]
+		border border-gray-700 bg-[#0c1525] shadow-2xl"
 	>
-		<!-- OCBC Top Bar -->
-		<div
-			class="flex h-20 w-full items-center justify-center rounded-t-3xl bg-red-600
-                text-3xl font-semibold tracking-wide text-white"
-		>
-			OCBC
+
+		<!-- INNER SCREEN -->
+		<div class="flex flex-col items-center w-full flex-1 px-12 py-10 text-center ">
+			{@render children()}
 		</div>
 
-		<!-- Main Screen Area -->
-		<div class="relative flex w-full flex-1 flex-col items-center px-8 pt-2 pb-10 text-center">
-			<!-- <div class="flex-1 w-full flex flex-col items-center text-center px-8 pt-4 pb-10 relative"> -->
+		<!-- Bottom vents -->
+		<div class="absolute bottom-[-80px] w-[90%] max-w-[900px] bg-white rounded-xl shadow-md 
+            flex items-center justify-center gap-6 py-3 px-6">
 
-			<!-- Page-Specific Content -->
-			<div class="flex h-full w-full flex-col items-center pt-20">
-				{@render children()}
-			</div>
-		</div>
-
-		<!-- Bottom Vents + Card Slot -->
-		<div class="absolute bottom-6 flex w-full flex-col items-center">
-			<!-- Vents -->
-			<div class="mb-3 flex w-[60%] justify-between text-gray-600">
-				<div class="space-y-1">
-					<div class="h-1 w-8 rounded bg-gray-700"></div>
-					<div class="h-1 w-8 rounded bg-gray-700"></div>
-					<div class="h-1 w-8 rounded bg-gray-700"></div>
-				</div>
-				<div class="space-y-1">
-					<div class="h-1 w-8 rounded bg-gray-700"></div>
-					<div class="h-1 w-8 rounded bg-gray-700"></div>
-					<div class="h-1 w-8 rounded bg-gray-700"></div>
-				</div>
+			<div class="flex items-center gap-2 font-semibold text-red-600">
+				<div class="w-5 h-5 bg-red-600 rounded-full flex items-center justify-center text-white text-xs">O</div>
+				OCBC
 			</div>
 
-			<!-- Card Slot -->
-			<div class="h-5 w-64 rounded-lg bg-black shadow-inner"></div>
+			<div class="px-4 py-1 rounded-md border border-blue-600 text-blue-600 font-medium text-sm">
+				VISA
+			</div>
+
+			<div class="px-4 py-1 rounded-md border border-blue-600 text-blue-600 font-medium text-sm">
+				PLUS
+			</div>
+
+			<div class="flex items-center">
+				<div class="w-5 h-5 rounded-full bg-[#eb001b]"></div>
+				<div class="w-5 h-5 rounded-full bg-[#f79e1b] -ml-2"></div>
+			</div>
+
+			<div class="px-4 py-1 rounded-md border border-blue-600 text-blue-600 font-medium text-sm">
+				Maestro
+			</div>
+
+			<span class="text-blue-600 font-medium">Cirrus</span>
+
+			<span class="text-red-600 font-medium">UnionPay</span>
+
+			<span class="text-blue-700 font-medium">UOB</span>
 		</div>
 	</div>
 </div>
