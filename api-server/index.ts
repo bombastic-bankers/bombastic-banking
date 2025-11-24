@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import morgan from "morgan";
 import { authenticate } from "./middleware/auth.js";
 import { validationError, anyError } from "./middleware/error.js";
 import { getUserInfo, login, signUp } from "./controllers/users.js";
@@ -14,6 +15,7 @@ import { ablyAuth } from "./controllers/ably.js";
 import { PORT } from "./env.js";
 
 const app = express();
+app.use(morgan("dev"));
 app.use(cors());
 app.use(express.json());
 
