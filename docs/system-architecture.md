@@ -17,7 +17,7 @@ For this prototype, we have no cash-related hardware, so all cash transactions a
 
 ## 1. Touchless ATM overview
 
-![Touchless ATM architecture](touchless-atm.png)
+![Touchless ATM architecture](./assets/system-architecture.png)
 
 ## 2. Definitions
 
