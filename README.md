@@ -30,4 +30,4 @@ API_SERVER_URL="https://bombastic-bankers.vercel.app"
 
 Our ATM implements the following user flow.
 
-![](./docs/atm-ui-flow.png)
+![](./docs/assets/atm-user-flow.png)

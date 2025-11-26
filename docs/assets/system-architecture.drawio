@@ -1,0 +1,124 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0" version="29.1.0">
+  <diagram name="Page-1" id="nPbR7QaezxUtOxPHuftq">
+    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="0" fold="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="Nnu8WsFFuzp-oNEyyG_N-7" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;" value="" vertex="1">
+          <mxGeometry height="540" width="840" x="15" y="47" as="geometry" />
+        </mxCell>
+        <mxCell id="Ciag91xzOmL6PYNOkeX3-42" parent="1" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=#f5f5f5;fontStyle=0;fontColor=#333333;strokeColor=#666666;" value="" vertex="1">
+          <mxGeometry height="61" width="106" x="230.5" y="417.5" as="geometry" />
+        </mxCell>
+        <mxCell id="Ciag91xzOmL6PYNOkeX3-22" parent="1" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fontStyle=0;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" value="" vertex="1">
+          <mxGeometry height="185" width="156" x="510" y="337" as="geometry" />
+        </mxCell>
+        <mxCell id="Ciag91xzOmL6PYNOkeX3-2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=#f5f5f5;fontStyle=0;fontColor=#333333;strokeColor=#666666;" value="" vertex="1">
+          <mxGeometry height="82.5" width="176" x="200" y="205.5" as="geometry" />
+        </mxCell>
+        <mxCell id="Ciag91xzOmL6PYNOkeX3-40" edge="1" parent="1" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.58;exitY=0.988;exitDx=0;exitDy=0;entryX=0.734;entryY=0.004;entryDx=0;entryDy=0;exitPerimeter=0;entryPerimeter=0;" target="Ciag91xzOmL6PYNOkeX3-36">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="300.39999999999986" y="271.15" as="sourcePoint" />
+            <mxPoint x="277.11" y="429.07600000000014" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Ciag91xzOmL6PYNOkeX3-1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Express.js API server" vertex="1">
+          <mxGeometry height="50" width="156" x="210" y="221.75" as="geometry" />
+        </mxCell>
+        <mxCell id="Ciag91xzOmL6PYNOkeX3-3" parent="1" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=0;fillColor=none;fontColor=#333333;strokeColor=none;" value="Vercel" vertex="1">
+          <mxGeometry height="30" width="60" x="202" y="178" as="geometry" />
+        </mxCell>
+        <mxCell id="Ciag91xzOmL6PYNOkeX3-34" edge="1" parent="1" source="Ciag91xzOmL6PYNOkeX3-7" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.403;exitY=1.024;exitDx=0;exitDy=0;exitPerimeter=0;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="573" y="357" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Ciag91xzOmL6PYNOkeX3-7" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Ably pub/sub" vertex="1">
+          <mxGeometry height="50" width="120" x="525" y="221.75" as="geometry" />
+        </mxCell>
+        <mxCell id="Ciag91xzOmL6PYNOkeX3-10" parent="1" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=0;rotation=0;" value="ATM control command" vertex="1">
+          <mxGeometry height="30" width="130" x="139" y="337" as="geometry" />
+        </mxCell>
+        <mxCell id="Ciag91xzOmL6PYNOkeX3-13" parent="1" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=0;rotation=0;" value="ATM status update" vertex="1">
+          <mxGeometry height="30" width="130" x="295" y="337" as="geometry" />
+        </mxCell>
+        <mxCell id="Ciag91xzOmL6PYNOkeX3-16" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="SvelteKit front-end" vertex="1">
+          <mxGeometry height="50" width="125" x="525.5" y="456.5" as="geometry" />
+        </mxCell>
+        <mxCell id="Ciag91xzOmL6PYNOkeX3-31" edge="1" parent="1" source="Ciag91xzOmL6PYNOkeX3-17" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="Ciag91xzOmL6PYNOkeX3-16">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Ciag91xzOmL6PYNOkeX3-33" connectable="0" parent="Ciag91xzOmL6PYNOkeX3-31" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Page redirect" vertex="1">
+          <mxGeometry relative="1" x="-0.0905" y="-1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Ciag91xzOmL6PYNOkeX3-17" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="SvelteKit server" vertex="1">
+          <mxGeometry height="50" width="130" x="523" y="354" as="geometry" />
+        </mxCell>
+        <mxCell id="Ciag91xzOmL6PYNOkeX3-20" parent="1" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=0" value="ATM control command" vertex="1">
+          <mxGeometry height="30" width="130" x="439" y="291" as="geometry" />
+        </mxCell>
+        <mxCell id="Ciag91xzOmL6PYNOkeX3-21" parent="1" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=0" value="ATM status update" vertex="1">
+          <mxGeometry height="30" width="130" x="595" y="291" as="geometry" />
+        </mxCell>
+        <mxCell id="Ciag91xzOmL6PYNOkeX3-23" parent="1" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=0;fillColor=none;fontColor=#333333;strokeColor=none;" value="ATM" vertex="1">
+          <mxGeometry height="30" width="60" x="506" y="520" as="geometry" />
+        </mxCell>
+        <mxCell id="Ciag91xzOmL6PYNOkeX3-24" edge="1" parent="1" source="Ciag91xzOmL6PYNOkeX3-1" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1.008;exitY=0.34;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.013;entryY=0.354;entryDx=0;entryDy=0;entryPerimeter=0;" target="Ciag91xzOmL6PYNOkeX3-7">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="483" y="238" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Ciag91xzOmL6PYNOkeX3-26" edge="1" parent="1" source="Ciag91xzOmL6PYNOkeX3-7" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=-0.007;exitY=0.681;exitDx=0;exitDy=0;entryX=0.996;entryY=0.681;entryDx=0;entryDy=0;exitPerimeter=0;entryPerimeter=0;" target="Ciag91xzOmL6PYNOkeX3-1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="387" y="488" as="sourcePoint" />
+            <mxPoint x="465" y="518" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Ciag91xzOmL6PYNOkeX3-37" edge="1" parent="1" source="Ciag91xzOmL6PYNOkeX3-36" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.347;exitY=0.039;exitDx=0;exitDy=0;entryX=0.407;entryY=1.006;entryDx=0;entryDy=0;entryPerimeter=0;exitPerimeter=0;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="250.4999999999999" y="429.22" as="sourcePoint" />
+            <mxPoint x="273.9100000000001" y="272.04999999999995" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Ciag91xzOmL6PYNOkeX3-36" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Flutter" vertex="1">
+          <mxGeometry height="36" width="70" x="248.5" y="428.5" as="geometry" />
+        </mxCell>
+        <mxCell id="Ciag91xzOmL6PYNOkeX3-38" parent="1" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=0" value="ATM control command" vertex="1">
+          <mxGeometry height="30" width="130" x="381" y="211" as="geometry" />
+        </mxCell>
+        <mxCell id="Ciag91xzOmL6PYNOkeX3-41" parent="1" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=0" value="ATM status update" vertex="1">
+          <mxGeometry height="30" width="130" x="381" y="251" as="geometry" />
+        </mxCell>
+        <mxCell id="Ciag91xzOmL6PYNOkeX3-43" parent="1" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=0;fillColor=none;fontColor=#333333;strokeColor=none;" value="Mobile app" vertex="1">
+          <mxGeometry height="30" width="70" x="236.5" y="476.5" as="geometry" />
+        </mxCell>
+        <mxCell id="Ciag91xzOmL6PYNOkeX3-46" edge="1" parent="1" source="Ciag91xzOmL6PYNOkeX3-45" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="Ciag91xzOmL6PYNOkeX3-36">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Ciag91xzOmL6PYNOkeX3-45" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="NTAG213 NFC tag" vertex="1">
+          <mxGeometry height="44" width="69" x="400.5" y="424.5" as="geometry" />
+        </mxCell>
+        <mxCell id="Ciag91xzOmL6PYNOkeX3-47" parent="1" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=0" value="ATM ID" vertex="1">
+          <mxGeometry height="30" width="50" x="343.5" y="419.5" as="geometry" />
+        </mxCell>
+        <mxCell id="Nnu8WsFFuzp-oNEyyG_N-2" edge="1" parent="1" source="Ciag91xzOmL6PYNOkeX3-17" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.598;exitY=0.043;exitDx=0;exitDy=0;entryX=0.631;entryY=0.994;entryDx=0;entryDy=0;exitPerimeter=0;entryPerimeter=0;" target="Ciag91xzOmL6PYNOkeX3-7">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="555" y="298" as="sourcePoint" />
+            <mxPoint x="556" y="386" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Nnu8WsFFuzp-oNEyyG_N-3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Neon Postgres database" vertex="1">
+          <mxGeometry height="60" width="115" x="230.5" y="95" as="geometry" />
+        </mxCell>
+        <mxCell id="Nnu8WsFFuzp-oNEyyG_N-5" edge="1" parent="1" source="Ciag91xzOmL6PYNOkeX3-1" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;startArrow=classic;startFill=1;" target="Nnu8WsFFuzp-oNEyyG_N-3">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="410" y="152.5" as="sourcePoint" />
+            <mxPoint x="410" y="67.5" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

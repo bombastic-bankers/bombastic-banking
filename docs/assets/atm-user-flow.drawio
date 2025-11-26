@@ -1,0 +1,93 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0" version="29.1.1">
+  <diagram name="Page-1" id="nOxsFLTCsjvCGM3qrIUx">
+    <mxGraphModel dx="2057" dy="913" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="TAj3FzbScLFAk-bf3t3Q-1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;" value="" vertex="1">
+          <mxGeometry height="580" width="910" x="-780" y="220" as="geometry" />
+        </mxCell>
+        <mxCell id="eZ7bFRQD_7g35oDoGVWs-1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Idle" vertex="1">
+          <mxGeometry height="40" width="60" x="-400" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="eZ7bFRQD_7g35oDoGVWs-11" edge="1" parent="1" source="eZ7bFRQD_7g35oDoGVWs-1" style="orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" target="eZ7bFRQD_7g35oDoGVWs-12">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-405" y="530" as="sourcePoint" />
+            <mxPoint x="-350" y="535" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eZ7bFRQD_7g35oDoGVWs-21" connectable="0" parent="eZ7bFRQD_7g35oDoGVWs-11" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];rounded=0;" value="&lt;div&gt;User selected withdrawal&lt;/div&gt;&lt;div&gt;and entered amount on app&lt;/div&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.3378" y="4" as="geometry">
+            <mxPoint x="-36" y="9" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eZ7bFRQD_7g35oDoGVWs-12" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Withdrawing..." vertex="1">
+          <mxGeometry height="40" width="120" x="-510" y="470" as="geometry" />
+        </mxCell>
+        <mxCell id="eZ7bFRQD_7g35oDoGVWs-15" edge="1" parent="1" source="eZ7bFRQD_7g35oDoGVWs-13" style="orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;rounded=0;" target="eZ7bFRQD_7g35oDoGVWs-14" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-290" y="650" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eZ7bFRQD_7g35oDoGVWs-13" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Deposit cash" vertex="1">
+          <mxGeometry height="40" width="105" x="-302.5" y="470" as="geometry" />
+        </mxCell>
+        <mxCell id="eZ7bFRQD_7g35oDoGVWs-14" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Counting deposit..." vertex="1">
+          <mxGeometry height="40" width="140" x="-320" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="eZ7bFRQD_7g35oDoGVWs-25" edge="1" parent="1" source="eZ7bFRQD_7g35oDoGVWs-16" style="edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;html=1;rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="eZ7bFRQD_7g35oDoGVWs-1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="-560" y="560" />
+              <mxPoint x="-560" y="340" />
+            </Array>
+            <mxPoint x="-400" y="340" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eZ7bFRQD_7g35oDoGVWs-16" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="$x withdrawn" vertex="1">
+          <mxGeometry height="40" width="110" x="-505" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="eZ7bFRQD_7g35oDoGVWs-17" edge="1" parent="1" source="eZ7bFRQD_7g35oDoGVWs-12" style="orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;rounded=0;" target="eZ7bFRQD_7g35oDoGVWs-16" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-290" y="670" as="sourcePoint" />
+            <mxPoint x="-290" y="700" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eZ7bFRQD_7g35oDoGVWs-24" edge="1" parent="1" source="eZ7bFRQD_7g35oDoGVWs-18" style="edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="eZ7bFRQD_7g35oDoGVWs-1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="-100" y="700" />
+              <mxPoint x="-100" y="340" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eZ7bFRQD_7g35oDoGVWs-18" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Received $x" vertex="1">
+          <mxGeometry height="40" width="100" x="-300" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="eZ7bFRQD_7g35oDoGVWs-19" edge="1" parent="1" source="eZ7bFRQD_7g35oDoGVWs-14" style="orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;rounded=0;" target="B30fm7l4Kbq15OzuD0ct-2" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-290" y="640" as="sourcePoint" />
+            <mxPoint x="-290" y="670" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eZ7bFRQD_7g35oDoGVWs-20" edge="1" parent="1" source="eZ7bFRQD_7g35oDoGVWs-1" style="orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;rounded=0;" target="eZ7bFRQD_7g35oDoGVWs-13">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-405" y="529.9999999999999" as="sourcePoint" />
+            <mxPoint x="-215" y="590" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eZ7bFRQD_7g35oDoGVWs-23" connectable="0" parent="eZ7bFRQD_7g35oDoGVWs-20" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];rounded=0;" value="&lt;div&gt;User selected&lt;/div&gt;&lt;div&gt;deposit on app&lt;/div&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.2456" y="-2" as="geometry">
+            <mxPoint x="24" y="6" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="B30fm7l4Kbq15OzuD0ct-4" edge="1" parent="1" source="B30fm7l4Kbq15OzuD0ct-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="eZ7bFRQD_7g35oDoGVWs-18" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="B30fm7l4Kbq15OzuD0ct-2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Refer to phone for instructions" vertex="1">
+          <mxGeometry height="40" width="200" x="-350" y="609" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
