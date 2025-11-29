@@ -75,7 +75,10 @@ Upon user confirmation of the counted deposit amount, the system must update the
 
 The system must allow users to transfer money to other users by selecting the recipient from the phone's contact list, or by entering their phone number.
 
-The system must allow users to enter a transfer amount that is no greater than their account balance.
+The system must allow users to enter a transfer amount that is:
+
+- No greater than their account balance
+- Within the $1000/day transfer limit
 
 After user confirmation of the transaction, the system must display the transaction's success or failure status.
 
