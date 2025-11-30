@@ -20,53 +20,28 @@
 	<title>ATM Dashboard</title>
 </svelte:head>
 
-<!-- Fullscreen machine background -->
-<div class="flex h-screen w-screen items-start justify-center bg-[#0f1a27] pt-10">
 
+<!-- OUTER ATM BACKGROUND -->
+<div class="relative flex min-h-screen justify-center bg-black pt-10 pb-40">
 
-	<!-- ATM outer frame -->
-	<div
-		class="relative flex h-[80%] w-[88%] max-w-[1100px]
-		flex-col items-center rounded-[32px]
-		border border-gray-700 bg-[#0c1525] shadow-2xl"
-	>
+    <!-- INNER SCREEN / WHITE BOX -->
+    <div class="w-[90%] max-w-[900px] h-screen bg-[#e5e7eb] rounded-2xl p-6 shadow-xl border border-gray-300">
+        {@render children()}
+    </div>
 
-		<!-- INNER SCREEN -->
-		<div class="flex flex-col items-center w-full flex-1 px-12 py-10 text-center ">
-			{@render children()}
-		</div>
+    <!-- BOTTOM VENTS (below the screen) -->
+    <div class="absolute top-[calc(100vh+5rem)] w-[90%] max-w-[900px]
+         bg-white rounded-xl shadow-md flex items-center justify-center
+         gap-6 py-3 px-6">
 
-		<!-- Bottom vents -->
-		<div class="absolute bottom-[-80px] w-[90%] max-w-[900px] bg-white rounded-xl shadow-md 
-            flex items-center justify-center gap-6 py-3 px-6">
+		<img src="/logos/ocbc.png" class="h-6 object-contain" alt="OCBC" />
+		<img src="/logos/visa.png" class="h-6 object-contain" alt="Visa" />
+		<img src="/logos/plus.png" class="h-6 object-contain" alt="Plus" />
+		<img src="/logos/mastercard.png" class="h-6 object-contain" alt="Mastercard" />
+		<img src="/logos/maestro.png" class="h-6 object-contain" alt="Maestro" />
+		<img src="/logos/cirrus.png" class="h-6 object-contain" alt="Cirrus" />
+		<img src="/logos/unionpay.png" class="h-6 object-contain" alt="UnionPay" />
+		<img src="/logos/uob.png" class="h-6 object-contain" alt="UOB" />
+    </div>
 
-			<div class="flex items-center gap-2 font-semibold text-red-600">
-				<div class="w-5 h-5 bg-red-600 rounded-full flex items-center justify-center text-white text-xs">O</div>
-				OCBC
-			</div>
-
-			<div class="px-4 py-1 rounded-md border border-blue-600 text-blue-600 font-medium text-sm">
-				VISA
-			</div>
-
-			<div class="px-4 py-1 rounded-md border border-blue-600 text-blue-600 font-medium text-sm">
-				PLUS
-			</div>
-
-			<div class="flex items-center">
-				<div class="w-5 h-5 rounded-full bg-[#eb001b]"></div>
-				<div class="w-5 h-5 rounded-full bg-[#f79e1b] -ml-2"></div>
-			</div>
-
-			<div class="px-4 py-1 rounded-md border border-blue-600 text-blue-600 font-medium text-sm">
-				Maestro
-			</div>
-
-			<span class="text-blue-600 font-medium">Cirrus</span>
-
-			<span class="text-red-600 font-medium">UnionPay</span>
-
-			<span class="text-blue-700 font-medium">UOB</span>
-		</div>
-	</div>
 </div>

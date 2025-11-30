@@ -16,12 +16,12 @@
 </script>
 
 {#await withdrawPromise}
-	<div class="w-full h-full bg-gradient-to-b from-[#273245] to-[#1d2735] 
+	<div class="w-full h-full bg-linear-to-b from-[#273245] to-[#1d2735] 
             rounded-2xl shadow-xl border border-[#394354] 
             flex flex-col items-center justify-center p-6">
 
 		<p class="text-2xl font-bold text-white text-center">
-				Withdrawl in process...
+				Withdrawal in progress...
 		</p>
 
 	</div>
@@ -41,14 +41,14 @@
 
 			<button
 				onclick={() => goto('/withdraw')}
-				class="w-56 h-20 rounded-xl bg-gradient-to-b from-[#4b5563] to-[#1f2937]
+				class="w-56 h-20 rounded-xl bg-linear-to-b from-[#4b5563] to-[#1f2937]
 					text-white text-md font-medium shadow-lg hover:brightness-110 transition
 					flex items-center justify-center px-4 text-center"
 			>
 				Another Withdraw
 			</button>
 
-			<button class="w-56 h-20 rounded-xl bg-gradient-to-b from-[#4b5563] to-[#1f2937]
+			<button class="w-56 h-20 rounded-xl bg-linear-to-b from-[#4b5563] to-[#1f2937]
 				text-white text-md font-medium shadow-lg hover:brightness-110 transition
 				flex items-center justify-center px-4 text-center">
 				Other Services
@@ -56,7 +56,7 @@
 
 			<button
 				onclick={() => goto('/')}
-				class="w-56 h-20 rounded-xl bg-gradient-to-b from-[#4b5563] to-[#1f2937]
+				class="w-56 h-20 rounded-xl bg-linear-to-b from-[#4b5563] to-[#1f2937]
 					text-white text-md font-medium shadow-lg hover:brightness-110 transition
 					flex items-center justify-center px-4 text-center"
 			>
