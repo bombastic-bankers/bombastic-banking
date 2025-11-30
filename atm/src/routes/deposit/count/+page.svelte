@@ -15,10 +15,10 @@
 			// TODO: Better error handling
 			data: { amount: +page.url.searchParams.get('amount')! }
 		});
-		goto('/instructions?next=/deposit/Received');
+		goto('/instructions?next=/deposit/received');
 	});
 </script>
-<div class="w-full h-full bg-gradient-to-b from-[#273245] to-[#1d2735] 
+<div class="w-full h-full bg-linear-to-b from-[#273245] to-[#1d2735] 
             rounded-2xl shadow-xl border border-[#394354] 
             flex flex-col items-center justify-center p-6">
 

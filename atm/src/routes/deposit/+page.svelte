@@ -13,7 +13,7 @@
 </script>
 
 <!-- MAIN DEPOSIT SLOT SCREEN -->
-<div class="w-full h-full bg-gradient-to-b from-[#273245] to-[#1d2735] 
+<div class="w-full h-full bg-linear-to-b from-[#273245] to-[#1d2735] 
             rounded-2xl shadow-xl border border-[#394354] 
             flex flex-col items-center justify-center p-6">
 
@@ -28,17 +28,17 @@
 				<!-- Inner dark slot -->
 				<div class="w-[85%] h-[55%] bg-[#1f2937] rounded-md flex items-center justify-between px-3">
 					<!-- left dash -->
-					<div class="w-6 h-[2px] bg-white"></div>
+					<div class="w-6 h-0.5 bg-white"></div>
 					<!-- right dash -->
-					<div class="w-6 h-[2px] bg-white"></div>
+					<div class="w-6 h-0.5 bg-white"></div>
 				</div>
 			</div>
 
 			<!-- Left arrow -->
-			<div class="absolute left-[-20px] text-2xl text-white">&lt;</div>
+			<div class="absolute -left-5 text-2xl text-white">&lt;</div>
 
 			<!-- Right arrow -->
-			<div class="absolute right-[-20px] text-2xl text-white">&gt;</div>
+			<div class="absolute -right-5 text-2xl text-white">&gt;</div>
 		</div>
 		
         <p class="text-white text-lg font-semibold text-center mt-4">
