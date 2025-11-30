@@ -3,6 +3,8 @@ import * as queries from "../db/queries/index.js";
 import { JWT_SECRET } from "../env.js";
 import { Request, Response } from "express";
 import z from "zod";
+import * as queries from "../db/queries/index.js";
+import { generateAuthTokens } from "../utils/tokenService";
 
 export async function signUp(req: Request, res: Response) {
   const userInit = z
@@ -39,9 +41,29 @@ export async function login(req: Request, res: Response) {
     expiresIn: "2m",
   });
 
-  res.json({ token });
+  res.json({ accessToken, refreshToken });
 }
 
 export async function getUserInfo(req: Request, res: Response) {
   res.send(await queries.getUserInfo(req.userId));
+}
+
+export async function refreshSession(req: Request, res: Response) {
+  const incomingRefreshToken = req.body.refreshToken;
+
+  if (!incomingRefreshToken) {
+    return res.status(401).json({ error: "No refresh token provided" });
+  }
+
+  const storedToken = await queries.getRefreshToken(incomingRefreshToken);
+
+  if (!storedToken || new Date() > storedToken.expiresAt) {
+    return res.status(401).json({ error: "Invalid or expired refresh token" });
+  }
+
+  await queries.deleteRefreshToken(storedToken.id);
+
+  const { accessToken, refreshToken } = await generateAuthTokens(storedToken.userId);
+
+  res.json({ accessToken, refreshToken });
 }

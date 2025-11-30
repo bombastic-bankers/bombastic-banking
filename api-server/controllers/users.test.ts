@@ -5,7 +5,21 @@ import app from "../index.js";
 import * as queries from "../db/queries/index.js";
 import * as env from "../env.js";
 
-vi.mock("../db/queries");
+vi.mock("../db/queries/index.js");
+
+// mock token service
+vi.mock("../utils/tokenService", async (importOriginal) => {
+  return {
+    generateAuthTokens: vi.fn().mockImplementation((userId) => {
+      // We return a real signed JWT so the verification tests below still pass
+      const accessToken = jwt.sign({ userId }, env.JWT_SECRET || "test-secret", { expiresIn: "2m" });
+      return Promise.resolve({
+        accessToken,
+        refreshToken: "mock-refresh-token-string",
+      });
+    }),
+  };
+});
 
 async function createMockUser() {
   return {
@@ -164,7 +178,7 @@ describe("POST /auth/login", () => {
     vi.clearAllMocks();
   });
 
-  it("should return an auth token", async () => {
+  it("should return an accessToken and set a refreshToken", async () => {
     vi.mocked(queries.getUserByCredentials).mockResolvedValue({
       userId: 1,
       fullName: "John Doe",
@@ -215,5 +229,53 @@ describe("POST /auth/login", () => {
 
     expect(response.status).toBe(400);
     expect(queries.getUserByCredentials).not.toHaveBeenCalled();
+  });
+});
+
+// tests for refresh logic
+describe("POST /auth/refresh", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should return 401 if no refresh token is provided", async () => {
+    const response = await request(app).post("/auth/refresh").send({});
+    expect(response.status).toBe(401);
+    expect(response.body.error).toBe("No refresh token provided");
+  });
+
+  it("should return 401 if token is not found in DB or expired", async () => {
+    vi.mocked(queries.getRefreshToken).mockResolvedValue(undefined as any);
+
+    const response = await request(app).post("/auth/refresh").send({ refreshToken: "some-invalid-token" });
+
+    expect(response.status).toBe(401);
+    expect(response.body.error).toBe("Invalid or expired refresh token");
+  });
+
+  it("should rotate tokens and return 200 on success", async () => {
+    // find valid token
+    const validStoredToken = {
+      id: 123,
+      userId: 1,
+      token: "valid-old-token",
+      expiresAt: new Date(Date.now() + 100000),
+      createdAt: new Date(),
+    };
+    // mock the finding of the token
+    vi.mocked(queries.getRefreshToken).mockResolvedValue(validStoredToken as any); // ts(2345) here
+
+    // mock the deletion of the token
+    vi.mocked(queries.deleteRefreshToken).mockResolvedValue(undefined);
+
+    const response = await request(app).post("/auth/refresh").send({ refreshToken: "valid-old-token" });
+
+    expect(response.status).toBe(200);
+
+    // check if got new Access Token
+    expect(response.body).toHaveProperty("accessToken");
+
+    // check if attempted to delete old token -- rotation
+    expect(queries.deleteRefreshToken).toHaveBeenCalledWith(123);
   });
 });
