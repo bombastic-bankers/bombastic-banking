@@ -37,12 +37,14 @@ export const touchlessSessions = pgTable(
   "touchless_sessions",
   {
     userId: integer("user_id")
+      .notNull()
       .unique()
       .references(() => users.userId, {
         onUpdate: "cascade",
         onDelete: "cascade",
       }),
     atmId: integer("atm_id")
+      .notNull()
       .unique()
       .references(() => atms.atmId, {
         onUpdate: "cascade",
@@ -52,3 +54,14 @@ export const touchlessSessions = pgTable(
   },
   (table) => [primaryKey({ columns: [table.userId, table.atmId] })],
 );
+
+// refresh tokens table
+export const refreshTokens = pgTable("refresh_tokens", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.userId, { onDelete: "cascade" }), // deletes token if user is deleted
+  token: text("token").notNull(), 
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
