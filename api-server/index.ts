@@ -3,7 +3,7 @@ import cors from "cors";
 import morgan from "morgan";
 import { authenticate } from "./middleware/auth.js";
 import { validationError, anyError } from "./middleware/error.js";
-import { getUserInfo, login, signUp } from "./controllers/users.js";
+import { getUserInfo, login, signUp, refreshSession } from "./controllers/users.js"; // add refreshSession
 import {
   exit,
   withdrawCash,
@@ -21,11 +21,13 @@ const TESTING = process.env.NODE_ENV === "test";
 const app = express();
 !TESTING && app.use(morgan("dev"));
 app.use(cors());
+
 app.use(express.json());
 
 app.get("/auth/ably", ablyAuth);
 app.post("/auth/signup", signUp);
 app.post("/auth/login", login);
+app.post("/auth/refresh", refreshSession);
 app.post("/auth/ably", ablyAuth);
 
 app.use(authenticate);

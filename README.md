@@ -31,6 +31,7 @@ For this prototype, we have no cash-related hardware, so all cash transactions a
 3. Copy the output to the `ATM_TOKEN` in `atm/.env`.
 
 4. If you wish to use the deployed API server with your ATM running locally, set the following in `atm/.env`:
+
    ```
    API_SERVER_URL="https://bombastic-bankers.vercel.app"
    ```
