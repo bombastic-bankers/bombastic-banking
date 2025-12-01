@@ -1,26 +1,11 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { getSSEContext } from '$lib/context';
-
-	const addSSEListener = getSSEContext();
-	$effect(() =>
-		addSSEListener('withdraw', (event) => {
-			const { amount } = JSON.parse(event.data);
-			goto(`/withdraw?amount=${amount}`);
-		})
-	);
-	$effect(() =>
-		addSSEListener('initiate-deposit', () => {
-			goto('/deposit');
-		})
-	);
-	$effect(() =>
-		addSSEListener('indicate-touchless', () => {
-			goto('/deposit');
-		})
-	);
 </script>
 
+<svelte:window
+	onwithdraw={(event) => goto(`/withdraw?amount=${event.detail.amount}`)}
+	ondepositstart={() => goto('/deposit')}
+/>
 
 <!-- MAIN SCREEN CONTENT -->
 <!-- <div class="w-full min-h-screen bg-[#e5e7eb] rounded-2xl p-1 shadow-xl text-left border border-gray-300"> -->
