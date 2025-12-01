@@ -1,18 +1,17 @@
 <script lang="ts">
 	import '../app.css';
 	import { onMount } from 'svelte';
-	import { setSSEContext } from '$lib/context';
 
 	let { children } = $props();
 
-	let eventSource: EventSource | undefined = $state(undefined);
-	setSSEContext((event, listener) => {
-		if (!eventSource) return () => {};
-		eventSource.addEventListener(event, listener);
-		return () => eventSource?.removeEventListener(event, listener);
-	});
+	// Dispatch events received from the ATM server on window
 	onMount(() => {
-		eventSource = new EventSource('/commands');
+		const eventSource = new EventSource('/commands');
+		eventSource.addEventListener('message', (event) => {
+			const msg: { type: string; data: any } = JSON.parse(event.data);
+			// Remove dashes, so (e.g.) "deposit-start" becomes "depositstart"
+			window.dispatchEvent(new CustomEvent(msg.type.replaceAll('-', ''), { detail: msg.data }));
+		});
 	});
 </script>
 
