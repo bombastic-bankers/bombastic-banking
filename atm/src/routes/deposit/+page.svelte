@@ -1,16 +1,11 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
-    import { getSSEContext } from '$lib/context';
 
 	// TODO: Simulated ATM UI to select this
 	const simulatedDepositAmount = 50;
-	const addSSEListener = getSSEContext();
-	$effect(() =>
-		addSSEListener('confirm-deposit', () => {
-			goto('/deposit/count?amount=' + simulatedDepositAmount);
-		})
-	);
 </script>
+
+<svelte:window ondepositconfirm={() => goto('/deposit/count?amount=' + simulatedDepositAmount)} />
 
 <!-- MAIN DEPOSIT SLOT SCREEN -->
 <div class="w-full h-full bg-linear-to-b from-[#273245] to-[#1d2735] 

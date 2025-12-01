@@ -1,10 +1,8 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { getSSEContext } from '$lib/context';
 
 	// TODO: Simulated ATM UI to select this
 	const simulatedDepositAmount = 50;
-	
 </script>
 
 <div
