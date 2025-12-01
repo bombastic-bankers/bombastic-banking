@@ -5,8 +5,40 @@ import jwt from "jsonwebtoken";
 import app from "../index.js";
 import * as queries from "../db/queries/index.js";
 import * as env from "../env.js";
+import { generateAuthTokens } from "../utils/tokenService.js";
 
 vi.mock("../db/queries");
+
+// mock token service
+vi.mock("../utils/tokenService", async (importOriginal) => {
+  return {
+    generateAuthTokens: vi.fn().mockImplementation((userId) => {
+      // We return a real signed JWT so the verification tests below still pass
+      const accessToken = jwt.sign({ userId }, env.JWT_SECRET || "test-secret", { expiresIn: "2m" });
+      return Promise.resolve({
+        accessToken,
+        refreshToken: "mock-refresh-token-string",
+      });
+    }),
+  };
+});
+
+// mock drizzle db instance
+const mockDb = vi.hoisted(() => {
+  return {
+    select: vi.fn().mockReturnThis(),
+    from: vi.fn().mockReturnThis(),
+    where: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    delete: vi.fn().mockReturnThis(),
+    insert: vi.fn().mockReturnThis(),
+    values: vi.fn().mockReturnThis(),
+  };
+});
+
+vi.mock("../db", () => ({
+  db: mockDb,
+}));
 
 async function createMockUser() {
   return {
@@ -105,7 +137,7 @@ describe("POST /auth/login", () => {
     vi.clearAllMocks();
   });
 
-  it("should return an auth token", async () => {
+  it("should return an accessToken and set a refreshToken cookie", async () => {
     const mockUser = await createMockUser();
     vi.mocked(queries.getUserByEmail).mockResolvedValue(mockUser);
 
@@ -115,11 +147,18 @@ describe("POST /auth/login", () => {
     });
 
     expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty("token");
-    expect(response.body.token).toBeTypeOf("string");
+    expect(response.body).toHaveProperty("accessToken");
+    expect(response.body.accessToken).toBeTypeOf("string");
+
+    // check if cookie is set
+    const cookies = response.headers["set-cookie"];
+    expect(cookies).toBeDefined();
+    expect(cookies[0]).toContain("refreshToken");
+    expect(cookies[0]).toContain("HttpOnly");
+
     const payload = jwt.verify(
-      response.body.token,
-      env.JWT_SECRET,
+      response.body.accessToken,
+      env.JWT_SECRET || "test-secret",
     ) as jwt.JwtPayload;
     expect(payload.userId).toBe(1);
   });
@@ -145,5 +184,59 @@ describe("POST /auth/login", () => {
     });
 
     expect(response.status).toBe(400);
+  });
+});
+
+// tests for refresh logic
+describe("POST /auth/refresh", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should return 401 if no refresh token cookie is provided", async () => {
+    const response = await request(app).post("/auth/refresh");
+    expect(response.status).toBe(401);
+    expect(response.body.error).toBe("No refresh token provided");
+  });
+
+  it("should return 401 if token is not found in DB or expired", async () => {
+    // Mock DB to return empty array (token not found)
+    // The chain is: db.select().from().where().limit()
+    mockDb.limit.mockResolvedValue([]); 
+
+    const response = await request(app)
+      .post("/auth/refresh")
+      .set("Cookie", ["refreshToken=some-invalid-token"]);
+
+    expect(response.status).toBe(401);
+    expect(response.body.error).toBe("Invalid or expired refresh token");
+  });
+
+  it("should rotate tokens and return 200 on success", async () => {
+    // find valid token
+    const validStoredToken = {
+      id: 123,
+      userId: 1,
+      token: "valid-old-token",
+      expiresAt: new Date(Date.now() + 100000), 
+    };
+    mockDb.limit.mockResolvedValue([validStoredToken]);
+
+    // mock db delete
+    mockDb.delete.mockReturnValue({
+      where: vi.fn().mockResolvedValue(true),
+    });
+
+    const response = await request(app)
+      .post("/auth/refresh")
+      .set("Cookie", ["refreshToken=valid-old-token"]);
+
+    expect(response.status).toBe(200);
+    
+    // check if got new Access Token
+    expect(response.body).toHaveProperty("accessToken");
+    
+    // check if attempted to delete old token -- rotation
+    expect(mockDb.delete).toHaveBeenCalled();
   });
 });
