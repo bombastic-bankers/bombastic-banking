@@ -5,14 +5,16 @@ import { authenticate } from "./middleware/auth.js";
 import { validationError, anyError } from "./middleware/error.js";
 import { getUserInfo, login, signUp } from "./controllers/users.js";
 import {
-  returnToIdle,
-  indicateTouchless,
+  exit,
   withdrawCash,
-  initiateCashDeposit,
+  startCashDeposit,
+  countCashDeposit,
   confirmCashDeposit,
+  cancelCashDeposit,
 } from "./controllers/atm.js";
 import { ablyAuth } from "./controllers/ably.js";
 import { PORT } from "./env.js";
+import { atmParam } from "./middleware/atm.js";
 
 const app = express();
 app.use(morgan("dev"));
@@ -28,11 +30,15 @@ app.use(authenticate);
 
 app.get("/userinfo", getUserInfo);
 
-app.post("/touchless/:atmId/indicate-touchless", indicateTouchless);
-app.post("/touchless/:atmId/return-to-idle", returnToIdle);
-app.post("/touchless/:atmId/withdraw", withdrawCash);
-app.post("/touchless/:atmId/initiate-deposit", initiateCashDeposit);
-app.post("/touchless/:atmId/confirm-deposit", confirmCashDeposit);
+const touchless = express.Router({ mergeParams: true });
+touchless.use(atmParam);
+touchless.post("/withdraw", withdrawCash);
+touchless.post("/deposit/start", startCashDeposit);
+touchless.post("/deposit/count", countCashDeposit);
+touchless.post("/deposit/confirm", confirmCashDeposit);
+touchless.post("/deposit/cancel", cancelCashDeposit);
+touchless.post("/exit", exit);
+app.use("/touchless/:atmId", touchless);
 
 app.use(validationError);
 app.use(anyError);

@@ -13,17 +13,11 @@ export async function atmExists(atmId: number): Promise<boolean> {
 /**
  * Initiate a touchless ATM session, returning `false` if the
  * ATM is already in use by another user and `true` otherwise.
+ * No-op if the user already has a session with that ATM.
  */
-export async function acquireTouchlessSession(
-  userId: number,
-  atmId: number,
-): Promise<boolean> {
+export async function ensureTouchlessSession(userId: number, atmId: number): Promise<boolean> {
   // TODO: Handle non-existent userIds/atmIds
-  const result = await db
-    .insert(touchlessSessions)
-    .values({ userId, atmId })
-    .onConflictDoNothing()
-    .returning();
+  const result = await db.insert(touchlessSessions).values({ userId, atmId }).onConflictDoNothing().returning();
   if (result.length > 0) {
     return true;
   }
@@ -33,12 +27,7 @@ export async function acquireTouchlessSession(
   const existing = await db
     .select()
     .from(touchlessSessions)
-    .where(
-      and(
-        eq(touchlessSessions.userId, userId),
-        eq(touchlessSessions.atmId, atmId),
-      ),
-    )
+    .where(and(eq(touchlessSessions.userId, userId), eq(touchlessSessions.atmId, atmId)))
     .limit(1);
 
   return existing.length > 0;
@@ -48,18 +37,10 @@ export async function acquireTouchlessSession(
  * End a touchless ATM session, returning `false`
  * if the session does not exist and `true` otherwise.
  */
-export async function terminateTouchlessSession(
-  userId: number,
-  atmId: number,
-): Promise<boolean> {
+export async function endTouchlessSession(userId: number, atmId: number): Promise<boolean> {
   const result = await db
     .delete(touchlessSessions)
-    .where(
-      and(
-        eq(touchlessSessions.userId, userId),
-        eq(touchlessSessions.atmId, atmId),
-      ),
-    )
+    .where(and(eq(touchlessSessions.userId, userId), eq(touchlessSessions.atmId, atmId)))
     .returning();
   return result.length > 0;
 }
@@ -67,10 +48,7 @@ export async function terminateTouchlessSession(
 /**
  * Update the ledger to reflect a cash withdrawal.
  */
-export async function updateLedgerForWithdrawal(
-  userId: number,
-  amount: number,
-) {
+export async function updateLedgerForWithdrawal(userId: number, amount: number) {
   await db.insert(ledger).values({ userId, amount: (-amount).toFixed(2) });
 }
 
