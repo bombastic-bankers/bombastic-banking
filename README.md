@@ -26,8 +26,4 @@ To use the deployed API server with your ATM running locally, set the following 
 API_SERVER_URL="https://bombastic-bankers.vercel.app"
 ```
 
-## Touchless ATM user flow
-
-Our ATM implements the following user flow.
-
-![](./docs/assets/atm-user-flow.png)
+Refer to `docs/` for the system's functional requirements and architecture specification.
