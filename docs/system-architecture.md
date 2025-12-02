@@ -61,12 +61,14 @@ Refer to [Realtime messaging](#realtime-messaging) below for details.
 
 The ATM server and API server perform realtime messaging through a pub/sub system, where each ATM uses a channel named `atm:{atmId}`. The table below documents the events sent through each channel.
 
-| Event                | Originator | Payload         | Description                                                  |
-| -------------------- | ---------- | --------------- | ------------------------------------------------------------ |
-| `indicate-touchless` | API server |                 | Command the ATM to indicate that a touchless session is in progress, preventing direct ATM interaction. |
-| `withdraw`           | API server | Withdraw amount | Command the ATM to dispense the indicated cash amount.       |
-| `withdraw-ready`     | ATM        |                 | Notify the API server that the ATM has successfully dispensed cash. |
-| `initiate-deposit`   | API server |                 | Command the ATM to prepare to receive a cash deposit.        |
-| `confirm-deposit`    | API server |                 | Command the ATM to receive and count deposited cash.         |
-| `deposit-collected`  | ATM        | Deposit amount  | Notify the API server that the ATM has successfully received the indicated cash amount. |
-| `return-to-idle`     | API server |                 | Command the ATM to return to its idle state, allowing for direct ATM interaction. |
+| Event             | Originator | Payload           | Description                                                  |
+| ----------------- | ---------- | ----------------- | ------------------------------------------------------------ |
+| `withdraw`        | API server | Withdraw amount   | Command the ATM to dispense the indicated cash amount.       |
+| `withdraw-ready`  | ATM        |                   | Notify the API server that the ATM has successfully dispensed cash. |
+| `deposit-start`   | API server |                   | Command the ATM to prepare to receive a cash deposit.        |
+| `deposit-count`   | API server |                   | Command the ATM to receive and count deposited cash.         |
+| `deposit-review`  | ATM        | Deposit breakdown | Notify the API server that the deposit has been counted, and instruct the user to review the counted per-denomination amounts. |
+| `deposit-confirm` | API server |                   | Notify the API server that the ATM has successfully received the indicated cash amount. |
+| `exit`            | API server |                   | Command the ATM to return to its idle state, allowing other users to use it. |
+
+![ATM state diagram](./assets/atm-state.png)
