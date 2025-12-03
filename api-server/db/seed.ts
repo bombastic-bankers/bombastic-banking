@@ -10,7 +10,7 @@ await db.insert(users).values({
   fullName: "Jayden Tan",
   phoneNumber: "91234567",
   email: "jaydentan@gmail.com",
-  hashedPassword: await bcrypt.hash("password123", 10),
+  hashedPin: await bcrypt.hash("123456", 10),
 });
 
 await db.delete(ledger);

@@ -1,39 +1,46 @@
 import { db } from "../index.js";
 import { ledger, users } from "../schema.js";
-import { eq, sum } from "drizzle-orm";
+import { eq, sum, and } from "drizzle-orm";
+import bcrypt from "bcryptjs";
 
 /**
  * Attempt to create a new user, returning `false` if
  * the email is already in use and `true` otherwise.
  */
-export async function createUser(
-  user: typeof users.$inferInsert,
-): Promise<boolean> {
+export async function createUser(user: {
+  fullName: string;
+  phoneNumber: string;
+  email: string;
+  pin: string;
+}): Promise<boolean> {
   const inserted = await db
     .insert(users)
-    .values(user)
+    .values({
+      fullName: user.fullName,
+      phoneNumber: user.phoneNumber,
+      email: user.email,
+      hashedPin: await bcrypt.hash(user.pin, 10),
+    })
     .onConflictDoNothing()
     .returning();
   return inserted.length > 0;
 }
 
-export async function getUserByEmail(
-  email: string,
-): Promise<typeof users.$inferSelect | null> {
-  return (
-    (await db.select().from(users).where(eq(users.email, email))).at(0) ?? null
-  );
+/**
+ * Return the user with the given email and PIN, or `null` if no such user exists.
+ */
+export async function getUserByCredentials(email: string, pin: string): Promise<typeof users.$inferSelect | null> {
+  const result = await db
+    .select()
+    .from(users)
+    .where(and(eq(users.email, email), eq(users.hashedPin, await bcrypt.hash(pin, 10))))
+    .limit(1);
+
+  return result.at(0) ?? null;
 }
 
-export async function getUserInfo(
-  userId: number,
-): Promise<{ fullName: string; accountBalance: number }> {
-  const { fullName } = (
-    await db
-      .select({ fullName: users.fullName })
-      .from(users)
-      .where(eq(users.userId, userId))
-  )[0];
+export async function getUserInfo(userId: number): Promise<{ fullName: string; accountBalance: number }> {
+  const { fullName } = (await db.select({ fullName: users.fullName }).from(users).where(eq(users.userId, userId)))[0];
   const { accountBalance: accountBalanceString } = (
     await db
       .select({ accountBalance: sum(ledger.amount) })
