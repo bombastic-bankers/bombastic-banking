@@ -1,3 +1,4 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'pages/home_page.dart';
@@ -5,15 +6,13 @@ import 'pages/login_page.dart';
 import 'services/auth_service.dart';
 import 'app_constants.dart';
 
-void main() {
-  // Ensure Flutter is initialized before running asynchronous code (like checking auth)
+Future main() async {
+  await dotenv.load();
   WidgetsFlutterBinding.ensureInitialized();
-  // Optional: Ensure the app stays in portrait mode
-  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   runApp(const BankApp());
 }
 
-/// -------------------- Main App (Stateful for Initial Auth Check) --------------------
 class BankApp extends StatefulWidget {
   const BankApp({super.key});
 
@@ -53,9 +52,7 @@ class _BankAppState extends State<BankApp> {
     if (_isChecking) {
       // Show a loading indicator while checking the token
       initialScreen = const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
+        body: Center(child: CircularProgressIndicator()),
       );
     } else {
       // Route to the correct screen based on the check result
@@ -67,7 +64,7 @@ class _BankAppState extends State<BankApp> {
     }
 
     return MaterialApp(
-      title: 'OCBC Bank App',
+      title: 'Bombastic Banking',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         scaffoldBackgroundColor: Colors.white,
@@ -75,7 +72,11 @@ class _BankAppState extends State<BankApp> {
           backgroundColor: Colors.white,
           foregroundColor: Colors.black87,
           elevation: 0.5,
-          titleTextStyle: TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold),
+          titleTextStyle: TextStyle(
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
           iconTheme: IconThemeData(color: Colors.black),
         ),
         colorScheme: ColorScheme.fromSeed(seedColor: brandRed),

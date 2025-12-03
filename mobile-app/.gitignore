@@ -49,3 +49,5 @@ app.*.map.json
 # and should not be committed to version control.
 **/generated_plugin_registrant.*
 **/generated_plugins.dart
+
+.env
