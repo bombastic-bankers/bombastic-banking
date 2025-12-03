@@ -16,8 +16,10 @@ import { ablyAuth } from "./controllers/ably.js";
 import { PORT } from "./env.js";
 import { atmParam } from "./middleware/atm.js";
 
+const TESTING = process.env.NODE_ENV === "test";
+
 const app = express();
-app.use(morgan("dev"));
+!TESTING && app.use(morgan("dev"));
 app.use(cors());
 app.use(express.json());
 
@@ -43,7 +45,7 @@ app.use("/touchless/:atmId", touchless);
 app.use(validationError);
 app.use(anyError);
 
-if (process.env.NODE_ENV !== "test") {
+if (!TESTING) {
   app.listen(PORT || 3000, () => {
     console.log("Server running at http://localhost:3000");
   });
