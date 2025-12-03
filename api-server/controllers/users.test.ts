@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import request from "supertest";
-import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import app from "../index.js";
 import * as queries from "../db/queries/index.js";
@@ -14,7 +13,7 @@ async function createMockUser() {
     fullName: "John Doe",
     phoneNumber: "1234567890",
     email: "john@example.com",
-    hashedPassword: await bcrypt.hash("password123", 10),
+    pin: "123456",
   };
 }
 
@@ -30,7 +29,7 @@ describe("POST /auth/signup", () => {
       fullName: "John Doe",
       phoneNumber: "1234567890",
       email: "john@example.com",
-      password: "password123",
+      pin: "123456",
     });
 
     expect(response.status).toBe(201);
@@ -38,7 +37,7 @@ describe("POST /auth/signup", () => {
       fullName: "John Doe",
       phoneNumber: "1234567890",
       email: "john@example.com",
-      hashedPassword: expect.any(String),
+      pin: "123456",
     });
   });
 
@@ -46,7 +45,7 @@ describe("POST /auth/signup", () => {
     const response = await request(app).post("/auth/signup").send({
       phoneNumber: "1234567890",
       email: "john@example.com",
-      password: "password123",
+      pin: "123456",
     });
 
     expect(response.status).toBe(400);
@@ -57,7 +56,7 @@ describe("POST /auth/signup", () => {
     const response = await request(app).post("/auth/signup").send({
       fullName: "John Doe",
       email: "john@example.com",
-      password: "password123",
+      pin: "123456",
     });
 
     expect(response.status).toBe(400);
@@ -68,18 +67,42 @@ describe("POST /auth/signup", () => {
     const response = await request(app).post("/auth/signup").send({
       fullName: "John Doe",
       phoneNumber: "1234567890",
-      password: "password123",
+      pin: "123456",
     });
 
     expect(response.status).toBe(400);
     expect(queries.createUser).not.toHaveBeenCalled();
   });
 
-  it("should return 400 when password is missing", async () => {
+  it("should return 400 when pin is missing", async () => {
     const response = await request(app).post("/auth/signup").send({
       fullName: "John Doe",
       phoneNumber: "1234567890",
       email: "john@example.com",
+    });
+
+    expect(response.status).toBe(400);
+    expect(queries.createUser).not.toHaveBeenCalled();
+  });
+
+  it("should return 400 when pin contains non-numeric characters", async () => {
+    const response = await request(app).post("/auth/signup").send({
+      fullName: "John Doe",
+      phoneNumber: "1234567890",
+      email: "john@example.com",
+      pin: "abc123",
+    });
+
+    expect(response.status).toBe(400);
+    expect(queries.createUser).not.toHaveBeenCalled();
+  });
+
+  it("should return 400 when pin is not 6 digits", async () => {
+    const response = await request(app).post("/auth/signup").send({
+      fullName: "John Doe",
+      phoneNumber: "1234567890",
+      email: "john@example.com",
+      pin: "12345",
     });
 
     expect(response.status).toBe(400);
@@ -93,7 +116,7 @@ describe("POST /auth/signup", () => {
       fullName: "John Doe",
       phoneNumber: "1234567890",
       email: "john@example.com",
-      password: "password123",
+      pin: "123456",
     });
 
     expect(response.status).toBe(409);
@@ -106,42 +129,32 @@ describe("POST /auth/login", () => {
   });
 
   it("should return an auth token", async () => {
-    const mockUser = await createMockUser();
-    vi.mocked(queries.getUserByEmail).mockResolvedValue(mockUser);
+    vi.mocked(queries.getUserByCredentials).mockResolvedValue({
+      userId: 1,
+      fullName: "John Doe",
+      phoneNumber: "1234567890",
+      email: "john@example.com",
+      hashedPin: "hashed_pin",
+    });
 
     const response = await request(app).post("/auth/login").send({
       email: "john@example.com",
-      password: "password123",
+      pin: "123456",
     });
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty("token");
     expect(response.body.token).toBeTypeOf("string");
-    const payload = jwt.verify(
-      response.body.token,
-      env.JWT_SECRET,
-    ) as jwt.JwtPayload;
+    const payload = jwt.verify(response.body.token, env.JWT_SECRET) as jwt.JwtPayload;
     expect(payload.userId).toBe(1);
   });
 
-  it("should return 400 when user does not exist", async () => {
-    vi.mocked(queries.getUserByEmail).mockResolvedValue(null);
+  it("should return 400 when credentials are incorrect", async () => {
+    vi.mocked(queries.getUserByCredentials).mockResolvedValue(null);
 
     const response = await request(app).post("/auth/login").send({
       email: "nonexistent@example.com",
-      password: "password123",
-    });
-
-    expect(response.status).toBe(400);
-  });
-
-  it("should return 400 when password is incorrect", async () => {
-    const mockUser = await createMockUser();
-    vi.mocked(queries.getUserByEmail).mockResolvedValue(mockUser);
-
-    const response = await request(app).post("/auth/login").send({
-      email: "john@example.com",
-      password: "wrong_password",
+      pin: "123457",
     });
 
     expect(response.status).toBe(400);

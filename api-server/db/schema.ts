@@ -1,19 +1,11 @@
-import {
-  pgTable,
-  serial,
-  integer,
-  text,
-  timestamp,
-  numeric,
-  primaryKey,
-} from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, text, timestamp, numeric, primaryKey } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
   userId: serial("user_id").primaryKey(),
   fullName: text("full_name").notNull(),
   phoneNumber: text("phone_number").notNull(),
   email: text("email").notNull().unique(),
-  hashedPassword: text("hashed_password").notNull(),
+  hashedPin: text("hashed_pin").notNull(),
 });
 
 export const ledger = pgTable("transaction_ledger", {
@@ -50,5 +42,5 @@ export const touchlessSessions = pgTable(
       }),
     startedAt: timestamp("started_at").defaultNow().notNull(),
   },
-  (table) => [primaryKey({ columns: [table.userId, table.atmId] })],
+  (table) => [primaryKey({ columns: [table.userId, table.atmId] })]
 );
