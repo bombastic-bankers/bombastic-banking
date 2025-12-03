@@ -30,13 +30,10 @@ export async function createUser(user: {
  * Return the user with the given email and PIN, or `null` if no such user exists.
  */
 export async function getUserByCredentials(email: string, pin: string): Promise<typeof users.$inferSelect | null> {
-  const result = await db
-    .select()
-    .from(users)
-    .where(and(eq(users.email, email), eq(users.hashedPin, await bcrypt.hash(pin, 10))))
-    .limit(1);
-
-  return result.at(0) ?? null;
+  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  if (result.length === 0) return null;
+  if (!(await bcrypt.compare(pin, result[0].hashedPin))) return null;
+  return result[0];
 }
 
 export async function getUserInfo(userId: number): Promise<{ fullName: string; accountBalance: number }> {
