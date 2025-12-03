@@ -11,7 +11,7 @@ async function createMockUser() {
   return {
     userId: 1,
     fullName: "John Doe",
-    phoneNumber: "1234567890",
+    phoneNumber: "+651234567890",
     email: "john@example.com",
     pin: "123456",
   };
@@ -27,7 +27,7 @@ describe("POST /auth/signup", () => {
 
     const response = await request(app).post("/auth/signup").send({
       fullName: "John Doe",
-      phoneNumber: "1234567890",
+      phoneNumber: "+651234567890",
       email: "john@example.com",
       pin: "123456",
     });
@@ -35,7 +35,7 @@ describe("POST /auth/signup", () => {
     expect(response.status).toBe(201);
     expect(queries.createUser).toHaveBeenCalledWith({
       fullName: "John Doe",
-      phoneNumber: "1234567890",
+      phoneNumber: "+651234567890",
       email: "john@example.com",
       pin: "123456",
     });
@@ -43,7 +43,19 @@ describe("POST /auth/signup", () => {
 
   it("should return 400 when fullName is missing", async () => {
     const response = await request(app).post("/auth/signup").send({
-      phoneNumber: "1234567890",
+      phoneNumber: "+651234567890",
+      email: "john@example.com",
+      pin: "123456",
+    });
+
+    expect(response.status).toBe(400);
+    expect(queries.createUser).not.toHaveBeenCalled();
+  });
+
+  it("should return 400 when fullName is empty", async () => {
+    const response = await request(app).post("/auth/signup").send({
+      fullName: "",
+      phoneNumber: "+651234567890",
       email: "john@example.com",
       pin: "123456",
     });
@@ -63,10 +75,11 @@ describe("POST /auth/signup", () => {
     expect(queries.createUser).not.toHaveBeenCalled();
   });
 
-  it("should return 400 when email is missing", async () => {
+  it("should return 400 when phoneNumber is not in E.164 format", async () => {
     const response = await request(app).post("/auth/signup").send({
       fullName: "John Doe",
       phoneNumber: "1234567890",
+      email: "john@example.com",
       pin: "123456",
     });
 
@@ -74,35 +87,23 @@ describe("POST /auth/signup", () => {
     expect(queries.createUser).not.toHaveBeenCalled();
   });
 
-  it("should return 400 when pin is missing", async () => {
+  it("should return 400 when email is invalid", async () => {
     const response = await request(app).post("/auth/signup").send({
       fullName: "John Doe",
-      phoneNumber: "1234567890",
-      email: "john@example.com",
+      phoneNumber: "+651234567890",
+      email: "invalid-email@.com",
+      pin: "123456",
     });
 
     expect(response.status).toBe(400);
     expect(queries.createUser).not.toHaveBeenCalled();
   });
 
-  it("should return 400 when pin contains non-numeric characters", async () => {
+  it("should return 400 when email is missing", async () => {
     const response = await request(app).post("/auth/signup").send({
       fullName: "John Doe",
-      phoneNumber: "1234567890",
-      email: "john@example.com",
-      pin: "abc123",
-    });
-
-    expect(response.status).toBe(400);
-    expect(queries.createUser).not.toHaveBeenCalled();
-  });
-
-  it("should return 400 when pin is not 6 digits", async () => {
-    const response = await request(app).post("/auth/signup").send({
-      fullName: "John Doe",
-      phoneNumber: "1234567890",
-      email: "john@example.com",
-      pin: "12345",
+      phoneNumber: "+651234567890",
+      pin: "123456",
     });
 
     expect(response.status).toBe(400);
@@ -114,12 +115,47 @@ describe("POST /auth/signup", () => {
 
     const response = await request(app).post("/auth/signup").send({
       fullName: "John Doe",
-      phoneNumber: "1234567890",
+      phoneNumber: "+651234567890",
       email: "john@example.com",
       pin: "123456",
     });
 
     expect(response.status).toBe(409);
+  });
+
+  it("should return 400 when pin is missing", async () => {
+    const response = await request(app).post("/auth/signup").send({
+      fullName: "John Doe",
+      phoneNumber: "+651234567890",
+      email: "john@example.com",
+    });
+
+    expect(response.status).toBe(400);
+    expect(queries.createUser).not.toHaveBeenCalled();
+  });
+
+  it("should return 400 when pin contains non-numeric characters", async () => {
+    const response = await request(app).post("/auth/signup").send({
+      fullName: "John Doe",
+      phoneNumber: "+651234567890",
+      email: "john@example.com",
+      pin: "abc123",
+    });
+
+    expect(response.status).toBe(400);
+    expect(queries.createUser).not.toHaveBeenCalled();
+  });
+
+  it("should return 400 when pin is not 6 digits", async () => {
+    const response = await request(app).post("/auth/signup").send({
+      fullName: "John Doe",
+      phoneNumber: "+651234567890",
+      email: "john@example.com",
+      pin: "12345",
+    });
+
+    expect(response.status).toBe(400);
+    expect(queries.createUser).not.toHaveBeenCalled();
   });
 });
 
@@ -132,7 +168,7 @@ describe("POST /auth/login", () => {
     vi.mocked(queries.getUserByCredentials).mockResolvedValue({
       userId: 1,
       fullName: "John Doe",
-      phoneNumber: "1234567890",
+      phoneNumber: "+651234567890",
       email: "john@example.com",
       hashedPin: "hashed_pin",
     });
@@ -158,5 +194,25 @@ describe("POST /auth/login", () => {
     });
 
     expect(response.status).toBe(400);
+  });
+
+  it("should return 400 when email is invalid", async () => {
+    const response = await request(app).post("/auth/login").send({
+      email: "invalid-email@.com",
+      pin: "123456",
+    });
+
+    expect(response.status).toBe(400);
+    expect(queries.getUserByCredentials).not.toHaveBeenCalled();
+  });
+
+  it("should return 400 when pin is invalid", async () => {
+    const response = await request(app).post("/auth/login").send({
+      email: "john@example.com",
+      pin: "abc123",
+    });
+
+    expect(response.status).toBe(400);
+    expect(queries.getUserByCredentials).not.toHaveBeenCalled();
   });
 });

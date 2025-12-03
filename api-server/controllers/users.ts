@@ -7,9 +7,9 @@ import z from "zod";
 export async function signUp(req: Request, res: Response) {
   const userInit = z
     .object({
-      fullName: z.string(),
-      phoneNumber: z.string(),
-      email: z.string(),
+      fullName: z.string().min(1),
+      phoneNumber: z.e164(),
+      email: z.email(),
       pin: z.string().regex(/[0-9]{6}/),
     })
     .parse(req.body);
@@ -23,7 +23,12 @@ export async function signUp(req: Request, res: Response) {
 }
 
 export async function login(req: Request, res: Response) {
-  const { email, pin } = z.object({ email: z.string(), pin: z.string() }).parse(req.body);
+  const { email, pin } = z
+    .object({
+      email: z.email(),
+      pin: z.string().regex(/[0-9]{6}/),
+    })
+    .parse(req.body);
   const user = await queries.getUserByCredentials(email, pin);
 
   if (user === null) {
