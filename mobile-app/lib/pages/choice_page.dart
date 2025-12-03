@@ -36,7 +36,7 @@ class ChoicePage extends StatelessWidget {
               const SizedBox(height: 16),
               AppButton(
                 text: 'Deposit',
-                onPressed: () => Navigator.push(context, slideRoute(const DepositStep1())),
+                onPressed: () => Navigator.push(context, slideRoute(const DepositNFCPromptPage())),
               ),
             ],
           ),
