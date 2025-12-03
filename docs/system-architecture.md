@@ -44,7 +44,9 @@ When it reads the ATM's NTAG213 tag, it uses the API server's HTTP API to start 
 
 ### 4.2. ATM server
 
-The ATM runs a webapp server hosting its GUI. On start-up, it connects to the pub/sub system, authenticating with the `ATM_KEY` environment variable. The ATM GUI starts in its idle state, and it transitions according to commands from the pub/sub system (refer to [Realtime messaging](#realtime-messaging) below for details).
+The ATM runs a web server hosting its own GUI. On start-up, it connects to the realtime system, authenticating with the `ATM_KEY` environment variable. The ATM GUI starts in its idle state, and it transitions according to commands from the realtime system (refer to [Realtime messaging](#realtime-messaging) below for details).
+
+The web server runs on the ATM itself rather than being hosted online to ensure reliable, low-latency UI updates. While the prototype does not currently involve hardware, running the web server on-device also enables direct hardware interaction once implemented, eliminating the need for a local hardware control daemon and simplifying the overall architecture. This on-device setup additionally reduces exposure to the public internet, minimising security risks.
 
 ### 4.3. API server
 
