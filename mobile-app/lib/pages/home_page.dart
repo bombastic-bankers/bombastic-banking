@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../app_constants.dart';
 import 'choice_page.dart';
 import 'transaction_flow_pages.dart';
-// Import the AuthService and UserInfo model
 import '../services/auth_service.dart';
+
+import 'login_page.dart'; 
 
 /// -------------------- Home Page --------------------
 class HomePage extends StatefulWidget {
@@ -25,26 +27,67 @@ class _HomePageState extends State<HomePage> {
     _fetchUserInfo();
   }
 
-  /// Fetches the user's name and account balance on page load.
+  /// Fetches the user's name and account balance, performing an authentication check first.
   Future<void> _fetchUserInfo() async {
+    if (!mounted) return;
+
     setState(() {
       _isLoading = true;
       _error = null;
     });
 
+    final String? token = await AuthService().getToken();
+    if (token == null) {
+      // If token is missing, force sign out and redirect.
+      await _handleUnauthenticatedRedirect();
+      return; 
+    }
     try {
+      // If token is present, proceed with fetching user data
       final info = await AuthService().fetchUserInfo();
-      setState(() {
-        _userInfo = info;
-      });
+      if (mounted) {
+        setState(() {
+          _userInfo = info;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _error = 'Failed to load user data: ${e.toString().split('Exception: ').last}';
-      });
+      // Check for explicit unauthenticated/invalid token messages from the API call
+      final errorString = e.toString().split('Exception: ').last;
+      if (errorString.contains('Unauthenticated') || errorString.contains('Token invalid')) {
+          // If the API confirms the token is invalid, force sign out and redirect
+          await _handleUnauthenticatedRedirect();
+          return;
+      }
+      
+      if (mounted) {
+        setState(() {
+          _error = 'Failed to load user data: $errorString';
+        });
+      }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  /// Helper function to perform secure redirect on authentication failure.
+  Future<void> _handleUnauthenticatedRedirect() async {
+    if (mounted) {
+      // Clear session data
+      await AuthService().signOut(); 
+      
+      // Navigate to the login page and clear the navigation stack completely (critical for security).
+      // Note: This must happen BEFORE SystemNavigator.pop()
+      Navigator.of(context).pushAndRemoveUntil(
+        slideRoute(const LoginPage()),
+        (Route<dynamic> route) => false,
+      );
+      
+
+      SystemNavigator.pop();
     }
   }
 
@@ -139,7 +182,7 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   const Text('Savings Account', style: TextStyle(color: Colors.white70, fontSize: 14)),
                   const SizedBox(height: 8),
-                  Text('$balance',
+                  Text('\$$balance',
                       style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
                   const Text('Available Balance', style: TextStyle(color: Colors.white70, fontSize: 12)),
@@ -211,7 +254,7 @@ class _HomePageState extends State<HomePage> {
               Navigator.push(context, slideRoute(const WithdrawStep1()));
             }
             if (label == 'Deposit') {
-              Navigator.push(context, slideRoute(const DepositStep1()));
+              Navigator.push(context, slideRoute(const DepositNFCPromptPage()));
             }
           },
           child: Container(
