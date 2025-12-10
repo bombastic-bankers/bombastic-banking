@@ -21,15 +21,17 @@ class _WithdrawStep1State extends State<WithdrawStep1> {
   void _next() {
     final amt = _controller.text.trim();
     if (amt.isEmpty) return;
-    
+
     // Updated: Pass the final destination page and the transaction type
     Navigator.push(
-      context, 
-      slideRoute(WithdrawNFCPromptPage(
-        amount: amt,
-        isWithdrawal: true, // Specify transaction type
-        nextPage: WithdrawSuccessPage(amount: amt), 
-      )),
+      context,
+      slideRoute(
+        WithdrawNFCPromptPage(
+          amount: amt,
+          isWithdrawal: true, // Specify transaction type
+          nextPage: WithdrawSuccessPage(amount: amt),
+        ),
+      ),
     );
   }
 
@@ -41,13 +43,19 @@ class _WithdrawStep1State extends State<WithdrawStep1> {
         padding: const EdgeInsets.all(32.0),
         child: Column(
           children: [
-            const Text('Enter amount to withdraw', style: TextStyle(fontSize: 16)),
+            const Text(
+              'Enter amount to withdraw',
+              style: TextStyle(fontSize: 16),
+            ),
             const SizedBox(height: 12),
             TextField(
               controller: _controller,
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: const InputDecoration(prefixText: '\$ ', border: OutlineInputBorder()),
+              decoration: const InputDecoration(
+                prefixText: '\$ ',
+                border: OutlineInputBorder(),
+              ),
             ),
             const SizedBox(height: 24),
             AppButton(text: 'Next', onPressed: _next),
@@ -76,7 +84,10 @@ class WithdrawSuccessPage extends StatelessWidget {
               Text(
                 '\$$amount successfully withdrawn!',
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 20),
               AppButton(
@@ -116,7 +127,7 @@ class DepositStep1 extends StatefulWidget {
 }
 
 class _DepositStep1State extends State<DepositStep1> {
-  final AuthService _authService = AuthService();
+  final OldAuthService _authService = OldAuthService();
 
   bool _isLoading = false;
   bool _hasError = false;
@@ -145,12 +156,13 @@ class _DepositStep1State extends State<DepositStep1> {
       );
 
       if (!mounted) return;
-      Navigator.of(context).pushReplacement(
-        slideRoute(DepositSuccessPage(amount: widget.amount)),
-      );
+      Navigator.of(
+        context,
+      ).pushReplacement(slideRoute(DepositSuccessPage(amount: widget.amount)));
     } catch (e) {
       String err = e.toString();
-      if (err.startsWith('Exception: ')) err = err.substring('Exception: '.length);
+      if (err.startsWith('Exception: '))
+        err = err.substring('Exception: '.length);
       setState(() {
         _isLoading = false;
         _hasError = true;
@@ -194,17 +206,13 @@ class _DepositStep1State extends State<DepositStep1> {
             if (_isLoading)
               const CircularProgressIndicator(color: brandRed)
             else
-              AppButton(
-                text: 'Confirm Deposit',
-                onPressed: _confirmDeposit,
-              ),
+              AppButton(text: 'Confirm Deposit', onPressed: _confirmDeposit),
           ],
         ),
       ),
     );
   }
 }
-
 
 class DepositSuccessPage extends StatelessWidget {
   final String amount;
@@ -224,7 +232,10 @@ class DepositSuccessPage extends StatelessWidget {
               Text(
                 '\$$amount successfully deposited!',
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 20),
               AppButton(
@@ -264,7 +275,7 @@ class DepositNFCPromptPage extends StatefulWidget {
 }
 
 class _DepositNFCPromptPageState extends State<DepositNFCPromptPage> {
-  final AuthService _authService = AuthService();
+  final OldAuthService _authService = OldAuthService();
   StreamSubscription<String?>? _atmIdSubscription;
   bool _isScanning = false;
 
@@ -287,7 +298,9 @@ class _DepositNFCPromptPageState extends State<DepositNFCPromptPage> {
 
         // Navigate to DepositStep1 and pass atmId so we can confirm later
         Navigator.of(context).pushReplacement(
-          slideRoute(DepositStep1(atmId: atmId, amount: '20',)), // Pass hardcoded amount for now, need to implement counting notes
+          slideRoute(
+            DepositStep1(atmId: atmId, amount: '20'),
+          ), // Pass hardcoded amount for now, need to implement counting notes
         );
       }
     });
@@ -326,11 +339,16 @@ class _DepositNFCPromptPageState extends State<DepositNFCPromptPage> {
             ),
             const SizedBox(height: 18),
             if (widget.amount != null)
-              Text('Amount (prefilled): \$${widget.amount}',
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              Text(
+                'Amount (prefilled): \$${widget.amount}',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               )
             else
-              const Text('Tap your card to start the deposit',
+              const Text(
+                'Tap your card to start the deposit',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             const SizedBox(height: 10),
@@ -356,12 +374,12 @@ class _DepositNFCPromptPageState extends State<DepositNFCPromptPage> {
 
 class WithdrawNFCPromptPage extends StatefulWidget {
   final String amount;
-  final Widget nextPage; 
+  final Widget nextPage;
   final bool isWithdrawal;
-  
+
   const WithdrawNFCPromptPage({
-    super.key, 
-    required this.amount, 
+    super.key,
+    required this.amount,
     required this.nextPage,
     required this.isWithdrawal,
   });
@@ -371,7 +389,7 @@ class WithdrawNFCPromptPage extends StatefulWidget {
 }
 
 class _WithdrawNFCPromptPageState extends State<WithdrawNFCPromptPage> {
-  final AuthService _authService = AuthService();
+  final OldAuthService _authService = OldAuthService();
   StreamSubscription<String?>? _atmIdSubscription;
   bool _isScanning = false;
 
@@ -391,14 +409,16 @@ class _WithdrawNFCPromptPageState extends State<WithdrawNFCPromptPage> {
     _atmIdSubscription = _authService.atmIdStream.listen((atmId) {
       if (atmId != null && _isScanning && mounted) {
         _stopNFCScan();
-        
+
         Navigator.of(context).pushReplacement(
-          slideRoute(PostNfcAuthPage(
-            amount: widget.amount,
-            atmId: atmId,
-            isWithdrawal: widget.isWithdrawal, // Transaction type
-            finalSuccessPage: widget.nextPage,
-          ))
+          slideRoute(
+            PostNfcAuthPage(
+              amount: widget.amount,
+              atmId: atmId,
+              isWithdrawal: widget.isWithdrawal, // Transaction type
+              finalSuccessPage: widget.nextPage,
+            ),
+          ),
         );
       }
     });
@@ -432,8 +452,8 @@ class _WithdrawNFCPromptPageState extends State<WithdrawNFCPromptPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              _isScanning ? Icons.nfc_outlined : Icons.check_circle_outline, 
-              size: 84, 
+              _isScanning ? Icons.nfc_outlined : Icons.check_circle_outline,
+              size: 84,
               color: _isScanning ? brandRed : Colors.green[600],
             ),
             const SizedBox(height: 18),
@@ -453,8 +473,7 @@ class _WithdrawNFCPromptPageState extends State<WithdrawNFCPromptPage> {
               ),
             ),
             const SizedBox(height: 30),
-            if (_isScanning)
-              const CircularProgressIndicator(color: brandRed),
+            if (_isScanning) const CircularProgressIndicator(color: brandRed),
           ],
         ),
       ),
@@ -483,7 +502,7 @@ class PostNfcAuthPage extends StatefulWidget {
 }
 
 class _PostNfcAuthPageState extends State<PostNfcAuthPage> {
-  final AuthService _authService = AuthService();
+  final OldAuthService _authService = OldAuthService();
   bool _isLoading = true;
   bool _hasError = false;
   String _errorMessage = '';
@@ -501,17 +520,19 @@ class _PostNfcAuthPageState extends State<PostNfcAuthPage> {
         amount: widget.amount,
         isWithdrawal: widget.isWithdrawal,
       );
-      
+
       // SUCCESS
       if (mounted) {
         setState(() {
           _isLoading = false;
         });
-        await Future.delayed(const Duration(milliseconds: 700)); 
-        
+        await Future.delayed(const Duration(milliseconds: 700));
+
         if (mounted) {
           // Navigate to the final success page
-          Navigator.of(context).pushReplacement(slideRoute(widget.finalSuccessPage));
+          Navigator.of(
+            context,
+          ).pushReplacement(slideRoute(widget.finalSuccessPage));
         }
       }
     } catch (e) {
@@ -523,11 +544,11 @@ class _PostNfcAuthPageState extends State<PostNfcAuthPage> {
         } else if (errorText.startsWith('SocketException: ')) {
           errorText = 'Network Error: Could not reach the ATM service.';
         }
-        
+
         setState(() {
           _isLoading = false;
           _hasError = true;
-          _errorMessage = errorText; 
+          _errorMessage = errorText;
           debugPrint('Transaction Failed: $_errorMessage');
         });
       }
@@ -541,7 +562,7 @@ class _PostNfcAuthPageState extends State<PostNfcAuthPage> {
   @override
   Widget build(BuildContext context) {
     final title = widget.isWithdrawal ? 'Withdrawing' : 'Depositing';
-    
+
     return Scaffold(
       appBar: AppBar(title: Text(title)),
       body: Center(
@@ -552,26 +573,33 @@ class _PostNfcAuthPageState extends State<PostNfcAuthPage> {
             children: [
               Icon(
                 _isLoading
-                    ? Icons.security 
-                    : (_hasError ? Icons.error_outline : Icons.check_circle), 
-                size: 84, 
-                color: _isLoading ? brandRed : (_hasError ? Colors.red : Colors.green),
+                    ? Icons.security
+                    : (_hasError ? Icons.error_outline : Icons.check_circle),
+                size: 84,
+                color: _isLoading
+                    ? brandRed
+                    : (_hasError ? Colors.red : Colors.green),
               ),
               const SizedBox(height: 18),
-              
+
               Text(
-                _isLoading 
+                _isLoading
                     ? 'Validating & Processing $title...'
-                    : (_hasError ? 'Transaction Failed!' : 'Transaction Authorized.'),
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                    : (_hasError
+                          ? 'Transaction Failed!'
+                          : 'Transaction Authorized.'),
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
                 textAlign: TextAlign.center,
               ),
-              
+
               const SizedBox(height: 10),
               Text('Amount: \$${widget.amount}'),
               Text('ATM ID: ${widget.atmId}'),
               const SizedBox(height: 20),
-              
+
               if (_isLoading) ...[
                 const Text(
                   'Securing connection with the ATM...',
@@ -593,7 +621,10 @@ class _PostNfcAuthPageState extends State<PostNfcAuthPage> {
                   child: Text(
                     _errorMessage,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 AppButton(

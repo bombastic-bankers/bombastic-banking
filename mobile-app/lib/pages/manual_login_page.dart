@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import '../widgets/app_button.dart';
 import 'home_page.dart';
 // Import the updated AuthService singleton
-import '../services/auth_service.dart'; 
+import '../services/auth_service.dart';
 
 // -------------------- Manual PIN Login --------------------
 class ManualLoginPage extends StatefulWidget {
@@ -42,7 +42,8 @@ class _ManualLoginPageState extends State<ManualLoginPage> {
     final pin = _pinController.text.trim();
 
     // Basic client-side validation
-    if (accessCode.isEmpty || pin.isEmpty) {//pin.length != 6
+    if (accessCode.isEmpty || pin.isEmpty) {
+      //pin.length != 6
       setState(() {
         _errorMessage = "Please enter a valid access code and 6-digit PIN.";
         _isLoading = false;
@@ -52,7 +53,7 @@ class _ManualLoginPageState extends State<ManualLoginPage> {
 
     try {
       // Calls the AuthService, which handles network request and token storage.
-      await AuthService().authenticate(accessCode, pin);
+      await OldAuthService().authenticate(accessCode, pin);
 
       // If the service call completes without throwing an exception:
       if (mounted) {
@@ -64,13 +65,13 @@ class _ManualLoginPageState extends State<ManualLoginPage> {
         );
       }
     } catch (e) {
-      // If the AuthService throws an exception (due to network error or 
+      // If the AuthService throws an exception (due to network error or
       // API failure), display the error message.
       setState(() {
         // Tries to clean up the "Exception: " prefix from the error string
-        _errorMessage = e.toString().contains('Exception: ') 
-                        ? e.toString().split('Exception: ').last 
-                        : 'Login failed. Please try again.';
+        _errorMessage = e.toString().contains('Exception: ')
+            ? e.toString().split('Exception: ').last
+            : 'Login failed. Please try again.';
       });
     } finally {
       // Ensure loading state is turned off regardless of success or failure
@@ -84,14 +85,14 @@ class _ManualLoginPageState extends State<ManualLoginPage> {
   Widget build(BuildContext context) {
     // Using a placeholder color for the error message, assuming brandRed wasn't defined.
     // Replace Colors.red[700] with a properly defined constant if available.
-    const Color errorColor = Color(0xFFCC0000); 
+    const Color errorColor = Color(0xFFCC0000);
 
     return Scaffold(
       appBar: AppBar(
         // Allows user to return to the Biometric prompt
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context), 
+          onPressed: () => Navigator.pop(context),
         ),
       ),
       body: SingleChildScrollView(
@@ -109,13 +110,13 @@ class _ManualLoginPageState extends State<ManualLoginPage> {
                   textAlign: TextAlign.left,
                   decoration: const InputDecoration(
                     labelText: 'Gmail or Access Code',
-                    counterText: '', 
+                    counterText: '',
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 30),
-              
+
               // PIN Field (6 digits only)
               SizedBox(
                 width: double.infinity,
@@ -132,11 +133,11 @@ class _ManualLoginPageState extends State<ManualLoginPage> {
                   ],
                   decoration: const InputDecoration(
                     labelText: 'Password or PIN',
-                    counterText: '', 
+                    counterText: '',
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 30),
 
               // Error Message Display
@@ -146,10 +147,13 @@ class _ManualLoginPageState extends State<ManualLoginPage> {
                   child: Text(
                     _errorMessage!,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(color: errorColor, fontWeight: FontWeight.bold), 
+                    style: const TextStyle(
+                      color: errorColor,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-              
+
               // Login Button
               SizedBox(
                 width: double.infinity,
@@ -157,11 +161,18 @@ class _ManualLoginPageState extends State<ManualLoginPage> {
                   text: _isLoading ? 'LOGGING IN...' : 'Login',
                   color: const Color(0xFF495A63),
                   // Use _authenticate method, provide a non-null VoidCallback and call the async method inside a void closure
-                  onPressed: _isLoading ? () {} : () { _authenticate(); }, 
+                  onPressed: _isLoading
+                      ? () {}
+                      : () {
+                          _authenticate();
+                        },
                 ),
               ),
               const SizedBox(height: 20),
-              const Text("Trouble logging in", style: TextStyle(color: Color.fromARGB(255, 49, 77, 136))),
+              const Text(
+                "Trouble logging in",
+                style: TextStyle(color: Color.fromARGB(255, 49, 77, 136)),
+              ),
             ],
           ),
         ),

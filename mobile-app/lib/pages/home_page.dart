@@ -5,7 +5,7 @@ import 'choice_page.dart';
 import 'transaction_flow_pages.dart';
 import '../services/auth_service.dart';
 
-import 'login_page.dart'; 
+import 'login_page.dart';
 
 /// -------------------- Home Page --------------------
 class HomePage extends StatefulWidget {
@@ -36,15 +36,15 @@ class _HomePageState extends State<HomePage> {
       _error = null;
     });
 
-    final String? token = await AuthService().getToken();
+    final String? token = await OldAuthService().getToken();
     if (token == null) {
       // If token is missing, force sign out and redirect.
       await _handleUnauthenticatedRedirect();
-      return; 
+      return;
     }
     try {
       // If token is present, proceed with fetching user data
-      final info = await AuthService().fetchUserInfo();
+      final info = await OldAuthService().fetchUserInfo();
       if (mounted) {
         setState(() {
           _userInfo = info;
@@ -53,12 +53,13 @@ class _HomePageState extends State<HomePage> {
     } catch (e) {
       // Check for explicit unauthenticated/invalid token messages from the API call
       final errorString = e.toString().split('Exception: ').last;
-      if (errorString.contains('Unauthenticated') || errorString.contains('Token invalid')) {
-          // If the API confirms the token is invalid, force sign out and redirect
-          await _handleUnauthenticatedRedirect();
-          return;
+      if (errorString.contains('Unauthenticated') ||
+          errorString.contains('Token invalid')) {
+        // If the API confirms the token is invalid, force sign out and redirect
+        await _handleUnauthenticatedRedirect();
+        return;
       }
-      
+
       if (mounted) {
         setState(() {
           _error = 'Failed to load user data: $errorString';
@@ -77,15 +78,14 @@ class _HomePageState extends State<HomePage> {
   Future<void> _handleUnauthenticatedRedirect() async {
     if (mounted) {
       // Clear session data
-      await AuthService().signOut(); 
-      
+      await OldAuthService().signOut();
+
       // Navigate to the login page and clear the navigation stack completely (critical for security).
       // Note: This must happen BEFORE SystemNavigator.pop()
       Navigator.of(context).pushAndRemoveUntil(
         slideRoute(const LoginPage()),
         (Route<dynamic> route) => false,
       );
-      
 
       SystemNavigator.pop();
     }
@@ -114,7 +114,11 @@ class _HomePageState extends State<HomePage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(_error!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.red)),
+              Text(
+                _error!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.red),
+              ),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _fetchUserInfo,
@@ -140,17 +144,25 @@ class _HomePageState extends State<HomePage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Hello, $displayName',
-                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    Text(
+                      'Hello, $displayName',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     const SizedBox(height: 4),
-                    const Text('Good morning', style: TextStyle(fontSize: 14, color: Colors.grey)),
+                    const Text(
+                      'Good morning',
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
+                    ),
                   ],
                 ),
               ],
             ),
             const SizedBox(height: 24),
 
-            // Quick Actions 
+            // Quick Actions
             Container(
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
               decoration: BoxDecoration(
@@ -161,7 +173,10 @@ class _HomePageState extends State<HomePage> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   _quickAction(Icons.money_outlined, 'Withdraw'),
-                  _quickAction(Icons.account_balance_wallet_outlined, 'Deposit'),
+                  _quickAction(
+                    Icons.account_balance_wallet_outlined,
+                    'Deposit',
+                  ),
                   _quickAction(Icons.payment_outlined, 'Pay'),
                   _quickAction(Icons.swap_horiz_outlined, 'Transfer'),
                 ],
@@ -180,19 +195,34 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Savings Account', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                  const Text(
+                    'Savings Account',
+                    style: TextStyle(color: Colors.white70, fontSize: 14),
+                  ),
                   const SizedBox(height: 8),
-                  Text('\$$balance',
-                      style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
+                  Text(
+                    '\$$balance',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(height: 4),
-                  const Text('Available Balance', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                  const Text(
+                    'Available Balance',
+                    style: TextStyle(color: Colors.white70, fontSize: 12),
+                  ),
                 ],
               ),
             ),
 
             // Transaction History
             const SizedBox(height: 24),
-            const Text('Recent Transactions', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text(
+              'Recent Transactions',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 12),
             _transactionItem('Grocery Store', '-\$54.20', 'Nov 15, 2025'),
             _transactionItem('Salary Credit', '+\$3,200.00', 'Nov 14, 2025'),
@@ -213,7 +243,7 @@ class _HomePageState extends State<HomePage> {
     ];
 
     return Scaffold(
-      appBar: _selectedIndex != 0 
+      appBar: _selectedIndex != 0
           ? AppBar(title: Text(_getAppBarTitle(_selectedIndex)))
           : null,
       body: pages[_selectedIndex],
@@ -224,11 +254,26 @@ class _HomePageState extends State<HomePage> {
         selectedItemColor: brandRed,
         unselectedItemColor: Colors.grey[600],
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.event_note_outlined), label: 'Plan'),
-          BottomNavigationBarItem(icon: Icon(Icons.local_atm_outlined), label: 'ATM Services'),
-          BottomNavigationBarItem(icon: Icon(Icons.payment_outlined), label: 'Pay & Transfer'),
-          BottomNavigationBarItem(icon: Icon(Icons.card_giftcard_outlined), label: 'Rewards'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.event_note_outlined),
+            label: 'Plan',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.local_atm_outlined),
+            label: 'ATM Services',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.payment_outlined),
+            label: 'Pay & Transfer',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.card_giftcard_outlined),
+            label: 'Rewards',
+          ),
           BottomNavigationBarItem(icon: Icon(Icons.more_horiz), label: 'More'),
         ],
       ),
@@ -237,11 +282,16 @@ class _HomePageState extends State<HomePage> {
 
   String _getAppBarTitle(int index) {
     switch (index) {
-      case 1: return 'Plan';
-      case 3: return 'Pay & Transfer';
-      case 4: return 'Rewards';
-      case 5: return 'More';
-      default: return '';
+      case 1:
+        return 'Plan';
+      case 3:
+        return 'Pay & Transfer';
+      case 4:
+        return 'Rewards';
+      case 5:
+        return 'More';
+      default:
+        return '';
     }
   }
 

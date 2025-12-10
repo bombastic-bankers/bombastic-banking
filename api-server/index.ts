@@ -30,7 +30,7 @@ app.post("/auth/ably", ablyAuth);
 
 app.use(authenticate);
 
-app.get("/userinfo", getUserInfo);
+app.get("/user-info", getUserInfo);
 
 const touchless = express.Router({ mergeParams: true });
 touchless.use(atmParam);
