@@ -1,8 +1,21 @@
+import 'package:bombastic_banking/repositories/atm_repository.dart';
+import 'package:bombastic_banking/repositories/auth_repository.dart';
+import 'package:bombastic_banking/repositories/nfc_repository.dart';
+import 'package:bombastic_banking/repositories/user_repository.dart';
+import 'package:bombastic_banking/services/atm_service.dart';
+import 'package:bombastic_banking/services/nfc_service.dart';
+import 'package:bombastic_banking/services/user_service.dart';
+import 'package:bombastic_banking/storage/secure_storage.dart';
+import 'package:bombastic_banking/ui/atm_services/nfc_prompt/nfc_prompt_viewmodel.dart';
+import 'package:bombastic_banking/ui/atm_services/withdrawing/withdrawing_viewmodel.dart';
+import 'package:bombastic_banking/ui/home/home_viewmodel.dart';
+import 'package:bombastic_banking/ui/login/login_viewmodel.dart';
+import 'package:bombastic_banking/ui/navbar_root/navbar_root_viewmodel.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'pages/home_page.dart';
-import 'pages/login_page.dart';
+import 'package:provider/provider.dart';
+import 'ui/login/login_screen.dart';
 import 'services/auth_service.dart';
 import 'app_constants.dart';
 
@@ -21,69 +34,64 @@ class BankApp extends StatefulWidget {
 }
 
 class _BankAppState extends State<BankApp> {
-  // Flag to indicate when the initial token check is complete
-  bool _isChecking = true;
-  // Flag to hold the authentication result
-  bool _isAuthenticated = false;
+  final _secureStorage = DefaultSecureStorage();
+  final _nfcService = NFCService();
 
-  @override
-  void initState() {
-    super.initState();
-    _checkAuthStatus();
-  }
-
-  /// Checks for the existence of a secure token.
-  Future<void> _checkAuthStatus() async {
-    // Note: We need 'flutter/services.dart' for this file now.
-    final token = await AuthService().getToken();
-
-    if (mounted) {
-      setState(() {
-        _isAuthenticated = token != null;
-        _isChecking = false;
-      });
-    }
-  }
+  late final _authRepo = AuthRepository(
+    authService: AuthService(baseUrl: apiBaseUrl),
+    secureStorage: _secureStorage,
+  );
+  late final _userRepo = UserRepository(
+    userService: UserService(baseUrl: apiBaseUrl),
+    secureStorage: _secureStorage,
+  );
+  late final _nfcRepo = NFCRepository(
+    nfcService: _nfcService,
+    tagMatcher: atmTagMatcher,
+  );
+  late final _atmRepository = ATMRepository(
+    atmService: ATMService(baseUrl: apiBaseUrl),
+    secureStorage: _secureStorage,
+  );
 
   @override
   Widget build(BuildContext context) {
-    Widget initialScreen;
-
-    if (_isChecking) {
-      // Show a loading indicator while checking the token
-      initialScreen = const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    } else {
-      // Route to the correct screen based on the check result
-      if (_isAuthenticated) {
-        initialScreen = const HomePage();
-      } else {
-        initialScreen = const LoginPage();
-      }
-    }
-
-    return MaterialApp(
-      title: 'Bombastic Banking',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        scaffoldBackgroundColor: Colors.white,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black87,
-          elevation: 0.5,
-          titleTextStyle: TextStyle(
-            color: Colors.black,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-          iconTheme: IconThemeData(color: Colors.black),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => NavbarRootViewModel()),
+        ChangeNotifierProvider(
+          create: (_) => LoginViewModel(authRepository: _authRepo),
         ),
-        colorScheme: ColorScheme.fromSeed(seedColor: brandRed),
-        useMaterial3: true,
+        ChangeNotifierProvider(
+          create: (_) => HomeViewModel(userRepository: _userRepo),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => NFCPromptViewModel(nfcRepository: _nfcRepo),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => WithdrawingViewModel(atmRepository: _atmRepository),
+        ),
+      ],
+      child: MaterialApp(
+        title: 'Bombastic Banking',
+        theme: ThemeData(
+          scaffoldBackgroundColor: Theme.of(context).colorScheme.surface,
+          appBarTheme: AppBarTheme(
+            backgroundColor: Theme.of(context).colorScheme.surface,
+            titleTextStyle: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: brandRed,
+            dynamicSchemeVariant: DynamicSchemeVariant.fidelity,
+          ),
+          useMaterial3: true,
+        ),
+        home: LoginScreen(),
       ),
-      // Set the home widget to the result of the authentication check
-      home: initialScreen,
     );
   }
 }

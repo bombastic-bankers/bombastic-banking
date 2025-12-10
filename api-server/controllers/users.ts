@@ -32,7 +32,7 @@ export async function login(req: Request, res: Response) {
   const user = await queries.getUserByCredentials(email, pin);
 
   if (user === null) {
-    return res.status(400).json({ error: "Incorrect email or PIN" });
+    return res.status(401).json({ error: "Incorrect email or PIN" });
   }
 
   const token = jwt.sign({ userId: user.userId }, JWT_SECRET, {
