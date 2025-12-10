@@ -1,73 +1,62 @@
-
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-<!-- Biometric permissions -->
-<uses-permission android:name="android.permission.USE_BIOMETRIC"/>
-<uses-permission android:name="android.permission.USE_FINGERPRINT"/>
-<uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Biometric permissions -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+    <uses-permission android:name="android.permission.USE_FINGERPRINT" />
+    <uses-permission android:name="android.permission.INTERNET" />
 
-<!-- NFC Permissions and Features -->
-<uses-permission android:name="android.permission.NFC" />
-<uses-feature android:name="android.hardware.nfc" android:required="true" />
+    <!-- NFC Permissions and Features -->
+    <uses-permission android:name="android.permission.NFC" />
+    <uses-feature android:name="android.hardware.nfc" android:required="true" />
 
-<application
-    android:label="bombastic_banking"
-    android:name="${applicationName}"
-    android:icon="@mipmap/ic_launcher">
+    <application
+        android:label="bombastic_banking"
+        android:name="${applicationName}"
+        android:icon="@mipmap/ic_launcher">
 
-    <activity
-        android:name=".MainActivity"
-        android:exported="true"
-        android:launchMode="singleTask" 
-        android:taskAffinity=""
-        android:theme="@style/LaunchTheme"
-        android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
-        android:hardwareAccelerated="true"
-        android:windowSoftInputMode="adjustResize">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:taskAffinity=""
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
 
-        <!-- Intent Filter for App Launch -->
-        <intent-filter>
-            <action android:name="android.intent.action.MAIN"/>
-            <category android:name="android.intent.category.LAUNCHER"/>
-        </intent-filter>
+            <!-- Intent Filter for App Launch -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
 
-        <!-- Intent Filters for NFC Tag Discovery (CRITICAL FIX) -->
-        <!-- This tells Android to route discovered NFC tags to this activity -->
-        <intent-filter>
-            <action android:name="android.nfc.action.TECH_DISCOVERED" />
-            <category android:name="android.intent.category.DEFAULT" />
-        </intent-filter>
-        <intent-filter>
-            <action android:name="android.nfc.action.TAG_DISCOVERED" />
-            <category android:name="android.intent.category.DEFAULT" />
-        </intent-filter>
 
-        <!-- Specifies an Android theme to apply to this Activity as soon as
+            <!-- Specifies an Android theme to apply to this Activity as soon as
              the Android process has started. This theme is visible to the user
              while the Flutter UI initializes. After that, this theme continues
              to determine the Window background behind the Flutter UI. -->
-        <meta-data
-            android:name="io.flutter.embedding.android.NormalTheme"
-            android:resource="@style/NormalTheme"
-        />
+            <meta-data
+                android:name="io.flutter.embedding.android.NormalTheme"
+                android:resource="@style/NormalTheme"
+            />
 
-    </activity>
+        </activity>
 
-    <!-- Don't delete the meta-data below.
+        <!-- Don't delete the meta-data below.
          This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
-    <meta-data
-        android:name="flutterEmbedding"
-        android:value="2" />
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2" />
 
-</application>
+    </application>
 
-<!-- Required to query activities that can process text -->
-<queries>
-    <intent>
-        <action android:name="android.intent.action.PROCESS_TEXT"/>
-        <data android:mimeType="text/plain"/>
-    </intent>
-</queries>
+    <!-- Required to query activities that can process text -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.PROCESS_TEXT" />
+            <data android:mimeType="text/plain" />
+        </intent>
+    </queries>
 
 
 </manifest>
