@@ -21,7 +21,7 @@
             flex flex-col items-center justify-center p-6">
 
 		<p class="text-2xl font-bold text-white text-center">
-				Withdrawal in progress...
+				Withdrawing ${amount} in progress...
 		</p>
 
 	</div>
@@ -29,7 +29,7 @@
 	<div class="w-full h-full bg-[#e5e7eb] rounded-2xl p-10 shadow-xl text-center border border-gray-300 flex flex-col items-center justify-center"
 >
 		<h1 class="text-3xl font-extrabold text-gray-900 mb-2">
-			Withdrawn ${amount}
+			Withdraw Completed
 		</h1>
 
 		<p class="text-gray-800 text-lg mb-10">
