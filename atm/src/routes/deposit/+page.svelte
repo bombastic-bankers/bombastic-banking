@@ -2,7 +2,7 @@
 	import { goto } from '$app/navigation';
 
 	// TODO: Simulated ATM UI to select this
-	const simulatedDepositAmount = 50;
+	let simulatedDepositAmount: string;
 </script>
 
 <svelte:window ondepositconfirm={() => goto('/deposit/count?amount=' + simulatedDepositAmount)} />
@@ -55,7 +55,9 @@
 		/>
 
 		<button
-			onclick={() => submitAmount()}
+			on:click={() => {
+				window.dispatchEvent(new Event('depositconfirm'));
+			}}
 			class="mt-4 w-full rounded-xl bg-blue-600 py-3 font-semibold text-white transition hover:bg-blue-700"
 		>
 			Confirm
