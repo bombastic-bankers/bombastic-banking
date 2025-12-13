@@ -1,7 +1,6 @@
 import 'package:bombastic_banking/app_constants.dart';
 import 'package:bombastic_banking/route_observer.dart';
 import 'package:bombastic_banking/ui/atm_services/deposit_confirmation/deposit_confirmation_screen.dart';
-import 'package:bombastic_banking/ui/atm_services/deposit_counting/deposit_counting_viewmodel.dart';
 import 'package:bombastic_banking/ui/atm_services/deposit_start/deposit_start_viewmodel.dart';
 import 'package:bombastic_banking/widgets/app_button.dart';
 import 'package:flutter/material.dart';
@@ -18,8 +17,6 @@ class DepositStartScreen extends StatefulWidget {
 
 class _DepositStartScreenState extends State<DepositStartScreen>
     with RouteAware {
-  bool _isCounting = false;
-
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -43,26 +40,23 @@ class _DepositStartScreenState extends State<DepositStartScreen>
 
   @override
   void didPopNext() {
-    final vm = context.read<DepositStartViewModel>();
-    vm.reset();
-    vm.startDeposit(atmId: widget.atmId);
+    Future.microtask(() {
+      if (!mounted) return;
+      final vm = context.read<DepositStartViewModel>();
+      vm.startDeposit(atmId: widget.atmId);
+    });
   }
 
   Future<void> _handleCountDeposit() async {
-    setState(() => _isCounting = true);
-
-    final countingVm = context.read<DepositCountingViewModel>();
-    await countingVm.countDeposit(atmId: widget.atmId);
+    final vm = context.read<DepositStartViewModel>();
+    final countedAmount = await vm.countDeposit(atmId: widget.atmId);
 
     if (!mounted) return;
-
-    setState(() => _isCounting = false);
-
-    if (countingVm.errorMessage != null) {
+    if (vm.errorMessage != null) {
       // Show error in snackbar
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(countingVm.errorMessage!),
+          content: Text(vm.errorMessage!),
           backgroundColor: Colors.red,
           action: SnackBarAction(
             label: 'Retry',
@@ -71,16 +65,18 @@ class _DepositStartScreenState extends State<DepositStartScreen>
           ),
         ),
       );
-    } else if (countingVm.countedAmount != null) {
+    } else if (countedAmount != null) {
       // Navigate to confirmation screen
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (_) => DepositConfirmationScreen(
             atmId: widget.atmId,
-            amount: countingVm.countedAmount!,
+            amount: countedAmount,
           ),
         ),
       );
+    } else {
+      debugPrint('Counted amount is null despite no error message.');
     }
   }
 
@@ -95,70 +91,29 @@ class _DepositStartScreenState extends State<DepositStartScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (!vm.isSuccess && vm.errorMessage == null) ...[
-                const CircularProgressIndicator(color: brandRed),
-                const SizedBox(height: 20),
-                const Text(
-                  'Initializing deposit session...',
-                  style: TextStyle(color: Colors.grey),
-                  textAlign: TextAlign.center,
-                ),
-              ] else if (vm.errorMessage != null) ...[
-                Container(
-                  padding: const EdgeInsets.all(16.0),
-                  margin: const EdgeInsets.only(bottom: 20.0),
-                  decoration: BoxDecoration(
-                    color: Colors.red.withAlpha(0x1A),
-                    borderRadius: BorderRadius.circular(8.0),
-                    border: Border.all(color: Colors.red.shade700),
-                  ),
-                  child: Text(
-                    vm.errorMessage!,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.red,
-                      fontWeight: FontWeight.w600,
+              const Text(
+                'Insert your cash into the ATM, then press the button below to count it.',
+                style: TextStyle(fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+
+              const SizedBox(height: 32),
+
+              vm.isCounting
+                  ? const Column(
+                      children: [
+                        CircularProgressIndicator(color: brandRed),
+                        SizedBox(height: 12),
+                        Text(
+                          'Counting deposit...',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ],
+                    )
+                  : AppButton(
+                      text: 'Count Deposit',
+                      onPressed: _handleCountDeposit,
                     ),
-                  ),
-                ),
-                AppButton(
-                  text: 'Try Again',
-                  onPressed: () {
-                    vm.reset();
-                    vm.startDeposit(atmId: widget.atmId);
-                  },
-                ),
-                const SizedBox(height: 15),
-                AppButton(
-                  color: const Color(0xFF495A63),
-                  text: 'Cancel',
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                ),
-              ] else ...[
-                const Text(
-                  'Insert your cash into the ATM, then press the button below to count it.',
-                  style: TextStyle(fontSize: 16),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 32),
-                _isCounting
-                    ? const Column(
-                        children: [
-                          CircularProgressIndicator(color: brandRed),
-                          SizedBox(height: 12),
-                          Text(
-                            'Counting deposit...',
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                        ],
-                      )
-                    : AppButton(
-                        text: 'Count Deposit',
-                        onPressed: _handleCountDeposit,
-                      ),
-              ],
             ],
           ),
         ),

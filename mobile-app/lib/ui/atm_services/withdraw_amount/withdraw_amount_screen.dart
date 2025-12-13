@@ -1,7 +1,7 @@
 import 'package:bombastic_banking/app_constants.dart';
 import 'package:bombastic_banking/ui/atm_services/nfc_prompt/nfc_prompt_widget.dart';
 import 'package:bombastic_banking/ui/atm_services/transaction_complete/transaction_complete_screen.dart';
-import 'package:bombastic_banking/ui/atm_services/withdrawing/withdrawing_viewmodel.dart';
+import 'package:bombastic_banking/ui/atm_services/withdraw_amount/withdraw_amount_viewmodel.dart';
 import 'package:bombastic_banking/widgets/app_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -17,7 +17,6 @@ class WithdrawAmountScreen extends StatefulWidget {
 class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
   final _formKey = GlobalKey<FormState>();
   final _amount = TextEditingController();
-  bool _isProcessing = false;
 
   @override
   void dispose() {
@@ -25,7 +24,7 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
     super.dispose();
   }
 
-  Future<void> _handleWithdrawal() async {
+  Future<void> _handleWithdrawal(BuildContext context) async {
     if (!_formKey.currentState!.validate()) return;
 
     final amount = double.parse(_amount.text);
@@ -39,16 +38,11 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
     );
     if (atmId == null || !mounted) return;
 
-    // Start processing
-    setState(() => _isProcessing = true);
-
-    final vm = context.read<WithdrawingViewModel>();
+    if (!context.mounted) return;
+    final vm = context.read<WithdrawAmountViewModel>();
     await vm.withdraw(atmId: atmId, amount: amount);
 
-    if (!mounted) return;
-
-    setState(() => _isProcessing = false);
-
+    if (!context.mounted) return;
     if (vm.errorMessage == null) {
       // Navigate to completion screen
       Navigator.of(context).pushReplacement(
@@ -67,7 +61,7 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
           action: SnackBarAction(
             label: 'Retry',
             textColor: Colors.white,
-            onPressed: _handleWithdrawal,
+            onPressed: () => _handleWithdrawal(context),
           ),
         ),
       );
@@ -76,6 +70,8 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final vm = context.watch<WithdrawAmountViewModel>();
+
     return Scaffold(
       appBar: AppBar(title: const Text('Withdraw amount')),
       body: Padding(
@@ -103,13 +99,13 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
                     value == null || value.isEmpty || int.parse(value) <= 0
                     ? 'Enter a valid amount'
                     : null,
-                enabled: !_isProcessing,
+                enabled: !vm.isProcessing,
               ),
             ),
 
             const SizedBox(height: 24),
 
-            _isProcessing
+            vm.isProcessing
                 ? const Column(
                     children: [
                       CircularProgressIndicator(color: brandRed),
@@ -120,7 +116,10 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
                       ),
                     ],
                   )
-                : AppButton(text: 'Withdraw', onPressed: _handleWithdrawal),
+                : AppButton(
+                    text: 'Withdraw',
+                    onPressed: () => _handleWithdrawal(context),
+                  ),
           ],
         ),
       ),
