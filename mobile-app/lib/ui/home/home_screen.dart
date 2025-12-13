@@ -48,7 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 'Good morning',
                 style: TextStyle(
                   fontSize: 14,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  color: Theme.of(context).colorScheme.onPrimaryFixedVariant,
                 ),
               ),
               const SizedBox(height: 24),

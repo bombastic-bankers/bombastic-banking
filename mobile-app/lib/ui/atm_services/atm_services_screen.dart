@@ -1,10 +1,28 @@
-import 'package:bombastic_banking/ui/atm_services/nfc_prompt/nfc_prompt_screen.dart';
+import 'package:bombastic_banking/ui/atm_services/deposit_start/deposit_start_screen.dart';
+import 'package:bombastic_banking/ui/atm_services/nfc_prompt/nfc_prompt_widget.dart';
 import 'package:bombastic_banking/ui/atm_services/withdraw_amount/withdraw_amount_screen.dart';
 import 'package:bombastic_banking/widgets/app_button.dart';
 import 'package:flutter/material.dart';
 
 class ATMServicesScreen extends StatelessWidget {
   const ATMServicesScreen({super.key});
+
+  Future<void> _handleDeposit(BuildContext context) async {
+    final atmId = await showModalBottomSheet<int>(
+      context: context,
+      isDismissible: false,
+      enableDrag: false,
+      builder: (context) => const NFCPromptWidget(),
+    );
+    if (atmId != null && context.mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DepositStartScreen(atmId: atmId),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,13 +60,7 @@ class ATMServicesScreen extends StatelessWidget {
 
               AppButton(
                 text: 'Deposit',
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        NFCPromptScreen(transaction: Deposit()),
-                  ),
-                ),
+                onPressed: () => _handleDeposit(context),
               ),
             ],
           ),
