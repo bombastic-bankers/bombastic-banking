@@ -8,10 +8,9 @@ import 'package:bombastic_banking/services/nfc_service.dart';
 import 'package:bombastic_banking/services/user_service.dart';
 import 'package:bombastic_banking/storage/secure_storage.dart';
 import 'package:bombastic_banking/ui/atm_services/deposit_confirmation/deposit_confirmation_viewmodel.dart';
-import 'package:bombastic_banking/ui/atm_services/deposit_counting/deposit_counting_viewmodel.dart';
 import 'package:bombastic_banking/ui/atm_services/deposit_start/deposit_start_viewmodel.dart';
 import 'package:bombastic_banking/ui/atm_services/nfc_prompt/nfc_prompt_viewmodel.dart';
-import 'package:bombastic_banking/ui/atm_services/withdrawing/withdrawing_viewmodel.dart';
+import 'package:bombastic_banking/ui/atm_services/withdraw_amount/withdraw_amount_viewmodel.dart';
 import 'package:bombastic_banking/ui/home/home_viewmodel.dart';
 import 'package:bombastic_banking/ui/login/login_viewmodel.dart';
 import 'package:bombastic_banking/ui/navbar_root/navbar_root_viewmodel.dart';
@@ -73,14 +72,10 @@ class _BankAppState extends State<BankApp> {
           create: (_) => NFCPromptViewModel(nfcRepository: _nfcRepo),
         ),
         ChangeNotifierProvider(
-          create: (_) => WithdrawingViewModel(atmRepository: _atmRepository),
+          create: (_) => WithdrawAmountViewModel(atmRepository: _atmRepository),
         ),
         ChangeNotifierProvider(
           create: (_) => DepositStartViewModel(atmRepository: _atmRepository),
-        ),
-        ChangeNotifierProvider(
-          create: (_) =>
-              DepositCountingViewModel(atmRepository: _atmRepository),
         ),
         ChangeNotifierProvider(
           create: (_) =>

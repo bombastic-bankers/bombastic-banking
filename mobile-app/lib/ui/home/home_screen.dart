@@ -1,5 +1,6 @@
-import 'package:bombastic_banking/app_constants.dart';
-import 'package:bombastic_banking/pages/transaction_flow_pages.dart';
+import 'package:bombastic_banking/ui/atm_services/deposit_start/deposit_start_screen.dart';
+import 'package:bombastic_banking/ui/atm_services/nfc_prompt/nfc_prompt_widget.dart';
+import 'package:bombastic_banking/ui/atm_services/withdraw_amount/withdraw_amount_screen.dart';
 import 'package:bombastic_banking/ui/home/home_viewmodel.dart';
 import 'package:bombastic_banking/ui/home/quick_action_widget.dart';
 import 'package:bombastic_banking/ui/home/transaction_item_widget.dart';
@@ -71,16 +72,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       label: 'Withdraw',
                       onPressed: () => Navigator.push(
                         context,
-                        slideRoute(const WithdrawStep1()),
+                        MaterialPageRoute(
+                          builder: (_) => const WithdrawAmountScreen(),
+                        ),
                       ),
                     ),
                     QuickAction(
                       icon: Icons.account_balance_wallet_outlined,
                       label: 'Deposit',
-                      onPressed: () => Navigator.push(
-                        context,
-                        slideRoute(const DepositNFCPromptPage()),
-                      ),
+                      onPressed: () => _handleDeposit(context),
                     ),
                     QuickAction(
                       icon: Icons.payment_outlined,
@@ -176,5 +176,22 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _handleDeposit(BuildContext context) async {
+    final atmId = await showModalBottomSheet<int>(
+      context: context,
+      isDismissible: false,
+      enableDrag: false,
+      builder: (context) => const NFCPromptWidget(),
+    );
+    if (atmId != null && context.mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DepositStartScreen(atmId: atmId),
+        ),
+      );
+    }
   }
 }
