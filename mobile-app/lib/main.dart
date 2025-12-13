@@ -2,10 +2,14 @@ import 'package:bombastic_banking/repositories/atm_repository.dart';
 import 'package:bombastic_banking/repositories/auth_repository.dart';
 import 'package:bombastic_banking/repositories/nfc_repository.dart';
 import 'package:bombastic_banking/repositories/user_repository.dart';
+import 'package:bombastic_banking/route_observer.dart';
 import 'package:bombastic_banking/services/atm_service.dart';
 import 'package:bombastic_banking/services/nfc_service.dart';
 import 'package:bombastic_banking/services/user_service.dart';
 import 'package:bombastic_banking/storage/secure_storage.dart';
+import 'package:bombastic_banking/ui/atm_services/deposit_confirmation/deposit_confirmation_viewmodel.dart';
+import 'package:bombastic_banking/ui/atm_services/deposit_counting/deposit_counting_viewmodel.dart';
+import 'package:bombastic_banking/ui/atm_services/deposit_start/deposit_start_viewmodel.dart';
 import 'package:bombastic_banking/ui/atm_services/nfc_prompt/nfc_prompt_viewmodel.dart';
 import 'package:bombastic_banking/ui/atm_services/withdrawing/withdrawing_viewmodel.dart';
 import 'package:bombastic_banking/ui/home/home_viewmodel.dart';
@@ -71,9 +75,21 @@ class _BankAppState extends State<BankApp> {
         ChangeNotifierProvider(
           create: (_) => WithdrawingViewModel(atmRepository: _atmRepository),
         ),
+        ChangeNotifierProvider(
+          create: (_) => DepositStartViewModel(atmRepository: _atmRepository),
+        ),
+        ChangeNotifierProvider(
+          create: (_) =>
+              DepositCountingViewModel(atmRepository: _atmRepository),
+        ),
+        ChangeNotifierProvider(
+          create: (_) =>
+              DepositConfirmationViewModel(atmRepository: _atmRepository),
+        ),
       ],
       child: MaterialApp(
         title: 'Bombastic Banking',
+        navigatorObservers: [routeObserver],
         theme: ThemeData(
           scaffoldBackgroundColor: Theme.of(context).colorScheme.surface,
           appBarTheme: AppBarTheme(

@@ -1,7 +1,11 @@
-import 'package:bombastic_banking/ui/atm_services/nfc_prompt/nfc_prompt_screen.dart';
+import 'package:bombastic_banking/app_constants.dart';
+import 'package:bombastic_banking/ui/atm_services/nfc_prompt/nfc_prompt_widget.dart';
+import 'package:bombastic_banking/ui/atm_services/transaction_complete/transaction_complete_screen.dart';
+import 'package:bombastic_banking/ui/atm_services/withdrawing/withdrawing_viewmodel.dart';
 import 'package:bombastic_banking/widgets/app_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
 class WithdrawAmountScreen extends StatefulWidget {
   const WithdrawAmountScreen({super.key});
@@ -13,6 +17,62 @@ class WithdrawAmountScreen extends StatefulWidget {
 class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
   final _formKey = GlobalKey<FormState>();
   final _amount = TextEditingController();
+  bool _isProcessing = false;
+
+  @override
+  void dispose() {
+    _amount.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleWithdrawal() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final amount = double.parse(_amount.text);
+
+    // Show NFC prompt bottom sheet
+    final atmId = await showModalBottomSheet<int>(
+      context: context,
+      isDismissible: false,
+      enableDrag: false,
+      builder: (context) => const NFCPromptWidget(),
+    );
+    if (atmId == null || !mounted) return;
+
+    // Start processing
+    setState(() => _isProcessing = true);
+
+    final vm = context.read<WithdrawingViewModel>();
+    await vm.withdraw(atmId: atmId, amount: amount);
+
+    if (!mounted) return;
+
+    setState(() => _isProcessing = false);
+
+    if (vm.errorMessage == null) {
+      // Navigate to completion screen
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => TransactionCompleteScreen(
+            transaction: CompletedWithdrawal(amount),
+          ),
+        ),
+      );
+    } else {
+      // Show error in snackbar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(vm.errorMessage!),
+          backgroundColor: Colors.red,
+          action: SnackBarAction(
+            label: 'Retry',
+            textColor: Colors.white,
+            onPressed: _handleWithdrawal,
+          ),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,25 +103,24 @@ class _WithdrawAmountScreenState extends State<WithdrawAmountScreen> {
                     value == null || value.isEmpty || int.parse(value) <= 0
                     ? 'Enter a valid amount'
                     : null,
+                enabled: !_isProcessing,
               ),
             ),
 
             const SizedBox(height: 24),
 
-            AppButton(
-              text: 'Next',
-              onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => NFCPromptScreen(
-                        transaction: Withdrawal(double.parse(_amount.text)),
+            _isProcessing
+                ? const Column(
+                    children: [
+                      CircularProgressIndicator(color: brandRed),
+                      SizedBox(height: 12),
+                      Text(
+                        'Processing withdrawal...',
+                        style: TextStyle(color: Colors.grey),
                       ),
-                    ),
-                  );
-                }
-              },
-            ),
+                    ],
+                  )
+                : AppButton(text: 'Withdraw', onPressed: _handleWithdrawal),
           ],
         ),
       ),

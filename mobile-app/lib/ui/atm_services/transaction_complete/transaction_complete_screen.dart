@@ -2,19 +2,29 @@ import 'package:bombastic_banking/app_constants.dart';
 import 'package:bombastic_banking/widgets/app_button.dart';
 import 'package:flutter/material.dart';
 
-class WithdrawalCompleteScreen extends StatefulWidget {
+sealed class CompletedTransaction {
   final double amount;
-
-  const WithdrawalCompleteScreen({super.key, required this.amount});
-
-  @override
-  State<WithdrawalCompleteScreen> createState() =>
-      _WithdrawalCompleteScreenState();
+  const CompletedTransaction(this.amount);
 }
 
-class _WithdrawalCompleteScreenState extends State<WithdrawalCompleteScreen> {
+class CompletedWithdrawal extends CompletedTransaction {
+  const CompletedWithdrawal(super.amount);
+}
+
+class CompletedDeposit extends CompletedTransaction {
+  const CompletedDeposit(super.amount);
+}
+
+class TransactionCompleteScreen extends StatelessWidget {
+  final CompletedTransaction transaction;
+
+  const TransactionCompleteScreen({super.key, required this.transaction});
+
   @override
   Widget build(BuildContext context) {
+    final isWithdrawal = transaction is CompletedWithdrawal;
+    final actionText = isWithdrawal ? 'withdrawn' : 'deposited';
+
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(32.0),
@@ -25,7 +35,7 @@ class _WithdrawalCompleteScreenState extends State<WithdrawalCompleteScreen> {
               const Icon(Icons.celebration, size: 84, color: brandRed),
               const SizedBox(height: 18),
               Text(
-                '\$${widget.amount.toStringAsFixed(2)} successfully withdrawn!',
+                '\$${transaction.amount.toStringAsFixed(2)} successfully $actionText!',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 20,
