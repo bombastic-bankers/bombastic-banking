@@ -9,13 +9,14 @@
 
 	onMount(async () => {
 		await depositCountingPromise;
-		setTimeout(() => goto('/'), 10_000);
 		await sendEvent({
 			name: 'deposit-collected',
 			// TODO: Better error handling
 			data: { amount: +page.url.searchParams.get('amount')! }
 		});
-		goto('/instructions?next=/deposit/received');
+		setTimeout(() => {
+			goto('/deposit/Received?next=/deposit/received');
+		}, 10_000);
 	});
 </script>
 <div class="w-full h-full bg-linear-to-b from-[#273245] to-[#1d2735] 
