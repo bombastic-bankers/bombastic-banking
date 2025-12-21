@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class TransactionItem extends StatelessWidget {
+  final String type;
   final String title;
   final double amount;
   final DateTime date;
 
   const TransactionItem({
     super.key,
+    required this.type,
     required this.title,
     required this.amount,
     required this.date,
