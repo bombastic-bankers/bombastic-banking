@@ -26,6 +26,7 @@ import { atmParam } from "./middleware/atm.js";
 import { transferMoney } from "./controllers/transaction.js";
 import ngrok from "@ngrok/ngrok";
 import { getVoiceToken } from "./controllers/voice.js";
+import { sendPhoneOTP,verifyPhoneOTP,verifyEmailLink } from "./controllers/verify.js";  
 
 const TESTING = process.env.NODE_ENV === "test";
 
@@ -38,7 +39,9 @@ app.post("/auth/signup", signUp);
 app.post("/auth/login", login);
 app.post("/auth/refresh", refreshSession);
 app.post("/auth/ably", ablyAuth);
-
+app.post("/send/phone", sendPhoneOTP);
+app.post("/verify/phone", verifyPhoneOTP);
+app.get("/verify/email/confirm", verifyEmailLink);
 app.use(authenticate);
 
 app.get("/account-overview", getUserAccOverview);

@@ -4,8 +4,7 @@ import { eq, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 /**
- * Create a new user account. Returns whether the account already exists.
- */
+ * Create a new user account. */
 export async function createUser(user: {
   fullName: string;
   phoneNumber: string;
@@ -20,7 +19,6 @@ export async function createUser(user: {
       phoneNumber: user.phoneNumber,
       email: user.email,
       hashedPin: hashedPin,
-      isInternal: false,
     })
     .onConflictDoNothing()
     .returning();
@@ -30,8 +28,15 @@ export async function createUser(user: {
 /**
  * Return the user with the given email and PIN, or `null` if no such user exists.
  */
-export async function getUserByCredentials(email: string, pin: string): Promise<typeof users.$inferSelect | null> {
-  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+export async function getUserByCredentials(
+  email: string,
+  pin: string,
+): Promise<typeof users.$inferSelect | null> {
+  const result = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, email))
+    .limit(1);
   if (result.length === 0) return null;
   if (!(await bcrypt.compare(pin, result[0].hashedPin))) return null;
   return result[0];
@@ -40,7 +45,9 @@ export async function getUserByCredentials(email: string, pin: string): Promise<
 /**
  * Retrieve a user by their email address.
  */
-export async function getUserByEmail(email: string): Promise<typeof users.$inferSelect | null> {
+export async function getUserByEmail(
+  email: string,
+): Promise<typeof users.$inferSelect | null> {
   const results = await db.select().from(users).where(eq(users.email, email));
   return results.at(0) ?? null;
 }
@@ -48,16 +55,28 @@ export async function getUserByEmail(email: string): Promise<typeof users.$infer
 /**
  * Retrieve a user by their phone number.
  */
-export async function getUserByPhoneNumber(phoneNumber: string): Promise<typeof users.$inferSelect | null> {
-  const results = await db.select().from(users).where(eq(users.phoneNumber, phoneNumber));
+export async function getUserByPhoneNumber(
+  phoneNumber: string,
+): Promise<typeof users.$inferSelect | null> {
+  const results = await db
+    .select()
+    .from(users)
+    .where(eq(users.phoneNumber, phoneNumber));
   return results.at(0) ?? null;
 }
 
 /**
  * Get user information including their current account balance.
  */
-export async function getUserAccOverview(userId: number): Promise<{ fullName: string; accountBalance: number }> {
-  const { fullName } = (await db.select({ fullName: users.fullName }).from(users).where(eq(users.userId, userId)))[0];
+export async function getUserAccOverview(
+  userId: number,
+): Promise<{ fullName: string; accountBalance: number }> {
+  const { fullName } = (
+    await db
+      .select({ fullName: users.fullName })
+      .from(users)
+      .where(eq(users.userId, userId))
+  )[0];
   const { accountBalance: accountBalanceString } = (
     await db
       .select({ accountBalance: sql`-sum(${ledger.change})` })
@@ -70,7 +89,6 @@ export async function getUserAccOverview(userId: number): Promise<{ fullName: st
 
 /**
  * Updates the user profile with the provided fields.
- * Returns the complete updated profile, or `null` if no user exists with the given ID.
  */
 export async function updateUserProfile(
   userId: number,
@@ -89,7 +107,9 @@ export async function updateUserProfile(
     .update(users)
     .set({
       ...(patch.fullName !== undefined ? { fullName: patch.fullName } : {}),
-      ...(patch.phoneNumber !== undefined ? { phoneNumber: patch.phoneNumber } : {}),
+      ...(patch.phoneNumber !== undefined
+        ? { phoneNumber: patch.phoneNumber }
+        : {}),
       ...(patch.email !== undefined ? { email: patch.email } : {}),
     })
     .where(eq(users.userId, userId))
@@ -101,6 +121,28 @@ export async function updateUserProfile(
     });
 
   return updatedRows[0] ?? null;
+}
+
+/** Update phoneVerified flag */
+export async function updatePhoneVerified(
+  userId: number,
+  verified: boolean,
+): Promise<void> {
+  await db
+    .update(users)
+    .set({ phoneVerified: verified })
+    .where(eq(users.userId, userId));
+}
+
+/** Update emailVerified flag
+ */
+export async function verifyUserEmail(userId: number) {
+  await db
+    .update(users)
+    .set({
+      emailVerified: true,
+    })
+    .where(eq(users.userId, userId));
 }
 
 /**
@@ -119,6 +161,40 @@ export async function getUserProfile(userId: number): Promise<{
     })
     .from(users)
     .where(eq(users.userId, userId));
-
   return rows[0] ?? null;
+}
+export async function updateEmailToken(
+  userId: number,
+  token: string,
+  expiry: Date,
+): Promise<void> {
+  await db
+    .update(users)
+    .set({
+      emailToken: token,
+      emailTokenExpiry: expiry,
+    })
+    .where(eq(users.userId, userId));
+}
+export async function getUserByEmailToken(
+  token: string,
+): Promise<typeof users.$inferSelect | null> {
+  const results = await db
+    .select()
+    .from(users)
+    .where(eq(users.emailToken, token));
+  return results.at(0) ?? null;
+}
+export async function saveEmailToken(
+  userId: number,
+  token: string,
+  expiry: Date,
+): Promise<void> {
+  await db
+    .update(users)
+    .set({
+      emailToken: token,
+      emailTokenExpiry: expiry,
+    })
+    .where(eq(users.userId, userId));
 }

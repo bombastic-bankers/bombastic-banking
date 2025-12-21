@@ -31,6 +31,24 @@ const env = {
   get NGROK_AUTHTOKEN(): string | undefined {
     return process.env.NGROK_AUTHTOKEN;
   },
+  get EMAIL_USER(): string {
+    return getEnvOrThrow("EMAIL_USER");
+  },
+  get EMAIL_PASS(): string {
+    return getEnvOrThrow("EMAIL_PASS");
+  },
+  get BASE_URL(): string {
+    return process.env.BASE_URL ?? "http://localhost:3000";
+  },
+  get TWILIO_SID(): string {
+    return getEnvOrThrow("TWILIO_SID");
+  },
+  get TWILIO_AUTH(): string {
+    return getEnvOrThrow("TWILIO_AUTH");
+  },
+  get TWILIO_VERIFY_SERVICE(): string {
+    return getEnvOrThrow("TWILIO_VERIFY_SERVICE");
+  },
 };
 
 export default env;

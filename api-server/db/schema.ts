@@ -1,4 +1,4 @@
-import { pgTable, serial, integer, text, timestamp, numeric, primaryKey, boolean, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, integer, text, timestamp, numeric, primaryKey, boolean, pgEnum } from "drizzle-orm/pg-core";
 
 /**
  * Users table stores both customer accounts and internal bank accounts.
@@ -14,6 +14,11 @@ export const users = pgTable("users", {
   phoneNumber: text("phone_number").notNull(),
   email: text("email").notNull().unique(),
   hashedPin: text("hashed_pin").notNull(),
+  phoneVerified: boolean("phone_verified").default(false),
+  emailVerified: boolean("email_verified").default(false),
+  emailToken: varchar("email_token", { length: 64 }),
+  emailTokenExpiry: timestamp("email_token_expiry"),
+
   isInternal: boolean("is_internal").notNull().default(false),
 });
 
@@ -25,7 +30,7 @@ export const users = pgTable("users", {
  * according to double-entry accounting (assets + liabilities = 0).
  */
 
-export const transactionTypeEnum = pgEnum('transaction_type', ['atm', 'transfer', 'internal']);
+export const transactionTypeEnum = pgEnum("transaction_type", ["atm", "transfer", "internal"]);
 export const transactions = pgTable("transactions", {
   transactionId: integer("transaction_id").primaryKey().generatedAlwaysAsIdentity(),
   type: transactionTypeEnum("transaction_type").notNull(),

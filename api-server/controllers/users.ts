@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import z from "zod";
 import * as queries from "../db/queries/index.js";
 import { generateAccessToken, generateRefreshToken } from "../services/auth.js";
+import { generateEmailToken, sendVerificationEmail } from "../services/emailVerificationService.js";
+import { sendOTP } from "../services/smsVerificationService.js";
 
 /** Create a new user account with the provided credentials. */
 export async function signUp(req: Request, res: Response) {
@@ -14,15 +16,52 @@ export async function signUp(req: Request, res: Response) {
     })
     .parse(req.body);
 
-  const created = await queries.createUser(userInit);
-  if (!created) {
+  // check if email or phone number already exists
+  const existingUser = await queries.getUserByEmail(userInit.email);
+  if (existingUser) {
     return res.status(409).json({ error: "Email already in use" });
   }
 
-  return res.status(201).send();
+  const existingPhone = await queries.getUserByPhoneNumber(userInit.phoneNumber);
+  if (existingPhone) {
+    return res.status(409).json({ error: "This phone number is already in use." });
+  }
+
+  // create user
+  const created = await queries.createUser({
+    fullName: userInit.fullName,
+    phoneNumber: userInit.phoneNumber,
+    email: userInit.email,
+    pin: userInit.pin,
+  });
+
+  if (!created) {
+    return res.status(500).json({ error: "Failed to create account" });
+  }
+  const user = await queries.getUserByEmail(userInit.email);
+  if (!user) {
+    return res.status(500).json({ error: "Failed to retrieve new account" });
+  }
+  const { token, expiry } = generateEmailToken();
+  await queries.saveEmailToken(user.userId, token, expiry);
+
+  try {
+    await sendVerificationEmail(userInit.email, token);
+    await sendOTP(userInit.phoneNumber);
+
+    return res.status(201).json({
+      message: "Registration successful! Please verify your email and phone number.",
+    });
+  } catch (error) {
+    console.error("AUTO_SEND_ERROR:", error);
+    return res.status(201).json({
+      message: "Account created, but verification codes failed to send. Please request a resend.",
+    });
+  }
 }
 
 /** Authenticate a user and issue access and refresh tokens. */
+
 export async function login(req: Request, res: Response) {
   const { email, pin } = z
     .object({
@@ -34,7 +73,12 @@ export async function login(req: Request, res: Response) {
   if (user === null) {
     return res.status(401).json({ error: "Incorrect email or PIN" });
   }
-
+  if (!user.emailVerified || !user.phoneVerified) {
+    return res.status(403).json({
+      error: "Account not fully verified",
+      message: "Please ensure both your email and phone number are verified.",
+    });
+  }
   const accessToken = generateAccessToken(user.userId);
   const refreshToken = generateRefreshToken();
   const expiresAt = new Date();
@@ -82,7 +126,6 @@ export async function getUserProfile(req: Request, res: Response) {
   const userId = req.userId;
 
   const profile = await queries.getUserProfile(userId);
-
   if (!profile) {
     return res.status(404).json({ error: "User not found" });
   }
