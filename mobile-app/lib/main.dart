@@ -2,16 +2,19 @@ import 'package:bombastic_banking/repositories/atm_repository.dart';
 import 'package:bombastic_banking/repositories/auth_repository.dart';
 import 'package:bombastic_banking/repositories/nfc_repository.dart';
 import 'package:bombastic_banking/repositories/user_repository.dart';
+import 'package:bombastic_banking/repositories/transaction_repository.dart';
 import 'package:bombastic_banking/route_observer.dart';
 import 'package:bombastic_banking/services/atm_service.dart';
 import 'package:bombastic_banking/services/nfc_service.dart';
 import 'package:bombastic_banking/services/user_service.dart';
+import 'package:bombastic_banking/services/transaction_service.dart';
 import 'package:bombastic_banking/storage/secure_storage.dart';
 import 'package:bombastic_banking/ui/atm_services/deposit_confirmation/deposit_confirmation_viewmodel.dart';
 import 'package:bombastic_banking/ui/atm_services/deposit_start/deposit_start_viewmodel.dart';
 import 'package:bombastic_banking/ui/atm_services/nfc_prompt/nfc_prompt_viewmodel.dart';
 import 'package:bombastic_banking/ui/atm_services/withdraw_amount/withdraw_amount_viewmodel.dart';
 import 'package:bombastic_banking/ui/home/home_viewmodel.dart';
+import 'package:bombastic_banking/ui/transactions/transactions_viewmodel.dart';
 import 'package:bombastic_banking/ui/login/login_viewmodel.dart';
 import 'package:bombastic_banking/ui/navbar_root/navbar_root_viewmodel.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -48,6 +51,10 @@ class _BankAppState extends State<BankApp> {
     userService: UserService(baseUrl: apiBaseUrl),
     secureStorage: _secureStorage,
   );
+  late final _transactionRepo = TransactionRepository(
+    transactionsService: TransactionsService(baseUrl: apiBaseUrl),
+    secureStorage: _secureStorage,
+  );
   late final _nfcRepo = NFCRepository(
     nfcService: _nfcService,
     tagMatcher: atmTagMatcher,
@@ -67,6 +74,10 @@ class _BankAppState extends State<BankApp> {
         ),
         ChangeNotifierProvider(
           create: (_) => HomeViewModel(userRepository: _userRepo),
+        ),
+        ChangeNotifierProvider(
+          create: (_) =>
+              TransactionsViewModel(transactionRepository: _transactionRepo),
         ),
         ChangeNotifierProvider(
           create: (_) => NFCPromptViewModel(nfcRepository: _nfcRepo),

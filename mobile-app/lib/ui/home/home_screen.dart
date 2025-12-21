@@ -1,6 +1,7 @@
 import 'package:bombastic_banking/ui/atm_services/deposit_start/deposit_start_screen.dart';
 import 'package:bombastic_banking/ui/atm_services/nfc_prompt/nfc_prompt_widget.dart';
 import 'package:bombastic_banking/ui/atm_services/withdraw_amount/withdraw_amount_screen.dart';
+import 'package:bombastic_banking/ui/transactions/transactions_screen.dart';
 import 'package:bombastic_banking/ui/home/home_viewmodel.dart';
 import 'package:bombastic_banking/ui/home/quick_action_widget.dart';
 import 'package:bombastic_banking/ui/home/transaction_item_widget.dart';
@@ -143,30 +144,53 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const SizedBox(height: 24),
 
-              const Text(
-                'Recent Transactions',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              Container(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Recent Transactions',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const TransactionsScreen(),
+                        ),
+                      ),
+                      child: const Text('See All'),
+                    ),
+                  ],
+                ),
               ),
 
               const SizedBox(height: 12),
 
               // Transaction history
               TransactionItem(
+                type: 'NETS QR',
                 title: 'Grocery Store',
                 amount: -54.20,
                 date: DateTime(2025, 11, 15),
               ),
               TransactionItem(
+                type: 'GIRO',
                 title: 'Salary Credit',
                 amount: 3200.00,
                 date: DateTime(2025, 11, 14),
               ),
               TransactionItem(
+                type: 'GIRO',
                 title: 'Electricity Bill',
                 amount: -120.50,
                 date: DateTime(2025, 11, 12),
               ),
               TransactionItem(
+                type: "DEBIT PURCHASE",
                 title: 'Coffee Shop',
                 amount: -8.75,
                 date: DateTime(2025, 11, 11),
