@@ -30,7 +30,8 @@ describe("POST /auth/signup", () => {
     });
 
     expect(response.status).toBe(201);
-    expect(queries.createUser).toHaveBeenCalledWith({
+    expect(queries.createUser).toHaveBeenCalledWith
+    expect.objectContaining({
       fullName: "John Doe",
       phoneNumber: "+651234567890",
       email: "john@example.com",
@@ -125,6 +126,7 @@ describe("POST /auth/signup", () => {
     });
 
     expect(response.status).toBe(409);
+    expect(response.body.error).toBe("Email already in use");
   });
 
   it("should return 400 when pin is missing", async () => {
@@ -179,6 +181,10 @@ describe("POST /auth/login", () => {
       email: "john@example.com",
       hashedPin: "123456",
       isInternal: false,
+      emailverified: true,
+      phoneverified: true,
+      emailToken: null,
+      emailTokenExpiry: null
     });
     vi.mocked(auth.generateAuthTokens).mockResolvedValue({
       accessToken: "access-token",

@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import z from "zod";
 import * as queries from "../db/queries/index.js";
 import { generateAuthTokens } from "../services/auth.js";
+import crypto from "crypto";
+import { sendVerificationEmail, generateEmailToken,autoSendOTP} from "./verify.js";
 
 /** Create a new user account with the provided credentials. */
 export async function signUp(req: Request, res: Response) {
@@ -14,15 +16,15 @@ export async function signUp(req: Request, res: Response) {
     })
     .parse(req.body);
 
-  const created = await queries.createUser(userInit);
-  if (!created) {
+  // check if email or phone number already exists
+  const existingUser = await queries.getUserByEmail(userInit.email);
+  if (existingUser) {
     return res.status(409).json({ error: "Email already in use" });
   }
 
   return res.status(201).send();
 }
 
-/** Authenticate a user and issue access and refresh tokens. */
 export async function login(req: Request, res: Response) {
   const { email, pin } = z
     .object({
@@ -34,7 +36,15 @@ export async function login(req: Request, res: Response) {
   if (user === null) {
     return res.status(401).json({ error: "Incorrect email or PIN" });
   }
-
+  // If either one is false, login fails
+  if (!user.emailverified || !user.phoneverified) {
+    return res.status(403).json({ 
+      error: "Account not fully verified", 
+      // emailVerified: user.emailverified,
+      // phoneVerified: user.phoneverified,
+      message: "Please ensure both your email and phone number are verified."
+    });
+  }
   const { accessToken, refreshToken } = await generateAuthTokens(user.userId);
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + 30);

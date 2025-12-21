@@ -11,6 +11,8 @@ export async function createUser(user: {
   phoneNumber: string;
   email: string;
   pin: string;
+  emailToken?: string;        
+  emailTokenExpiry?: Date;
 }): Promise<boolean> {
   const hashedPin = await bcrypt.hash(user.pin, 10);
   const inserted = await db
@@ -21,6 +23,8 @@ export async function createUser(user: {
       email: user.email,
       hashedPin: hashedPin,
       isInternal: false,
+      emailToken: user.emailToken,
+      emailTokenExpiry: user.emailTokenExpiry,
     })
     .onConflictDoNothing()
     .returning();
@@ -121,4 +125,24 @@ export async function getUserProfile(userId: number): Promise<{
     .where(eq(users.userId, userId));
 
   return rows[0] ?? null;
+}
+
+// Update phoneVerified flag
+export async function updatePhoneVerified(userId: number, verified: boolean) {
+  await db.update(users).set({ phoneverified: verified }).where(eq(users.userId, userId));
+}
+
+export async function getUserByEmailToken(token: string) {
+  const result = await db.select().from(users).where(eq(users.emailToken, token)).limit(1);
+  return result[0] ?? null;
+}
+
+export async function verifyUserEmail(userId: number) {
+  await db.update(users)
+    .set({ 
+      emailverified: true, 
+      emailToken: null, 
+      emailTokenExpiry: null 
+    })
+    .where(eq(users.userId, userId));
 }
