@@ -11,6 +11,14 @@ vi.mock("../middleware/auth", () => ({
     next();
   },
 }));
+vi.mock("../services/emailVerificationService.js", () => ({
+  sendVerificationEmail: vi.fn().mockResolvedValue(undefined),
+  VerifyEmailLink: vi.fn().mockResolvedValue(true),
+}));
+vi.mock("../services/smsVerificationService.js", () => ({
+  sendOTP: vi.fn().mockResolvedValue({ status: "pending" }),
+  checkOTP: vi.fn().mockResolvedValue(true),
+}));
 
 describe("POST /transfer", () => {
   beforeEach(() => {
@@ -25,6 +33,10 @@ describe("POST /transfer", () => {
       email: "jane@example.com",
       hashedPin: "123456",
       isInternal: false,
+      phoneVerified: true,
+      emailVerified: true,
+      emailToken: null,
+      emailTokenExpiry: null,
     });
     vi.mocked(queries.transferMoney).mockResolvedValue(true);
 
@@ -124,6 +136,10 @@ describe("POST /transfer", () => {
       email: "jane@example.com",
       hashedPin: "123456",
       isInternal: false,
+      phoneVerified: true,
+      emailVerified: true,
+      emailToken: null,
+      emailTokenExpiry: null,
     });
     vi.mocked(queries.transferMoney).mockResolvedValue(false);
 

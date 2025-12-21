@@ -11,6 +11,14 @@ vi.mock("../middleware/auth", () => ({
     next();
   },
 }));
+vi.mock("../services/emailVerificationService.js", () => ({
+  sendVerificationEmail: vi.fn().mockResolvedValue(undefined),
+  VerifyEmailLink: vi.fn().mockResolvedValue(true),
+}));
+vi.mock("../services/smsVerificationService.js", () => ({
+  sendOTP: vi.fn().mockResolvedValue({ status: "pending" }),
+  checkOTP: vi.fn().mockResolvedValue(true),
+}));
 
 describe("GET /contacts", () => {
   beforeEach(() => {

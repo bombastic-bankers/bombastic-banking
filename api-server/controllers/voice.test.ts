@@ -4,7 +4,6 @@ import app from "../index.js";
 import * as elevenLabsService from "../services/elevenlabsAgent.js";
 import { NextFunction, Request, Response } from "express";
 
-
 vi.mock("../services/elevenlabsAgent.js");
 
 vi.mock("../middleware/auth", () => ({
@@ -12,6 +11,14 @@ vi.mock("../middleware/auth", () => ({
     req.userId = 1;
     next();
   },
+}));
+vi.mock("../services/emailVerificationService.js", () => ({
+  sendVerificationEmail: vi.fn().mockResolvedValue(undefined),
+  VerifyEmailLink: vi.fn().mockResolvedValue(true),
+}));
+vi.mock("../services/smsVerificationService.js", () => ({
+  sendOTP: vi.fn().mockResolvedValue({ status: "pending" }),
+  checkOTP: vi.fn().mockResolvedValue(true),
 }));
 
 describe("GET /voice/token", () => {
@@ -23,9 +30,9 @@ describe("GET /voice/token", () => {
   });
 
   it("should return a 200 and the voice token data", async () => {
-    const mockTokenResponse = { 
-        token: "mock-webrtc-token-123",
-        expiresAt: 1737300000 
+    const mockTokenResponse = {
+      token: "mock-webrtc-token-123",
+      expiresAt: 1737300000,
     };
     vi.mocked(elevenLabsService.getWebrtcTokenForAgent).mockResolvedValue(mockTokenResponse);
 
@@ -35,7 +42,7 @@ describe("GET /voice/token", () => {
     expect(response.body).toEqual({
       agentId: MOCK_AGENT_ID,
       token: "mock-webrtc-token-123",
-      expiresAt: 1737300000
+      expiresAt: 1737300000,
     });
     expect(elevenLabsService.getWebrtcTokenForAgent).toHaveBeenCalledTimes(1);
   });
