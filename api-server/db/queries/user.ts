@@ -12,6 +12,8 @@ export async function createUser(user: {
   phoneNumber: string;
   email: string;
   pin: string;
+  emailToken?: string;        
+  emailTokenExpiry?: Date;
 }): Promise<boolean> {
   const inserted = await db
     .insert(users)
@@ -20,6 +22,8 @@ export async function createUser(user: {
       phoneNumber: user.phoneNumber,
       email: user.email,
       hashedPin: await bcrypt.hash(user.pin, 10),
+      emailToken: user.emailToken,
+      emailTokenExpiry: user.emailTokenExpiry,
     })
     .onConflictDoNothing()
     .returning();
@@ -46,4 +50,37 @@ export async function getUserInfo(userId: number): Promise<{ fullName: string; a
   )[0];
 
   return { fullName, accountBalance: +(accountBalanceString ?? 0) };
+}
+// Get user by phone number
+export async function getUserByPhoneNumber(phoneNumber: string) {
+  const result = await db.select().from(users).where(eq(users.phoneNumber, phoneNumber)).limit(1);
+  return result[0] ?? null;
+}
+
+// Update phoneVerified flag
+export async function updatePhoneVerified(userId: number, verified: boolean) {
+  await db.update(users).set({ phoneverified: verified }).where(eq(users.userId, userId));
+}
+export async function getUserByEmail(email: string) {
+  const result = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, email))
+    .limit(1);
+
+  return result[0] ?? null;
+}
+export async function getUserByEmailToken(token: string) {
+  const result = await db.select().from(users).where(eq(users.emailToken, token)).limit(1);
+  return result[0] ?? null;
+}
+
+export async function verifyUserEmail(userId: number) {
+  await db.update(users)
+    .set({ 
+      emailverified: true, 
+      emailToken: null, 
+      emailTokenExpiry: null 
+    })
+    .where(eq(users.userId, userId));
 }

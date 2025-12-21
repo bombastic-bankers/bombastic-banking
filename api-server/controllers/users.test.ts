@@ -33,7 +33,8 @@ describe("POST /auth/signup", () => {
     });
 
     expect(response.status).toBe(201);
-    expect(queries.createUser).toHaveBeenCalledWith({
+    expect(queries.createUser).toHaveBeenCalledWith
+    expect.objectContaining({
       fullName: "John Doe",
       phoneNumber: "+651234567890",
       email: "john@example.com",
@@ -111,7 +112,10 @@ describe("POST /auth/signup", () => {
   });
 
   it("should return 409 when email is already in use", async () => {
-    vi.mocked(queries.createUser).mockResolvedValue(false);
+    vi.mocked(queries.getUserByEmail).mockResolvedValue ({ 
+    userId: 1, 
+    email: "john@example.com" 
+    } as any);
 
     const response = await request(app).post("/auth/signup").send({
       fullName: "John Doe",
@@ -121,6 +125,7 @@ describe("POST /auth/signup", () => {
     });
 
     expect(response.status).toBe(409);
+    expect(response.body.error).toBe("Email already in use");
   });
 
   it("should return 400 when pin is missing", async () => {
@@ -171,6 +176,10 @@ describe("POST /auth/login", () => {
       phoneNumber: "+651234567890",
       email: "john@example.com",
       hashedPin: "hashed_pin",
+      emailverified: true,
+      phoneverified: true,
+      emailToken: null,
+      emailTokenExpiry: null
     });
 
     const response = await request(app).post("/auth/login").send({

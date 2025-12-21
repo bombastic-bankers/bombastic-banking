@@ -1,4 +1,4 @@
-import { pgTable, serial, integer, text, timestamp, numeric, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, text, timestamp, numeric, primaryKey, boolean, varchar } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
   userId: serial("user_id").primaryKey(),
@@ -6,6 +6,11 @@ export const users = pgTable("users", {
   phoneNumber: text("phone_number").notNull(),
   email: text("email").notNull().unique(),
   hashedPin: text("hashed_pin").notNull(),
+  phoneverified: boolean("phoneverified").default(false),
+  emailverified: boolean("emailverified").default(false),
+  emailToken: varchar("emailtoken", { length: 255 }),      
+  emailTokenExpiry: timestamp("emailtokenexpiry"),    
+
 });
 
 export const ledger = pgTable("transaction_ledger", {
