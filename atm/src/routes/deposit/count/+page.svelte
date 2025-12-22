@@ -9,13 +9,12 @@
 
 	onMount(async () => {
 		await depositCountingPromise;
+		const amount = +page.url.searchParams.get('amount')!;
 		await sendEvent({
 			name: 'deposit-collected',
-			// TODO: Better error handling
-			data: { amount: +page.url.searchParams.get('amount')! }
 		});
 		setTimeout(() => {
-			goto('/deposit/Received?next=/deposit/received');
+			goto('/deposit/Received?amount=' + amount);
 		}, 10_000);
 	});
 </script>

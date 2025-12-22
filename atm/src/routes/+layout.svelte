@@ -24,7 +24,7 @@
 <div class="relative flex min-h-screen justify-center bg-black pt-10 pb-40">
 
     <!-- INNER SCREEN / WHITE BOX -->
-    <div class="w-[90%] max-w-[900px] h-screen bg-[#e5e7eb] rounded-2xl p-6 shadow-xl border border-gray-300">
+    <div class="w-[90%] max-w-[900px] h-[650px] bg-[#e5e7eb] rounded-2xl p-6 shadow-xl border border-gray-300">
         {@render children()}
     </div>
 
