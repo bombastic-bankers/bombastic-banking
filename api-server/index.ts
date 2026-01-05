@@ -15,6 +15,7 @@ import {
 import { ablyAuth } from "./controllers/ably.js";
 import { PORT } from "./env.js";
 import { atmParam } from "./middleware/atm.js";
+import { updateProfile } from "./controllers/updateProfile.js";
 
 const TESTING = process.env.NODE_ENV === "test";
 
@@ -31,6 +32,7 @@ app.post("/auth/ably", ablyAuth);
 app.use(authenticate);
 
 app.get("/userinfo", getUserInfo);
+app.put("/profile", updateProfile)
 
 const touchless = express.Router({ mergeParams: true });
 touchless.use(atmParam);

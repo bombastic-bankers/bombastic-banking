@@ -47,3 +47,34 @@ export async function getUserInfo(userId: number): Promise<{ fullName: string; a
 
   return { fullName, accountBalance: +(accountBalanceString ?? 0) };
 }
+
+/**
+ * update the user profile with the related information.
+ */
+export type UpdateUserProfilePatch = {
+  fullName?: string;
+  phoneNumber?: string;
+  email?: string;
+};
+
+export async function updateUserProfile(
+  userId: number,
+  patch: UpdateUserProfilePatch
+): Promise<{ userId: number; fullName: string; phoneNumber: string; email: string } | null> {
+  const updatedRows = await db
+    .update(users)
+    .set({
+      ...(patch.fullName !== undefined ? { fullName: patch.fullName } : {}),
+      ...(patch.phoneNumber !== undefined ? { phoneNumber: patch.phoneNumber } : {}),
+      ...(patch.email !== undefined ? { email: patch.email } : {})
+    })
+    .where(eq(users.userId, userId))
+    .returning({
+      userId: users.userId,
+      fullName: users.fullName,
+      phoneNumber: users.phoneNumber,
+      email: users.email
+    });
+
+  return updatedRows[0] ?? null;
+}
