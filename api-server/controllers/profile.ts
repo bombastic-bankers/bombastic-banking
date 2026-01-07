@@ -10,9 +10,12 @@ const updateProfileBodySchema = z
     phoneNumber: z.string().regex(/^\d{8}$/).optional(),
     email: z.email().optional()
   })
-  .refine((data) => Object.keys(data).length > 0, {
-    message: "At least one field must be provided"
-  });
+  .strict()
+  .refine(
+    (data) => data.fullName !== undefined || data.phoneNumber !== undefined || data.email !== undefined,
+    { message: "At least one field must be provided" }
+  );
+
 
 export async function updateProfile(req: Request, res: Response) {
   try {

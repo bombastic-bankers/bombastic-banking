@@ -15,7 +15,7 @@ import {
 import { ablyAuth } from "./controllers/ably.js";
 import { PORT } from "./env.js";
 import { atmParam } from "./middleware/atm.js";
-import { updateProfile } from "./controllers/updateProfile.js";
+import { updateProfile } from "./controllers/profile.js";
 
 const TESTING = process.env.NODE_ENV === "test";
 
