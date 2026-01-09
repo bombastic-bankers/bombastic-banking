@@ -27,14 +27,9 @@ class QuickAction extends StatelessWidget {
             backgroundColor: Theme.of(
               context,
             ).colorScheme.surfaceContainerHighest,
-            padding: const EdgeInsets.all(12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            padding: const EdgeInsets.only(left: 12, right: 12),
           ),
         ),
-
-        const SizedBox(height: 8),
 
         Text(
           label,

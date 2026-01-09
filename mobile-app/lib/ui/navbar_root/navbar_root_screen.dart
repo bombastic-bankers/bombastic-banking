@@ -14,10 +14,8 @@ class NavbarRootScreen extends StatefulWidget {
 class _NavbarRootScreenState extends State<NavbarRootScreen> {
   final List<Widget> _screens = [
     const HomeScreen(),
-    const Center(child: Text('Plan Page (Placeholder)')),
     const ATMServicesScreen(),
     const Center(child: Text('Pay & Transfer Page (Placeholder)')),
-    const Center(child: Text('Rewards Page (Placeholder)')),
     const Center(child: Text('More Page (Placeholder)')),
   ];
 
@@ -47,20 +45,12 @@ class _NavbarRootScreenState extends State<NavbarRootScreen> {
               label: 'Home',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.event_note_outlined),
-              label: 'Plan',
-            ),
-            BottomNavigationBarItem(
               icon: Icon(Icons.local_atm_outlined),
               label: 'ATM Services',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.payment_outlined),
               label: 'Pay & Transfer',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.card_giftcard_outlined),
-              label: 'Rewards',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.more_horiz),
