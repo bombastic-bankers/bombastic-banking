@@ -6,24 +6,46 @@ For this prototype, we have no cash-related hardware, so all cash transactions a
 
 ## Development
 
-Follow the `.env.example` file for the API server or ATM (depending on what you want to run).
+**To set up and run the API server,**
 
-To run the API server or ATM, `cd` into the corresponding folder and run the following.
+1. Create a `api-server/.env` following `api-server/.env.example`.
 
-```
-$ npm run dev
-```
+2. ```
+   $ cd api-server
+   $ npm i
+   $ npm run seed  # Seed database with internal accounts
+   $ npm run dev
+   ```
 
-To generate an `ATM_TOKEN` for the ATM, run the following from `api-server/`.
+**To set up and run the ATM,**
 
-```
-$ npm run gen-atm-token --id=<atmId>  # <atmId> must be an integer
-```
+1. Create a `atm/.env` following `atm/.env.example`.
 
-To use the deployed API server with your ATM running locally, set the following in `atm/.env`.
+2. ```
+   $ cd api-server
+   $ npm i
+   $ npm run gen-atm-token --id=123  # Use any integer
+   $ cd ..
+   ```
 
-```
-API_SERVER_URL="https://bombastic-bankers.vercel.app"
-```
+3. Copy the output to the `ATM_TOKEN` in `atm/.env`.
+
+4. If you wish to use the deployed API server with your ATM running locally, set the following in `atm/.env`:
+   ```
+   API_SERVER_URL="https://bombastic-bankers.vercel.app"
+   ```
+
+5. ```
+   $ cd atm
+   $ npm i
+   $ npm run dev
+   ```
+
+**To update the database with a modified schema,**
+
+1. ```
+   $ cd api-server
+   $ npx drizzle-kit push
+   ```
 
 Refer to `docs/` for the system's functional requirements and architecture specification.
