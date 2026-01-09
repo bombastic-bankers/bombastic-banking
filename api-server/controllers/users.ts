@@ -1,11 +1,9 @@
-import jwt from "jsonwebtoken";
-import * as queries from "../db/queries/index.js";
-import { JWT_SECRET } from "../env.js";
 import { Request, Response } from "express";
 import z from "zod";
 import * as queries from "../db/queries/index.js";
-import { generateAuthTokens } from "../utils/tokenService";
+import { generateAuthTokens } from "../services/auth.js";
 
+/** Create a new user account with the provided credentials. */
 export async function signUp(req: Request, res: Response) {
   const userInit = z
     .object({
@@ -24,6 +22,7 @@ export async function signUp(req: Request, res: Response) {
   return res.status(201).send();
 }
 
+/** Authenticate a user and issue access and refresh tokens. */
 export async function login(req: Request, res: Response) {
   const { email, pin } = z
     .object({
@@ -32,38 +31,35 @@ export async function login(req: Request, res: Response) {
     })
     .parse(req.body);
   const user = await queries.getUserByCredentials(email, pin);
-
   if (user === null) {
     return res.status(401).json({ error: "Incorrect email or PIN" });
   }
 
-  const token = jwt.sign({ userId: user.userId }, JWT_SECRET, {
-    expiresIn: "2m",
-  });
+  const { accessToken, refreshToken } = await generateAuthTokens(user.userId);
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 30);
+  await queries.setRefreshToken(user.userId, refreshToken, expiresAt);
 
   res.json({ accessToken, refreshToken });
 }
 
+/** Return the authenticated user's information. */
 export async function getUserInfo(req: Request, res: Response) {
   res.send(await queries.getUserInfo(req.userId));
 }
 
+/** Refresh an authenticated session by rotating the refresh token and issuing a new access token. */
 export async function refreshSession(req: Request, res: Response) {
-  const incomingRefreshToken = req.body.refreshToken;
+  const oldRefreshToken = z.string().parse(req.body.refreshToken);
 
-  if (!incomingRefreshToken) {
-    return res.status(401).json({ error: "No refresh token provided" });
-  }
+  const { accessToken, refreshToken: newRefreshToken } = await generateAuthTokens(req.userId);
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 30);
 
-  const storedToken = await queries.getRefreshToken(incomingRefreshToken);
-
-  if (!storedToken || new Date() > storedToken.expiresAt) {
+  const success = await queries.resetRefreshToken(oldRefreshToken, newRefreshToken, expiresAt);
+  if (!success) {
     return res.status(401).json({ error: "Invalid or expired refresh token" });
   }
 
-  await queries.deleteRefreshToken(storedToken.id);
-
-  const { accessToken, refreshToken } = await generateAuthTokens(storedToken.userId);
-
-  res.json({ accessToken, refreshToken });
+  res.json({ accessToken, refreshToken: newRefreshToken });
 }
