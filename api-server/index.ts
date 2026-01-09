@@ -13,6 +13,7 @@ import {
   cancelCashDeposit,
 } from "./controllers/atm.js";
 import { ablyAuth } from "./controllers/ably.js";
+import { getContactsByPhoneNumber } from "./controllers/contacts.js";
 import { PORT } from "./env.js";
 import { atmParam } from "./middleware/atm.js";
 
@@ -41,6 +42,8 @@ touchless.post("/deposit/confirm", confirmCashDeposit);
 touchless.post("/deposit/cancel", cancelCashDeposit);
 touchless.post("/exit", exit);
 app.use("/touchless/:atmId", touchless);
+
+app.get("/contacts", getContactsByPhoneNumber);
 
 app.use(validationError);
 app.use(anyError);
