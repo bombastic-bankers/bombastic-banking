@@ -23,7 +23,7 @@ class NFCService {
         for (final record in records) {
           // The payload starts with encoding/language info.
           // Skip first byte (status) and next two bytes (language code).
-          // Language code is variable length, but this code assumes it's 2 bytes.
+          // Language code is variable length, assume it's 2 bytes.
           // TODO: Handle variable-length language codes properly.
           final text = String.fromCharCodes(record.payload.sublist(3));
           _controller.add(text);

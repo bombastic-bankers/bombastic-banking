@@ -5,12 +5,14 @@ import '../app_constants.dart';
 class AppButton extends StatelessWidget {
   final String text;
   final VoidCallback? onPressed;
+  final double? height;
   final Color? color;
 
   const AppButton({
     super.key,
     required this.text,
     required this.onPressed,
+    this.height,
     this.color,
   });
 
@@ -19,7 +21,7 @@ class AppButton extends StatelessWidget {
     final buttonColor = color ?? brandRed;
     return SizedBox(
       width: double.infinity,
-      height: 50,
+      height: height ?? 50,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: buttonColor,

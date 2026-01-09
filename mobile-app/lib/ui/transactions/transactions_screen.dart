@@ -52,11 +52,26 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 child: Wrap(
                   spacing: 13,
                   children: vm.pastSixMonths.map((month) {
+                    final bool isSelected = vm.selectedMonth == month;
                     return OutlinedButton(
-                      onPressed: () {},
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: isSelected
+                            ? Theme.of(context).colorScheme.primaryContainer
+                            : null,
+                        side: BorderSide(
+                          color: isSelected
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      onPressed: () {
+                        vm.selectMonth(month);
+                      },
                       child: Text(
                         style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          color: isSelected
+                              ? Theme.of(context).colorScheme.onPrimaryContainer
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                         DateFormat.yMMM().format(month),
                       ),
