@@ -21,18 +21,16 @@ const TESTING = process.env.NODE_ENV === "test";
 const app = express();
 !TESTING && app.use(morgan("dev"));
 app.use(cors());
-
 app.use(express.json());
 
-app.get("/auth/ably", ablyAuth);
 app.post("/auth/signup", signUp);
 app.post("/auth/login", login);
-app.post("/auth/refresh", refreshSession);
 app.post("/auth/ably", ablyAuth);
 
 app.use(authenticate);
 
-app.get("/user-info", getUserInfo);
+app.post("/auth/refresh", refreshSession);
+app.get("/userinfo", getUserInfo);
 
 const touchless = express.Router({ mergeParams: true });
 touchless.use(atmParam);

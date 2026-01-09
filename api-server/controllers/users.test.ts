@@ -1,26 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import request from "supertest";
-import jwt from "jsonwebtoken";
 import app from "../index.js";
-import * as env from "../env.js";
 import * as queries from "../db/queries/index.js";
-import * as tokenService from "../utils/tokenService.js";
+import * as auth from "../services/auth.js";
+import { NextFunction, Request, Response } from "express";
 
 vi.mock("../db/queries");
-vi.mock("../utils/tokenService");
-
-// mock token service
-vi.mock("../utils/tokenService", async (importOriginal) => {
-  return {
-    generateAuthTokens: vi.fn().mockImplementation((userId) => {
-      const accessToken = jwt.sign({ userId }, env.JWT_SECRET || "test-secret", { expiresIn: "2m" });
-      return Promise.resolve({
-        accessToken,
-        refreshToken: "mock-refresh-token-string",
-      });
-    }),
-  };
-});
+vi.mock("../services/auth");
+vi.mock("../middleware/auth", () => ({
+  authenticate: (req: Request, _: Response, next: NextFunction) => {
+    req.userId = 1;
+    next();
+  },
+}));
 
 describe("POST /auth/signup", () => {
   beforeEach(() => {
@@ -188,7 +180,7 @@ describe("POST /auth/login", () => {
       hashedPin: "123456",
       isInternal: false,
     });
-    vi.mocked(tokenService.generateAuthTokens).mockResolvedValue({
+    vi.mocked(auth.generateAuthTokens).mockResolvedValue({
       accessToken: "access-token",
       refreshToken: "refresh-token",
     });
@@ -203,7 +195,7 @@ describe("POST /auth/login", () => {
     expect(response.body.accessToken).toBe("access-token");
     expect(response.body).toHaveProperty("refreshToken");
     expect(response.body.refreshToken).toBe("refresh-token");
-    expect(tokenService.generateAuthTokens).toHaveBeenCalledWith(1);
+    expect(auth.generateAuthTokens).toHaveBeenCalledWith(1);
   });
 
   it("should return 400 when user does not exist or wrong PIN", async () => {
@@ -215,7 +207,7 @@ describe("POST /auth/login", () => {
     });
 
     expect(response.status).toBe(400);
-    expect(tokenService.generateAuthTokens).not.toHaveBeenCalled();
+    expect(auth.generateAuthTokens).not.toHaveBeenCalled();
   });
 
   it("should return 400 when email is invalid", async () => {
@@ -226,7 +218,7 @@ describe("POST /auth/login", () => {
 
     expect(response.status).toBe(400);
     expect(queries.getUserByCredentials).not.toHaveBeenCalled();
-    expect(tokenService.generateAuthTokens).not.toHaveBeenCalled();
+    expect(auth.generateAuthTokens).not.toHaveBeenCalled();
   });
 
   it("should return 400 when pin is invalid", async () => {
@@ -237,7 +229,7 @@ describe("POST /auth/login", () => {
 
     expect(response.status).toBe(400);
     expect(queries.getUserByCredentials).not.toHaveBeenCalled();
-    expect(tokenService.generateAuthTokens).not.toHaveBeenCalled();
+    expect(auth.generateAuthTokens).not.toHaveBeenCalled();
   });
 });
 
@@ -247,44 +239,39 @@ describe("POST /auth/refresh", () => {
     vi.clearAllMocks();
   });
 
-  it("should return 401 if no refresh token is provided", async () => {
+  it("should return 400 if no refresh token is provided in body", async () => {
     const response = await request(app).post("/auth/refresh").send({});
-    expect(response.status).toBe(401);
-    expect(response.body.error).toBe("No refresh token provided");
+
+    expect(response.status).toBe(400);
+    expect(auth.generateAuthTokens).not.toHaveBeenCalled();
+    expect(queries.resetRefreshToken).not.toHaveBeenCalled();
   });
 
-  it("should return 401 if token is not found in DB or expired", async () => {
-    vi.mocked(queries.getRefreshToken).mockResolvedValue(null as any);
+  it("should return 401 if refresh token is non-existent or expired", async () => {
+    vi.mocked(queries.resetRefreshToken).mockResolvedValue(false);
 
-    const response = await request(app).post("/auth/refresh").send({ refreshToken: "some-invalid-token" });
     const response = await request(app).post("/auth/refresh").send({ refreshToken: "some-invalid-token" });
 
     expect(response.status).toBe(401);
-    expect(response.body.error).toBe("Invalid or expired refresh token");
+    expect(queries.resetRefreshToken).toHaveBeenCalled();
   });
 
   it("should rotate tokens and return 200 on success", async () => {
-    // find valid token
-    const validStoredToken = {
-      id: 123,
-      userId: 1,
-      token: "valid-old-token",
-      expiresAt: new Date(Date.now() + 100000),
-      createdAt: new Date(),
-    };
-    // mock the finding of the token
-    vi.mocked(queries.getRefreshToken).mockResolvedValue(validStoredToken as any); // ts(2345) here
+    vi.mocked(queries.resetRefreshToken).mockResolvedValue(true);
+    vi.mocked(auth.generateAuthTokens).mockResolvedValue({
+      accessToken: "new-access-token",
+      refreshToken: "new-refresh-token",
+    });
 
-    vi.mocked(queries.getRefreshToken).mockResolvedValue(validStoredToken);
-    vi.mocked(queries.deleteRefreshToken).mockResolvedValue(undefined);
-
-    const response = await request(app).post("/auth/refresh").send({ refreshToken: "valid-old-token" });
     const response = await request(app).post("/auth/refresh").send({ refreshToken: "valid-old-token" });
 
     expect(response.status).toBe(200);
 
     // check if got new Access Token
     expect(response.body).toHaveProperty("accessToken");
-    expect(queries.deleteRefreshToken).toHaveBeenCalledWith(123);
+    expect(response.body.accessToken).toBe("new-access-token");
+    expect(response.body).toHaveProperty("refreshToken");
+    expect(response.body.refreshToken).toBe("new-refresh-token");
+    expect(queries.resetRefreshToken).toHaveBeenCalledWith("valid-old-token", "new-refresh-token", expect.any(Date));
   });
 });

@@ -92,11 +92,10 @@ export const touchlessSessions = pgTable(
 
 // refresh tokens table
 export const refreshTokens = pgTable("refresh_tokens", {
-  id: serial("id").primaryKey(),
+  token: text("token").primaryKey(),
   userId: integer("user_id")
-    .notNull()
+    .unique()
     .references(() => users.userId, { onDelete: "cascade" }), // deletes token if user is deleted
-  token: text("token").notNull(),
   expiresAt: timestamp("expires_at").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
