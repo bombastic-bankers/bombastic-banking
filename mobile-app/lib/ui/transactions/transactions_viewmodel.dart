@@ -66,4 +66,14 @@ class TransactionsViewModel extends ChangeNotifier {
       return DateTime(now.year, now.month - i, 1);
     });
   }
+
+  DateTime? _selectedMonth;
+  DateTime? get selectedMonth {
+    return _selectedMonth;
+  }
+
+  void selectMonth(DateTime month) {
+    _selectedMonth = month;
+    notifyListeners();
+  }
 }

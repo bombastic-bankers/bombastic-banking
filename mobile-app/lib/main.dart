@@ -34,7 +34,6 @@ Future main() async {
 
 class BankApp extends StatefulWidget {
   const BankApp({super.key});
-
   @override
   State<BankApp> createState() => _BankAppState();
 }
@@ -106,9 +105,17 @@ class _BankAppState extends State<BankApp> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: brandRed,
-            dynamicSchemeVariant: DynamicSchemeVariant.fidelity,
+          colorScheme: const ColorScheme(
+            brightness: Brightness.light,
+            primary: Color(0xFFE50513),
+            onPrimary: Color(0xFFF9F5F6),
+            secondary: Color(0xFF5D6BD4),
+            onSecondary: Color(0xFFDDDFEC),
+            error: Colors.red,
+            onError: Colors.white,
+            surface: Colors.white,
+            onSurface: Color(0xFF232125),
+            tertiary: Color(0xFF3EB489),
           ),
           useMaterial3: true,
         ),
