@@ -171,6 +171,7 @@ describe("POST /auth/login", () => {
       phoneNumber: "+651234567890",
       email: "john@example.com",
       hashedPin: "hashed_pin",
+      isInternal: false,
     });
 
     const response = await request(app).post("/auth/login").send({

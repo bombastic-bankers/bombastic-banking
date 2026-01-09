@@ -29,7 +29,7 @@ describe("POST /touchless/:atmId/withdraw", () => {
       amount: 100.5,
     });
     expect(realtime.waitForATM).toHaveBeenCalledWith(1, "withdraw-ready");
-    expect(queries.updateLedgerForWithdrawal).toHaveBeenCalledWith(1, 100.5);
+    expect(queries.withdrawCash).toHaveBeenCalledWith(1, 100.5);
   });
 
   it("should return 409 if the ATM is in use by another user", async () => {
@@ -38,14 +38,14 @@ describe("POST /touchless/:atmId/withdraw", () => {
     const response = await request(app).post("/touchless/1/withdraw").send({ amount: 100.5 });
 
     expect(response.status).toBe(409);
-    expect(queries.updateLedgerForWithdrawal).not.toBeCalled();
+    expect(queries.withdrawCash).not.toBeCalled();
   });
 
   it("should return 400 if the ATM ID is invalid", async () => {
     const response = await request(app).post("/touchless/123abc/withdraw").send({ amount: 100.5 });
 
     expect(response.status).toBe(400);
-    expect(queries.updateLedgerForWithdrawal).not.toBeCalled();
+    expect(queries.withdrawCash).not.toBeCalled();
   });
 
   it("should return 400 if the amount is negative", async () => {
@@ -54,7 +54,7 @@ describe("POST /touchless/:atmId/withdraw", () => {
     const response = await request(app).post("/touchless/1/withdraw").send({ amount: -100.5 });
 
     expect(response.status).toBe(400);
-    expect(queries.updateLedgerForWithdrawal).not.toBeCalled();
+    expect(queries.withdrawCash).not.toBeCalled();
   });
 
   it("should return 400 if the amount is 0", async () => {
@@ -63,7 +63,7 @@ describe("POST /touchless/:atmId/withdraw", () => {
     const response = await request(app).post("/touchless/1/withdraw").send({ amount: 0 });
 
     expect(response.status).toBe(400);
-    expect(queries.updateLedgerForWithdrawal).not.toBeCalled();
+    expect(queries.withdrawCash).not.toBeCalled();
   });
 
   it("should return 400 if the amount is not a multiple of 0.01", async () => {
@@ -72,7 +72,7 @@ describe("POST /touchless/:atmId/withdraw", () => {
     const response = await request(app).post("/touchless/1/withdraw").send({ amount: 100.005 });
 
     expect(response.status).toBe(400);
-    expect(queries.updateLedgerForWithdrawal).not.toBeCalled();
+    expect(queries.withdrawCash).not.toBeCalled();
   });
 });
 

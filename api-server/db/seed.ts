@@ -1,26 +1,57 @@
-/** Seed the database with sample data, removing all existing data. */
+/**
+ * Seed the database with sample data, removing all existing data.
+ */
 
 import bcrypt from "bcryptjs";
 import { db } from "./index.js";
-import { atms, touchlessSessions, ledger, users } from "./schema.js";
+import { atms, ledger, users, transactions } from "./schema.js";
+import * as schema from "./schema.js";
+import { CASH_VAULT_USER_ID, SHAREHOLDER_EQUITY_USER_ID } from "./constants.js";
+import { reset } from "drizzle-seed";
 
-await db.delete(users);
-await db.insert(users).values({
-  userId: 1,
-  fullName: "Jayden Tan",
-  phoneNumber: "91234567",
-  email: "jaydentan@gmail.com",
-  hashedPin: await bcrypt.hash("123456", 10),
-});
+await reset(db, schema);
 
-await db.delete(ledger);
-await db.insert(ledger).values({
-  userId: 1,
-  amount: "100.00",
-  timestamp: new Date(2025, 10, 19, 14, 30),
-});
+// Create internal accounts
+await db.insert(users).values([
+  {
+    userId: CASH_VAULT_USER_ID,
+    fullName: "Cash Vault",
+    phoneNumber: "00000000",
+    email: "cash-vault@internal.bombastic-banking",
+    hashedPin: await bcrypt.hash("internal", 10),
+    isInternal: true,
+  },
+  {
+    userId: SHAREHOLDER_EQUITY_USER_ID,
+    fullName: "Shareholder Equity",
+    phoneNumber: "00000000",
+    email: "shareholder-equity@internal.bombastic-banking",
+    hashedPin: await bcrypt.hash("internal", 10),
+    isInternal: true,
+  },
+]);
 
-await db.delete(atms);
+// Initial transaction for bank capitalization
+const [initialTransaction] = await db
+  .insert(transactions)
+  .values({
+    description: "Initial bank capitalization",
+  })
+  .returning();
+
+// Create balanced ledger entries
+await db.insert(ledger).values([
+  {
+    transactionId: initialTransaction.transactionId,
+    userId: CASH_VAULT_USER_ID,
+    change: "10000.00", // Asset increase (positive)
+  },
+  {
+    transactionId: initialTransaction.transactionId,
+    userId: SHAREHOLDER_EQUITY_USER_ID,
+    change: "-10000.00", // Equity (negative, balances the asset)
+  },
+]);
+
+// Create ATM
 await db.insert(atms).values({ atmId: 1, location: "OCBC Centre Branch" });
-
-await db.delete(touchlessSessions);

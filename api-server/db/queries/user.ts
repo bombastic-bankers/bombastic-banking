@@ -4,8 +4,7 @@ import { eq, sum, and } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 /**
- * Attempt to create a new user, returning `false` if
- * the email is already in use and `true` otherwise.
+ * Create a new user account. Returns whether the account already exists.
  */
 export async function createUser(user: {
   fullName: string;
@@ -13,13 +12,15 @@ export async function createUser(user: {
   email: string;
   pin: string;
 }): Promise<boolean> {
+  const hashedPin = await bcrypt.hash(user.pin, 10);
   const inserted = await db
     .insert(users)
     .values({
       fullName: user.fullName,
       phoneNumber: user.phoneNumber,
       email: user.email,
-      hashedPin: await bcrypt.hash(user.pin, 10),
+      hashedPin: hashedPin,
+      isInternal: false,
     })
     .onConflictDoNothing()
     .returning();
@@ -36,11 +37,30 @@ export async function getUserByCredentials(email: string, pin: string): Promise<
   return result[0];
 }
 
+/**
+ * Retrieve a user by their email address.
+ */
+export async function getUserByEmail(email: string): Promise<typeof users.$inferSelect | null> {
+  const results = await db.select().from(users).where(eq(users.email, email));
+  return results.at(0) ?? null;
+}
+
+/**
+ * Retrieve a user by their phone number.
+ */
+export async function getUserByPhoneNumber(phoneNumber: string): Promise<typeof users.$inferSelect | null> {
+  const results = await db.select().from(users).where(eq(users.phoneNumber, phoneNumber));
+  return results.at(0) ?? null;
+}
+
+/**
+ * Get user information including their current account balance.
+ */
 export async function getUserInfo(userId: number): Promise<{ fullName: string; accountBalance: number }> {
   const { fullName } = (await db.select({ fullName: users.fullName }).from(users).where(eq(users.userId, userId)))[0];
   const { accountBalance: accountBalanceString } = (
     await db
-      .select({ accountBalance: sum(ledger.amount) })
+      .select({ accountBalance: sum(ledger.change) })
       .from(ledger)
       .where(eq(ledger.userId, userId))
   )[0];
