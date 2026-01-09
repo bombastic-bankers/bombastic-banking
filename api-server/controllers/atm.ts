@@ -18,7 +18,7 @@ export async function withdrawCash(req: Request, res: Response) {
   // Wait for the ATM to finish withdrawing the cash
   await realtime.waitForATM(req.atmId, "withdraw-ready");
 
-  await queries.updateLedgerForWithdrawal(req.userId, amount);
+  await queries.withdrawCash(req.userId, amount);
   return res.status(200).send();
 }
 
