@@ -3,8 +3,7 @@ import { Request, Response } from "express";
 import z from "zod";
 
 export async function getContactsByPhoneNumber(req: Request, res: Response) {
-  const phoneNumbers = z.e164().array()
-    .parse(req.body);
+  const phoneNumbers = z.e164().array().parse(req.body);
 
   const contacts = await queries.getContactsByPhoneNumber(phoneNumbers);
   if (!contacts) {
