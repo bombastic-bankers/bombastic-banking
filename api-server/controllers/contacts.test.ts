@@ -55,9 +55,7 @@ describe("POST /contacts", () => {
   });
 
   it("should return 200 when request body is empty", async () => {
-    const response = await request(app)
-      .post("/contacts")
-      .send([]);
+    const response = await request(app).post("/contacts").send([]);
 
     expect(response.status).toBe(200);
     expect(queries.getContactsByPhoneNumber).not.toHaveBeenCalled();
