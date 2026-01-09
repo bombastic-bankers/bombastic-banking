@@ -62,7 +62,7 @@ export async function endTouchlessSession(userId: number, atmId: number): Promis
  */
 export async function withdrawCash(userId: number, amount: number): Promise<void> {
   await db.transaction(async (tx) => {
-    const [withdrawalTransaction] = await tx
+    const [{ transactionId }] = await tx
       .insert(transactions)
       .values({
         description: "Cash withdrawal",
@@ -71,12 +71,12 @@ export async function withdrawCash(userId: number, amount: number): Promise<void
 
     await tx.insert(ledger).values([
       {
-        transactionId: withdrawalTransaction.transactionId,
+        transactionId,
         userId: userId,
         change: amount.toFixed(2),
       },
       {
-        transactionId: withdrawalTransaction.transactionId,
+        transactionId,
         userId: CASH_VAULT_USER_ID,
         change: (-amount).toFixed(2),
       },
@@ -89,7 +89,7 @@ export async function withdrawCash(userId: number, amount: number): Promise<void
  */
 export async function depositCash(userId: number, amount: number): Promise<void> {
   await db.transaction(async (tx) => {
-    const [transaction] = await tx
+    const [{ transactionId }] = await tx
       .insert(transactions)
       .values({
         description: "Cash deposit",
@@ -98,12 +98,12 @@ export async function depositCash(userId: number, amount: number): Promise<void>
 
     await tx.insert(ledger).values([
       {
-        transactionId: transaction.transactionId,
+        transactionId,
         userId: userId,
         change: (-amount).toFixed(2),
       },
       {
-        transactionId: transaction.transactionId,
+        transactionId,
         userId: CASH_VAULT_USER_ID,
         change: amount.toFixed(2),
       },
