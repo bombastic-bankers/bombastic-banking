@@ -31,7 +31,7 @@ app.post("/auth/ably", ablyAuth);
 
 app.use(authenticate);
 
-app.get("/userinfo", getUserInfo);
+app.get("/account-overview", getUserInfo);
 app.get("/profile/get", getUserProfile)
 app.put("/profile/update", updateProfile)
 
