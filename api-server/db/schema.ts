@@ -9,7 +9,7 @@ import { pgTable, serial, integer, text, timestamp, numeric, primaryKey, boolean
  * Customer accounts (isInternal=false) represent liabilities to customers.
  */
 export const users = pgTable("users", {
-  userId: serial("user_id").primaryKey(),
+  userId: integer("user_id").primaryKey().generatedByDefaultAsIdentity(),
   fullName: text("full_name").notNull(),
   phoneNumber: text("phone_number").notNull(),
   email: text("email").notNull().unique(),
@@ -25,7 +25,7 @@ export const users = pgTable("users", {
  * according to double-entry accounting (assets + liabilities = 0).
  */
 export const transactions = pgTable("transactions", {
-  transactionId: serial("transaction_id").primaryKey(),
+  transactionId: integer("transaction_id").primaryKey().generatedAlwaysAsIdentity(),
   description: text("description"),
   timestamp: timestamp("timestamp").defaultNow().notNull(),
 });
@@ -41,7 +41,7 @@ export const transactions = pgTable("transactions", {
  * - Customer withdrawal: Customer account +$100 (liability ↓), Cash vault -$100 (asset ↓)
  */
 export const ledger = pgTable("ledger", {
-  entryId: serial("entry_id").primaryKey(),
+  entryId: integer("entry_id").primaryKey().generatedAlwaysAsIdentity(),
   transactionId: integer("transaction_id")
     .notNull()
     .references(() => transactions.transactionId, {
@@ -61,7 +61,7 @@ export const ledger = pgTable("ledger", {
  * ATMs table stores physical ATM locations.
  */
 export const atms = pgTable("atms", {
-  atmId: serial("atm_id").primaryKey(),
+  atmId: integer("atm_id").primaryKey().generatedAlwaysAsIdentity(),
   location: text("location").notNull(),
 });
 
