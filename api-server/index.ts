@@ -15,6 +15,7 @@ import {
 import { ablyAuth } from "./controllers/ably.js";
 import { PORT } from "./env.js";
 import { atmParam } from "./middleware/atm.js";
+import { transferMoney } from "./controllers/transaction.js";
 
 const TESTING = process.env.NODE_ENV === "test";
 
@@ -41,6 +42,8 @@ touchless.post("/deposit/confirm", confirmCashDeposit);
 touchless.post("/deposit/cancel", cancelCashDeposit);
 touchless.post("/exit", exit);
 app.use("/touchless/:atmId", touchless);
+
+app.post("/transfer", transferMoney);
 
 app.use(validationError);
 app.use(anyError);
