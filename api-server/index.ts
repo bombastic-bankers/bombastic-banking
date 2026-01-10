@@ -25,11 +25,11 @@ app.use(express.json());
 
 app.post("/auth/signup", signUp);
 app.post("/auth/login", login);
+app.post("/auth/refresh", refreshSession);
 app.post("/auth/ably", ablyAuth);
 
 app.use(authenticate);
 
-app.post("/auth/refresh", refreshSession);
 app.get("/userinfo", getUserInfo);
 
 const touchless = express.Router({ mergeParams: true });
