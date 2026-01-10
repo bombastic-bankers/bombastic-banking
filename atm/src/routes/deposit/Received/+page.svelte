@@ -1,7 +1,20 @@
 <script lang="ts">
+	import { sendEvent } from '$lib/realtime.remote';
+	import { deposit } from '$lib/simulate';
+	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	
 	const amount = +page.url.searchParams.get('amount')!;
+	let depositCountingPromise = deposit();
+	
+	onMount(async () => {
+		await depositCountingPromise;
+		setTimeout(() => goto('/'), 10_000);
+		await sendEvent({
+			name: 'deposit-collected',
+		});
+	});
 </script>
 
 <div

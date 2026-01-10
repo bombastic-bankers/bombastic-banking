@@ -43,7 +43,7 @@
 	<div class="flex justify-center gap-10 mt-10">
 
 		<button
-			onclick={() => goto('/instructions?next=/withdraw')}
+			onclick={() => goto('/withdraw')}
 			class="w-60 h-25 rounded-2xl bg-linear-to-b from-[#353b4b] to-[#1f2330]
 			text-white text-lg font-medium shadow-lg hover:brightness-110 transition
 			flex flex-col items-center justify-center"
@@ -53,7 +53,7 @@
 		</button>
 
 		<button
-			onclick={() => goto('/instructions?next=/deposit')}
+			onclick={() => goto('/deposit')}
 			class="w-60 h-25 rounded-2xl bg-linear-to-b from-[#353b4b] to-[#1f2330]
 			text-white text-lg font-medium shadow-lg hover:brightness-110 transition
 			flex flex-col items-center justify-center"
@@ -63,7 +63,7 @@
 		</button>
 
 		<button
-			onclick={() => goto('/instructions?next=/payout')}
+			onclick={() => goto('/')}
 			class="w-60 h-25 rounded-2xl bg-linear-to-b from-[#353b4b] to-[#1f2330]
 			text-white text-lg font-medium shadow-lg hover:brightness-110 transition
 			flex flex-col items-center justify-center"

@@ -11,11 +11,11 @@
 		await depositCountingPromise;
 		const amount = +page.url.searchParams.get('amount')!;
 		await sendEvent({
-			name: 'deposit-collected',
+			name: 'deposit-counted',
 		});
 		setTimeout(() => {
-			goto('/deposit/Received?amount=' + amount);
-		}, 10_000);
+			goto('../instructions?amount=' + amount);
+		}, 6000);
 	});
 </script>
 <div class="w-full h-full bg-linear-to-b from-[#273245] to-[#1d2735] 
@@ -26,5 +26,4 @@
 				Please wait while we count your cash
 		</p>
 </div>
-
 
