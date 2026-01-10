@@ -45,3 +45,52 @@ export async function login(req: Request, res: Response) {
 export async function getUserInfo(req: Request, res: Response) {
   res.send(await queries.getUserInfo(req.userId));
 }
+
+/**
+ * update profile
+ */
+const updateProfileBodySchema = z
+  .object({
+    fullName: z.string().min(1).optional(),
+    phoneNumber: z.e164().optional(),
+    email: z.email().optional()
+  })
+  .refine(
+    (data) => data.fullName !== undefined || data.phoneNumber !== undefined || data.email !== undefined,
+    { message: "At least one field must be provided" }
+  );
+
+
+export async function updateProfile(req: Request, res: Response) {
+  const userId = req.userId;
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+    const patch = updateProfileBodySchema.parse(req.body);
+
+    const updated = await queries.updateUserProfile(userId, patch);
+
+    if (!updated) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    return res.json(updated);
+}
+
+/**
+ * get user profile
+ */
+
+export async function getUserProfile(req: Request, res: Response) {
+  const userId = req.userId;
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  const profile = await queries.getUserProfile(userId);
+
+  if (!profile) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  return res.json(profile);
+}

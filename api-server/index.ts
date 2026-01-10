@@ -3,7 +3,7 @@ import cors from "cors";
 import morgan from "morgan";
 import { authenticate } from "./middleware/auth.js";
 import { validationError, anyError } from "./middleware/error.js";
-import { getUserInfo, login, signUp } from "./controllers/users.js";
+import { getUserInfo, login, signUp, updateProfile, getUserProfile } from "./controllers/users.js";
 import {
   exit,
   withdrawCash,
@@ -15,7 +15,6 @@ import {
 import { ablyAuth } from "./controllers/ably.js";
 import { PORT } from "./env.js";
 import { atmParam } from "./middleware/atm.js";
-import { updateProfile } from "./controllers/profile.js";
 
 const TESTING = process.env.NODE_ENV === "test";
 
@@ -32,7 +31,8 @@ app.post("/auth/ably", ablyAuth);
 app.use(authenticate);
 
 app.get("/userinfo", getUserInfo);
-app.put("/profile", updateProfile)
+app.get("/profile/get", getUserProfile)
+app.put("/profile/update", updateProfile)
 
 const touchless = express.Router({ mergeParams: true });
 touchless.use(atmParam);

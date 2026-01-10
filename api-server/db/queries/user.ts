@@ -78,3 +78,23 @@ export async function updateUserProfile(
 
   return updatedRows[0] ?? null;
 }
+
+/**
+ * get the user profile
+ */
+export async function getUserProfile(userId: number): Promise<{
+  fullName: string;
+  phoneNumber: string;
+  email: string;
+} | null> {
+  const rows = await db
+    .select({
+      fullName: users.fullName,
+      phoneNumber: users.phoneNumber,
+      email: users.email,
+    })
+    .from(users)
+    .where(eq(users.userId, userId));
+
+  return rows[0] ?? null;
+}
