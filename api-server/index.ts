@@ -3,7 +3,7 @@ import cors from "cors";
 import morgan from "morgan";
 import { authenticate } from "./middleware/auth.js";
 import { validationError, anyError } from "./middleware/error.js";
-import { getUserInfo, login, signUp, updateProfile, getUserProfile } from "./controllers/users.js";
+import { getUserInfo, login, signUp, updateProfile, getUserProfile, refreshSession } from "./controllers/users.js"; // add refreshSession
 import {
   exit,
   withdrawCash,
@@ -15,6 +15,7 @@ import {
 import { ablyAuth } from "./controllers/ably.js";
 import { PORT } from "./env.js";
 import { atmParam } from "./middleware/atm.js";
+import { transferMoney } from "./controllers/transaction.js";
 
 const TESTING = process.env.NODE_ENV === "test";
 
@@ -23,9 +24,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.get("/auth/ably", ablyAuth);
 app.post("/auth/signup", signUp);
 app.post("/auth/login", login);
+app.post("/auth/refresh", refreshSession);
 app.post("/auth/ably", ablyAuth);
 
 app.use(authenticate);
@@ -43,6 +44,8 @@ touchless.post("/deposit/confirm", confirmCashDeposit);
 touchless.post("/deposit/cancel", cancelCashDeposit);
 touchless.post("/exit", exit);
 app.use("/touchless/:atmId", touchless);
+
+app.post("/transfer", transferMoney);
 
 app.use(validationError);
 app.use(anyError);
