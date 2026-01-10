@@ -17,7 +17,7 @@ class AuthService {
     );
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body)['token'];
+      return jsonDecode(response.body)['accessToken'];
     } else if (response.statusCode == 401) {
       throw InvalidCredentialsException();
     } else {
