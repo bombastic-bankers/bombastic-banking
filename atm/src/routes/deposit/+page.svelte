@@ -36,8 +36,6 @@
 
 		<p class="mt-4 text-center text-lg font-semibold text-white">
 			Please place your cash in the deposit slot
-			<br />
-			and refer to your phone for instructions
 		</p>
 	</div>
 
