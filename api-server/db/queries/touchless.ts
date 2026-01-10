@@ -1,9 +1,10 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "../index.js";
-import { touchlessSessions, ledger, atms } from "../schema.js";
+import { touchlessSessions, ledger, atms, transactions } from "../schema.js";
+import { CASH_VAULT_USER_ID } from "../constants.js";
 
 /**
- * Return whether an ATM with the specified ID exists.
+ * Check if an ATM with the specified ID exists.
  */
 export async function atmExists(atmId: number): Promise<boolean> {
   const result = await db.select().from(atms).where(eq(atms.atmId, atmId));
@@ -11,19 +12,31 @@ export async function atmExists(atmId: number): Promise<boolean> {
 }
 
 /**
- * Initiate a touchless ATM session, returning `false` if the
- * ATM is already in use by another user and `true` otherwise.
- * No-op if the user already has a session with that ATM.
+ * Initiate a touchless ATM session, returning `false` if the ATM is already in
+ * use by another user or if the userId or atmId doesn't exist. No-op if the
+ * user already has a session with that ATM.
  */
 export async function ensureTouchlessSession(userId: number, atmId: number): Promise<boolean> {
-  // TODO: Handle non-existent userIds/atmIds
-  const result = await db.insert(touchlessSessions).values({ userId, atmId }).onConflictDoNothing().returning();
+  let result: (typeof touchlessSessions.$inferSelect)[];
+  try {
+    // If the insert fails because of a conflict (no error, result.length == 0),
+    // it's because:
+    // 1. The user already has a session with that ATM
+    // 2. The user already has a session with another ATM
+    // 3. The ATM is already in use by another user
+    //
+    // If the insert fails because of a foreign key constraint violation
+    // (error), it's because the userId or atmId doesn't exist.
+    result = await db.insert(touchlessSessions).values({ userId, atmId }).onConflictDoNothing().returning();
+  } catch (error) {
+    return false;
+  }
+
   if (result.length > 0) {
     return true;
   }
 
-  // Check whether nothing was inserted because the user already has a session with that ATM, or
-  // because the ATM is already in use by another user / the user is already using another ATM.
+  // Check if session already exists for this user-ATM pair
   const existing = await db
     .select()
     .from(touchlessSessions)
@@ -34,8 +47,7 @@ export async function ensureTouchlessSession(userId: number, atmId: number): Pro
 }
 
 /**
- * End a touchless ATM session, returning `false`
- * if the session does not exist and `true` otherwise.
+ * End a touchless ATM session.
  */
 export async function endTouchlessSession(userId: number, atmId: number): Promise<boolean> {
   const result = await db
@@ -46,15 +58,55 @@ export async function endTouchlessSession(userId: number, atmId: number): Promis
 }
 
 /**
- * Update the ledger to reflect a cash withdrawal.
+ * Process a cash withdrawal from an ATM.
  */
-export async function updateLedgerForWithdrawal(userId: number, amount: number) {
-  await db.insert(ledger).values({ userId, amount: (-amount).toFixed(2) });
+export async function withdrawCash(userId: number, amount: number): Promise<void> {
+  await db.transaction(async (tx) => {
+    const [{ transactionId }] = await tx
+      .insert(transactions)
+      .values({
+        description: "Cash withdrawal",
+      })
+      .returning();
+
+    await tx.insert(ledger).values([
+      {
+        transactionId,
+        userId: userId,
+        change: amount.toFixed(2),
+      },
+      {
+        transactionId,
+        userId: CASH_VAULT_USER_ID,
+        change: (-amount).toFixed(2),
+      },
+    ]);
+  });
 }
 
 /**
- * Update the ledger to reflect a cash deposit.
+ * Process a cash deposit to an ATM.
  */
-export async function depositCash(userId: number, amount: number) {
-  await db.insert(ledger).values({ userId, amount: amount.toFixed(2) });
+export async function depositCash(userId: number, amount: number): Promise<void> {
+  await db.transaction(async (tx) => {
+    const [{ transactionId }] = await tx
+      .insert(transactions)
+      .values({
+        description: "Cash deposit",
+      })
+      .returning();
+
+    await tx.insert(ledger).values([
+      {
+        transactionId,
+        userId: userId,
+        change: (-amount).toFixed(2),
+      },
+      {
+        transactionId,
+        userId: CASH_VAULT_USER_ID,
+        change: amount.toFixed(2),
+      },
+    ]);
+  });
 }

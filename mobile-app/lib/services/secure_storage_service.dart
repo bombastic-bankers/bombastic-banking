@@ -1,36 +1,89 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-/// Utility class to mock a secure storage solution (e.g., flutter_secure_storage).
-/// This class handles the persistent storage for the JWT token and the current ATM ID.
-class SecureStorageService {
-  static String? _storedToken;
-  static String? _storedAtmId;
+/// - JWT Token is stored securely using FlutterSecureStorage (encrypted).
+/// - ATM ID is stored using SharedPreferences (standard, non-encrypted).
+class OldSecureStorageService {
+  // Singleton pattern implementation
+  static final OldSecureStorageService _instance =
+      OldSecureStorageService._internal();
+  factory OldSecureStorageService() => _instance;
 
-  /// Simulates saving the JWT token to secure storage.
+  OldSecureStorageService._internal() {
+    // Start the asynchronous initialization of SharedPreferences immediately
+    _initializationFuture = _initializePreferences();
+  }
+  // ------------------------------------
+
+  // Storage Clients
+  // 1. For sensitive data (JWT Token) - instantiated immediately
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+
+  // 2. For non-sensitive data (ATM ID) - requires async initialization
+  late SharedPreferences _prefs;
+
+  // This future tracks the completion of the SharedPreferences initialization
+  late Future<void> _initializationFuture;
+
+  /// Asynchronously initializes the SharedPreferences instance.
+  Future<void> _initializePreferences() async {
+    try {
+      // SharedPreferences must be awaited before use
+      _prefs = await SharedPreferences.getInstance();
+      debugPrint('Shared Preferences Initialized successfully.');
+    } catch (e) {
+      debugPrint('Error initializing Shared Preferences: $e');
+      rethrow;
+    }
+  }
+
+  // --- JWT TOKEN (SECURE STORAGE) ---
+  static const String _tokenKey = 'jwt_token';
+
+  /// Saves the JWT token using FlutterSecureStorage
   Future<void> saveToken(String token) async {
-    await Future.delayed(const Duration(milliseconds: 100));
-    _storedToken = token;
-    debugPrint('🔐 Token saved to secure storage: $token');
+    await _secureStorage.write(key: _tokenKey, value: token);
+    debugPrint('Token saved to secure storage.');
   }
 
-  /// Simulates retrieving the JWT token from secure storage.
+  /// Retrieves the JWT token from secure storage.
   Future<String?> getToken() async {
-    await Future.delayed(const Duration(milliseconds: 50));
-    debugPrint('🔎 Token retrieved: $_storedToken');
-    return _storedToken;
+    final token = await _secureStorage.read(key: _tokenKey);
+    debugPrint('Token retrieved: ${token != null ? "Found" : "Not Found"}');
+    return token;
   }
-  
-  /// Simulates saving the ATM ID to secure storage.
+
+  /// Deletes the JWT token from secure storage.
+  Future<void> deleteToken() async {
+    await _secureStorage.delete(key: _tokenKey);
+    debugPrint('Token deleted from secure storage.');
+  }
+
+  // --- ATM ID (STANDARD PREFERENCES) ---
+  static const String _atmIdKey = 'current_atm_id';
+
+  /// Saves the ATM ID using SharedPreferences.
   Future<void> saveAtmId(String atmId) async {
-    await Future.delayed(const Duration(milliseconds: 50));
-    _storedAtmId = atmId;
-    debugPrint('📍 ATM ID saved: $atmId');
+    await _initializationFuture;
+    await _prefs.setString(_atmIdKey, atmId);
+    debugPrint('ATM ID saved: $atmId');
   }
-  
-  /// Simulates retrieving the ATM ID from secure storage.
+
+  /// Retrieves the ATM ID from SharedPreferences.
   Future<String?> getAtmId() async {
-    await Future.delayed(const Duration(milliseconds: 50));
-    return _storedAtmId;
+    // Wait for SharedPreferences to be ready before using it
+    await _initializationFuture;
+    final atmId = _prefs.getString(_atmIdKey);
+    return atmId;
+  }
+
+  /// Deletes the ATM ID from SharedPreferences.
+  Future<void> deleteAtmId() async {
+    // Wait for SharedPreferences to be ready before using it
+    await _initializationFuture;
+    await _prefs.remove(_atmIdKey);
+    debugPrint('ATM ID deleted from preferences.');
   }
 }
