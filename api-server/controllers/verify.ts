@@ -5,8 +5,10 @@ import nodemailer from "nodemailer";
 import crypto from "crypto";
 import * as queries from "../db/queries/index.js";
 
-const client = twilio(process.env.TWILIO_SID!, process.env.TWILIO_AUTH!);
-const VERIFY_SERVICE = process.env.TWILIO_VERIFY_SERVICE!;
+import { EMAIL_USER,EMAIL_PASS,BASE_URL,TWILIO_SID,TWILIO_AUTH,TWILIO_VERIFY_SERVICE,MOCK_EMAIL,MOCK_TWILIO_SMS} from "../env.js";
+
+const client = twilio(TWILIO_SID, TWILIO_AUTH);
+const VERIFY_SERVICE = TWILIO_VERIFY_SERVICE;
 
 // send OTP
 export async function sendPhoneOTP(req: Request, res: Response) {
@@ -20,7 +22,7 @@ export async function sendPhoneOTP(req: Request, res: Response) {
       return res.status(404).json({ error: "Phone number not registered" });
     }
 
-    if (process.env.MOCK_TWILIO_SMS === "true") {
+    if (MOCK_TWILIO_SMS) {
       const mockOtp = Math.floor(100000 + Math.random() * 900000).toString();
       console.log("Mock OTP for", phoneNumber, ":", mockOtp);
       return res.json({ message: "Mock OTP sent (check terminal)" });
@@ -54,7 +56,7 @@ export async function verifyPhoneOTP(req: Request, res: Response) {
       return res.status(404).json({ error: "Phone number not registered" });
     }
 
-    if (process.env.MOCK_TWILIO_SMS === "true") {
+    if (MOCK_TWILIO_SMS) {
       console.log("Mock verify:", phoneNumber, "OTP:", otp);
       await queries.updatePhoneVerified(user.userId, true);
       return res.json({ verified: true });
@@ -83,8 +85,8 @@ export async function verifyPhoneOTP(req: Request, res: Response) {
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: EMAIL_USER,
+    pass: EMAIL_PASS,
   },
 });
 export function generateEmailToken() {
@@ -145,13 +147,13 @@ export async function verifyEmailLink(req: Request, res: Response) {
 }
 // send verification email
 export async function sendVerificationEmail(email: string, token: string) {
-  const frontendUrl = process.env.BASE_URL || "http://localhost:3000";
+  const frontendUrl = BASE_URL;
   const link = `${frontendUrl}/verify/email/confirm?token=${token}`;
 
   // Mock email for testing
-  if (process.env.MOCK_EMAIL === "true") {
+  if (MOCK_EMAIL) {
     console.log("\n--- [Mock Email Verification] ---");
-    console.log('From: "OCBC Support" <' + process.env.EMAIL_USER + '>');
+    console.log('From: "OCBC Support" <' + EMAIL_USER + '>');
     console.log(`To: ${email}`);
     console.log(`Subject: Verify Your Account`);
     console.log(`Link: ${link}`);
@@ -159,7 +161,7 @@ export async function sendVerificationEmail(email: string, token: string) {
   }
 
   await transporter.sendMail({
-    from: `"OCBC Support" <${process.env.EMAIL_USER}>`,
+    from: `"OCBC Support" <${EMAIL_USER}>`,
     to: email,
     subject: "Verify Your Account",
     html: `<p>Click <a href="${link}">here</a> to verify your email. This link expires in 24 hours.</p>`,
@@ -168,7 +170,7 @@ export async function sendVerificationEmail(email: string, token: string) {
 
 // auto send OTP
 export async function autoSendOTP(phoneNumber: string) {
-    if (process.env.MOCK_TWILIO_SMS === "true") {
+    if (MOCK_TWILIO_SMS) {
         const mockOtp = Math.floor(100000 + Math.random() * 900000).toString();
         console.log(`[Auto-Mock OTP] to ${phoneNumber}: ${mockOtp}`);
         return;
