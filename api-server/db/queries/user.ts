@@ -52,13 +52,13 @@ export async function getUserInfo(userId: number): Promise<{ fullName: string; a
   return { fullName, accountBalance: +(accountBalanceString ?? 0) };
 }
 // Get user by phone number
-export async function getUserByPhoneNumber(phoneNumber: string) {
+export async function getUserByPhoneNumber(phoneNumber: string): Promise<typeof users.$inferSelect | null> {
   const result = await db.select().from(users).where(eq(users.phoneNumber, phoneNumber)).limit(1);
   return result[0] ?? null;
 }
 
 // Update phoneVerified flag
-export async function updatePhoneVerified(userId: number, verified: boolean) {
+export async function updatePhoneVerified(userId: number, verified: boolean): Promise<void> {
   await db.update(users).set({ phoneverified: verified }).where(eq(users.userId, userId));
 }
 export async function getUserByEmail(email: string) {

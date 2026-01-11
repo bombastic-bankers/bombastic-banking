@@ -4,7 +4,9 @@ import { JWT_SECRET } from "../env.js";
 import { Request, Response } from "express";
 import z from "zod";
 import crypto from "crypto";
-import { sendVerificationEmail, generateEmailToken,autoSendOTP} from "./verify.js";
+import { sendVerificationEmail } from "./services/emailVerificationService.js";
+import { autoSendOTP } from "./services/smsVerificationService.js";
+import { generateEmailToken } from "./verify.js";
 
 export async function signUp(req: Request, res: Response) {
   const userInit = z
@@ -27,10 +29,7 @@ export async function signUp(req: Request, res: Response) {
     return res.status(409).json({ error: "This phone number is already in use." });
   }
 
-  // generate email token
-  const emailToken = crypto.randomBytes(32).toString("hex");
-  const emailTokenExpiry = new Date();
-  emailTokenExpiry.setHours(emailTokenExpiry.getHours() + 24);
+  const { token: emailToken, expiry: emailTokenExpiry } = generateEmailToken();
 
   // create user
   const created = await queries.createUser({

@@ -88,12 +88,12 @@ export async function verifyPhoneOTP(req: Request, res: Response) {
   }
 }
 
-// export function generateEmailToken() {
-//   const token = crypto.randomBytes(32).toString("hex");
-//   const expiry = new Date();
-//   expiry.setHours(expiry.getHours() + 24);
-//   return { token, expiry };
-// }
+export function generateEmailToken() {
+  const token = crypto.randomBytes(32).toString("hex");
+  const expiry = new Date();
+  expiry.setHours(expiry.getHours() + 24);
+  return { token, expiry };
+}
 
 // verify email link
 export async function verifyEmailLink(req: Request, res: Response) {
