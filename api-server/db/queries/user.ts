@@ -132,7 +132,7 @@ export async function updatePhoneVerified(userId: number, verified: boolean): Pr
   await db.update(users).set({ phoneverified: verified }).where(eq(users.userId, userId));
 }
 
-export async function getUserByEmailToken(token: string) {
+export async function getUserByEmailToken(token: string): Promise<typeof users.$inferSelect | null> {
   const result = await db.select().from(users).where(eq(users.emailToken, token)).limit(1);
   return result[0] ?? null;
 }
