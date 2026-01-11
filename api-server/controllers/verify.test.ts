@@ -5,6 +5,7 @@ import * as queries from "../db/queries/index.js";
 import { sendVerificationEmail } from "./services/emailVerificationService.js";
 import { generateEmailToken } from "./verify.js";
 import { autoSendOTP } from "./services/smsVerificationService.js";
+import { email } from "zod";
 vi.mock("../db/queries");
 
 process.env.MOCK_TWILIO_SMS = "true";
@@ -22,6 +23,7 @@ async function createMockUser(overrides: Partial<any>= {}) {
     phoneverified: true,
     emailToken:"token123",
     emailTokenExpiry: new Date(Date.now() + 1000 * 60 * 60 * 24),
+    ...overrides,
   };
 }
 
@@ -63,7 +65,7 @@ describe("POST /verify/phone/verify", () => {
   it("should verify OTP successfully", async () => {
     vi.mocked(queries.getUserByPhoneNumber).mockResolvedValue(await createMockUser());
 
-    vi.mocked(queries.updatePhoneVerified).mockResolvedValue(undefined);
+    vi.mocked(queries.updatePhoneVerified).mockResolvedValue();
 
     const res = await request(app)
       .post("/verify/phone/verify")
@@ -109,9 +111,9 @@ describe("GET /verify/email/confirm", () => {
   });
 
   it("should verify email successfully", async () => {
-    vi.mocked(queries.getUserByEmailToken).mockResolvedValue( await createMockUser());
+    vi.mocked(queries.getUserByEmailToken).mockResolvedValue( await createMockUser({emailverified: false,}));
 
-    vi.mocked(queries.verifyUserEmail).mockResolvedValue(true as any);
+    vi.mocked(queries.verifyUserEmail).mockResolvedValue();
 
     const res = await request(app)
       .get("/verify/email/confirm")
@@ -122,7 +124,7 @@ describe("GET /verify/email/confirm", () => {
   });
 
   it("should reject expired token", async () => {
-    vi.mocked(queries.getUserByEmailToken).mockResolvedValue(await createMockUser());
+    vi.mocked(queries.getUserByEmailToken).mockResolvedValue(await createMockUser({emailverified: false, emailTokenExpiry: new Date(Date.now() - 1000),}));
 
     const res = await request(app)
       .get("/verify/email/confirm")
@@ -133,7 +135,7 @@ describe("GET /verify/email/confirm", () => {
   });
 
   it("should reject invalid token", async () => {
-    vi.mocked(queries.getUserByEmailToken).mockResolvedValue(null as any);
+    vi.mocked(queries.getUserByEmailToken).mockResolvedValue(null);
 
     const res = await request(app)
       .get("/verify/email/confirm")

@@ -70,7 +70,7 @@ export async function getUserByEmail(email: string) {
 
   return result[0] ?? null;
 }
-export async function getUserByEmailToken(token: string) {
+export async function getUserByEmailToken(token: string): Promise<typeof users.$inferSelect | null> {
   const result = await db.select().from(users).where(eq(users.emailToken, token)).limit(1);
   return result[0] ?? null;
 }

@@ -19,6 +19,7 @@ async function createMockUser(overrides: Partial<any>= {}) {
     phoneverified: true,
     emailToken:"token123",
     emailTokenExpiry: new Date(Date.now() + 1000 * 60 * 60 * 24),
+    ...overrides,
   };
 }
 
