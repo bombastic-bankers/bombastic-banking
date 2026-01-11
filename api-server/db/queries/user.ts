@@ -128,7 +128,7 @@ export async function getUserProfile(userId: number): Promise<{
 }
 
 // Update phoneVerified flag
-export async function updatePhoneVerified(userId: number, verified: boolean) {
+export async function updatePhoneVerified(userId: number, verified: boolean): Promise<void> {
   await db.update(users).set({ phoneverified: verified }).where(eq(users.userId, userId));
 }
 

@@ -13,6 +13,20 @@ vi.mock("../middleware/auth", () => ({
     next();
   },
 }));
+async function createMockUser(overrides: Partial<any>= {}) {
+  return {
+    userId: 1,
+    fullName: "John Doe",
+    phoneNumber: "+651234567890",
+    email: "john@example.com",
+    pin: "123456",
+    hashedPin: "hashed_pin",
+    emailverified: true,
+    phoneverified: true,
+    emailToken:"token123",
+    emailTokenExpiry: new Date(Date.now() + 1000 * 60 * 60 * 24),
+  };
+}
 
 describe("POST /auth/signup", () => {
   beforeEach(() => {
@@ -115,8 +129,10 @@ describe("POST /auth/signup", () => {
   });
 
   it("should return 409 when email is already in use", async () => {
-    vi.mocked(queries.createUser).mockResolvedValue(false);
-    vi.mocked(queries.createUser).mockResolvedValue(false);
+    vi.mocked(queries.getUserByEmail).mockResolvedValue ({ 
+    userId: 1, 
+    email: "john@example.com" 
+    } as any);
 
     const response = await request(app).post("/auth/signup").send({
       fullName: "John Doe",

@@ -3,7 +3,9 @@ import z from "zod";
 import * as queries from "../db/queries/index.js";
 import { generateAuthTokens } from "../services/auth.js";
 import crypto from "crypto";
-import { sendVerificationEmail, generateEmailToken,autoSendOTP} from "./verify.js";
+import { sendVerificationEmail } from "./services/emailVerificationService.js";
+import { autoSendOTP } from "./services/smsVerificationService.js";
+import { generateEmailToken } from "./verify.js";
 
 /** Create a new user account with the provided credentials. */
 export async function signUp(req: Request, res: Response) {
@@ -22,8 +24,40 @@ export async function signUp(req: Request, res: Response) {
     return res.status(409).json({ error: "Email already in use" });
   }
 
-  return res.status(201).send();
+  const existingPhone = await queries.getUserByPhoneNumber(userInit.phoneNumber);
+  if (existingPhone) {
+    return res.status(409).json({ error: "This phone number is already in use." });
+  }
+
+  const { token: emailToken, expiry: emailTokenExpiry } = generateEmailToken();
+
+  // create user
+  const created = await queries.createUser({
+    ...userInit,
+    emailToken,
+    emailTokenExpiry,
+  });
+
+  if (!created) {
+    return res.status(500).json({ error: "Failed to create account" });
+  }
+
+  // automatically send verification email and OTP
+  try {
+    await sendVerificationEmail(userInit.email, emailToken);
+    await autoSendOTP(userInit.phoneNumber);
+    
+    return res.status(201).json({ 
+      message: "Registration successful! Please verify your email and phone number." 
+    });
+  } catch (error) {
+    console.error("AUTO_SEND_ERROR:", error);
+    return res.status(201).json({ 
+      message: "Account created, but verification codes failed to send. Please request a resend." 
+    });
+  }
 }
+
 
 export async function login(req: Request, res: Response) {
   const { email, pin } = z
