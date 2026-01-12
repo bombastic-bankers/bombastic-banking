@@ -15,7 +15,7 @@ import {
 import { ablyAuth } from "./controllers/ably.js";
 import { PORT } from "./env.js";
 import { atmParam } from "./middleware/atm.js";
-import { sendPhoneOTP,verifyPhoneOTP,verifyEmailLink } from "./controllers/verify.js";  
+import { sendPhoneOTP,verifyPhoneOTP,verifyEmailLink,requestEmailVerification } from "./controllers/verify.js";  
 const TESTING = process.env.NODE_ENV === "test";
 
 const app = express();
@@ -27,6 +27,7 @@ app.get("/auth/ably", ablyAuth);
 app.post("/auth/signup", signUp);
 app.post("/auth/login", login);
 app.post("/auth/ably", ablyAuth);
+app.post("/verify/email/request", requestEmailVerification);
 app.post("/verify/phone/send", sendPhoneOTP);
 app.post("/verify/phone/verify", verifyPhoneOTP);
 app.get("/verify/email/confirm", verifyEmailLink);
