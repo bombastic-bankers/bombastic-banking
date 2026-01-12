@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-import env from "../env";
+import env from "../env.js";
 
 /**
  * Generate a new access and refresh token for the specified user.
