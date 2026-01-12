@@ -13,7 +13,10 @@ For this prototype, we have no cash-related hardware, so all cash transactions a
   - [4.1. Mobile app](#41-mobile-app)
   - [4.2. ATM server](#42-atm-server)
   - [4.3. API server](#43-api-server)
-- [5. Realtime messaging](#5-pubsub-messaging)
+- [5. Realtime messaging](#5-realtime-messaging)
+- [6. Double-entry accounting](#6-double-entry-accounting)
+  - [6.1. Ledger sign convention](#61-ledger-sign-convention)
+
 
 ## 1. Touchless ATM overview
 
@@ -63,14 +66,44 @@ Refer to [Realtime messaging](#realtime-messaging) below for details.
 
 The ATM server and API server perform realtime messaging through a pub/sub system, where each ATM uses a channel named `atm:{atmId}`. The table below documents the events sent through each channel.
 
-| Event             | Originator | Payload           | Description                                                  |
-| ----------------- | ---------- | ----------------- | ------------------------------------------------------------ |
-| `withdraw`        | API server | Withdraw amount   | Command the ATM to dispense the indicated cash amount.       |
-| `withdraw-ready`  | ATM        |                   | Notify the API server that the ATM has successfully dispensed cash. |
-| `deposit-start`   | API server |                   | Command the ATM to prepare to receive a cash deposit.        |
-| `deposit-count`   | API server |                   | Command the ATM to receive and count deposited cash.         |
+| Event             | Originator | Payload           | Description                                                                                                                    |
+| ----------------- | ---------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `withdraw`        | API server | Withdraw amount   | Command the ATM to dispense the indicated cash amount.                                                                         |
+| `withdraw-ready`  | ATM        |                   | Notify the API server that the ATM has successfully dispensed cash.                                                            |
+| `deposit-start`   | API server |                   | Command the ATM to prepare to receive a cash deposit.                                                                          |
+| `deposit-count`   | API server |                   | Command the ATM to receive and count deposited cash.                                                                           |
 | `deposit-review`  | ATM        | Deposit breakdown | Notify the API server that the deposit has been counted, and instruct the user to review the counted per-denomination amounts. |
-| `deposit-confirm` | API server |                   | Notify the API server that the ATM has successfully received the indicated cash amount. |
-| `exit`            | API server |                   | Command the ATM to return to its idle state, allowing other users to use it. |
+| `deposit-confirm` | API server |                   | Notify the API server that the ATM has successfully received the indicated cash amount.                                        |
+| `exit`            | API server |                   | Command the ATM to return to its idle state, allowing other users to use it.                                                   |
 
 ![ATM state diagram](./assets/atm-state.png)
+
+## 6. Double-entry accounting
+
+The database uses a double-entry accounting system to track all financial transactions, providing a complete audit trail of all money movements. This means that every transaction affects at least two accounts, and at any time it can be verified that all money is accounted for by checking that all ledger entries' `change` sum to zero. This ensures that money never appears or disappears; it only moves between accounts.
+
+The system comprises three account types:
+
+- Customer accounts (liabilities): Money the bank owes to customers.
+- Cash vault (asset): Physical cash holdings.
+- Shareholder equity (liability): Bank owners' initial investment.
+
+### 6.1. Ledger sign convention
+
+The ledger uses an asset/liability perspective, where the sign of each entry's `change` has different meanings:
+
+| Account type                      | Change sign | Meaning                              |
+| --------------------------------- | ----------- | ------------------------------------ |
+| Asset (e.g. cash vault)           | Positive    | Asset increases (bank gains cash)    |
+| Asset (e.g. cash vault)           | Negative    | Asset decreases (bank loses cash)    |
+| Liability (e.g. customer account) | Positive    | Liability decreases (bank owes less) |
+| Liability (e.g. customer account) | Negative    | Liability increases (bank owes more) |
+
+**Example: customer deposits \$100**
+
+When a customer deposits \$100, their balance increases, but this is recorded as a -\$100 change (liability increase). Their balance is computed as their `-sum(change)`, converting from the bank's liability perspective to the customer's perspective.
+
+| Account          | Type      | Change | Meaning                 |
+| ---------------- | --------- | ------ | ----------------------- |
+| Customer account | Liability | -\$100 | Bank owes customer more |
+| Cash Vault       | Asset     | +\$100 | Bank gains cash         |
