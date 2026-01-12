@@ -4,6 +4,9 @@ import app from "../index.js";
 import * as queries from "../db/queries/index.js";
 import * as auth from "../services/auth.js";
 import { NextFunction, Request, Response } from "express";
+import e from "express";
+import jwt from "jsonwebtoken";
+import env  from "../env.js";
 
 vi.mock("../db/queries");
 vi.mock("../services/auth");
@@ -19,12 +22,7 @@ async function createMockUser(overrides: Partial<any>= {}) {
     fullName: "John Doe",
     phoneNumber: "+651234567890",
     email: "john@example.com",
-    pin: "123456",
     hashedPin: "hashed_pin",
-    emailverified: true,
-    phoneverified: true,
-    emailToken:"token123",
-    emailTokenExpiry: new Date(Date.now() + 1000 * 60 * 60 * 24),
     ...overrides,
   };
 }
@@ -35,7 +33,21 @@ describe("POST /auth/signup", () => {
   });
 
   it("should create a new user with valid data", async () => {
+    vi.mocked(queries.getEmailVerificationByEmail).mockResolvedValue({
+      id: 1,
+      email: "john@example.com",
+      token: "token123",
+      verifiedAt: new Date(),
+      expiresAt: new Date(Date.now() + 100000),
+      createdAt: new Date(),
+      isInternal: false,
+    });
+
+    vi.mocked(queries.getUserByEmail).mockResolvedValue(null);
+
     vi.mocked(queries.createUser).mockResolvedValue(true);
+
+    vi.mocked(queries.deleteEmailToken).mockResolvedValue(undefined);
 
     const response = await request(app).post("/auth/signup").send({
       fullName: "John Doe",
@@ -45,13 +57,8 @@ describe("POST /auth/signup", () => {
     });
 
     expect(response.status).toBe(201);
-    expect(queries.createUser).toHaveBeenCalledWith
-    expect.objectContaining({
-      fullName: "John Doe",
-      phoneNumber: "+651234567890",
-      email: "john@example.com",
-      pin: "123456",
-    });
+    expect(queries.createUser).toHaveBeenCalled();
+    expect(queries.deleteEmailToken).toHaveBeenCalledWith(1);
   });
 
   it("should return 400 when fullName is missing", async () => {
@@ -130,10 +137,7 @@ describe("POST /auth/signup", () => {
   });
 
   it("should return 409 when email is already in use", async () => {
-    vi.mocked(queries.getUserByEmail).mockResolvedValue ({ 
-    userId: 1, 
-    email: "john@example.com" 
-    } as any);
+    vi.mocked(queries.getUserByEmail).mockResolvedValue(await createMockUser());
 
     const response = await request(app).post("/auth/signup").send({
       fullName: "John Doe",
@@ -196,12 +200,7 @@ describe("POST /auth/login", () => {
       fullName: "John Doe",
       phoneNumber: "+651234567890",
       email: "john@example.com",
-      hashedPin: "123456",
-      isInternal: false,
-      emailverified: true,
-      phoneverified: true,
-      emailToken: null,
-      emailTokenExpiry: null
+      hashedPin: "hashed_pin",
     });
     vi.mocked(auth.generateAuthTokens).mockResolvedValue({
       accessToken: "access-token",
@@ -214,6 +213,24 @@ describe("POST /auth/login", () => {
     });
 
     expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty("token");
+    expect(response.body.token).toBeTypeOf("string");
+    const payload = jwt.verify(
+      response.body.token,
+      env.JWT_SECRET
+    ) as jwt.JwtPayload;
+    expect(payload.userId).toBe(1);
+  });
+
+  it("should return 400 when credentials are incorrect", async () => {
+    vi.mocked(queries.getUserByCredentials).mockResolvedValue(null);
+
+    const response = await request(app).post("/auth/login").send({
+      email: "nonexistent@example.com",
+      pin: "123457",
+    });
+
+    expect(response.status).toBe(400);
     expect(response.body).toHaveProperty("accessToken");
     expect(response.body.accessToken).toBe("access-token");
     expect(response.body).toHaveProperty("refreshToken");
