@@ -9,9 +9,8 @@ function getEnvOrThrow(key: string): string {
 }
 
 /**
- * Environment variables with lazy evaluation.
- * Each property is a getter that only throws if accessed and the env var is not set.
- * This allows unit tests to import this module without errors if they don't use env vars.
+ * Provides typed environment variables. Throws when
+ * a non-optional environment variable is accessed.
  */
 const env = {
   get PORT(): number | undefined {
