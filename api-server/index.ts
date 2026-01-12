@@ -14,7 +14,7 @@ import {
 } from "./controllers/atm.js";
 import { ablyAuth } from "./controllers/ably.js";
 import { getContactsByPhoneNumber } from "./controllers/contacts.js";
-import { PORT } from "./env.js";
+import env from "./env.js";
 import { atmParam } from "./middleware/atm.js";
 import { transferMoney } from "./controllers/transaction.js";
 
@@ -51,7 +51,7 @@ app.use(validationError);
 app.use(anyError);
 
 if (!TESTING) {
-  app.listen(PORT || 3000, () => {
+  app.listen(env.PORT || 3000, () => {
     console.log("Server running at http://localhost:3000");
   });
 }

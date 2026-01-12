@@ -1,4 +1,4 @@
 import { drizzle } from "drizzle-orm/neon-serverless";
-import { DATABASE_URL } from "../env.js";
+import env from "../env.js";
 
-export const db = drizzle(DATABASE_URL);
+export const db = drizzle(env.DATABASE_URL);
