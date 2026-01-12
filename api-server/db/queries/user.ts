@@ -56,7 +56,7 @@ export async function getUserByPhoneNumber(phoneNumber: string): Promise<typeof 
 /**
  * Get user information including their current account balance.
  */
-export async function getUserInfo(userId: number): Promise<{ fullName: string; accountBalance: number }> {
+export async function getUserAccOverview(userId: number): Promise<{ fullName: string; accountBalance: number }> {
   const { fullName } = (await db.select({ fullName: users.fullName }).from(users).where(eq(users.userId, userId)))[0];
   const { accountBalance: accountBalanceString } = (
     await db
@@ -69,18 +69,22 @@ export async function getUserInfo(userId: number): Promise<{ fullName: string; a
 }
 
 /**
- * update the user profile with the related information.
+ * Updates the user profile with the provided fields.
+ * Returns the complete updated profile, or `null` if no user exists with the given ID.
  */
-export type UpdateUserProfilePatch = {
-  fullName?: string;
-  phoneNumber?: string;
-  email?: string;
-};
-
 export async function updateUserProfile(
   userId: number,
-  patch: UpdateUserProfilePatch
-): Promise<{ userId: number; fullName: string; phoneNumber: string; email: string } | null> {
+  patch: {
+    fullName?: string;
+    phoneNumber?: string;
+    email?: string;
+  }
+): Promise<{
+  userId: number;
+  fullName: string;
+  phoneNumber: string;
+  email: string
+} | null> {
   const updatedRows = await db
     .update(users)
     .set({
@@ -100,7 +104,7 @@ export async function updateUserProfile(
 }
 
 /**
- * get the user profile
+ * Retrieves a user's profile information by their unique ID.
  */
 export async function getUserProfile(userId: number): Promise<{
   fullName: string;

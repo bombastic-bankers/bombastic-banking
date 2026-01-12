@@ -233,7 +233,9 @@ describe("POST /auth/login", () => {
   });
 });
 
-// tests for refresh logic
+/**
+ * Unit tests for the user profile functionality.
+ */
 describe("POST /auth/refresh", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -271,5 +273,99 @@ describe("POST /auth/refresh", () => {
     expect(response.body).toHaveProperty("refreshToken");
     expect(response.body.refreshToken).toBe("new-refresh-token");
     expect(queries.resetRefreshToken).toHaveBeenCalledWith("valid-old-token", "new-refresh-token", expect.any(Date));
+  });
+});
+
+/**
+ * unit test for profile
+ */
+vi.mock("../middleware/auth", () => ({
+  authenticate: (req: Request, _: Response, next: NextFunction) => {
+    req.userId = 1;
+    next();
+  },
+}));
+
+describe("PATCH /profile", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should return 400 if body is empty", async () => {
+    const res = await request(app).patch("/profile").send({});
+
+    expect(res.status).toBe(400);
+    expect(queries.updateUserProfile).not.toHaveBeenCalled();
+  });
+
+  it("should return 400 if phoneNumber is invalid", async () => {
+    const res = await request(app).patch("/profile").send({ phoneNumber: "123" });
+
+    expect(res.status).toBe(400);
+    expect(queries.updateUserProfile).not.toHaveBeenCalled();
+  });
+
+  it("should return 404 if user is not found", async () => {
+    vi.mocked(queries.updateUserProfile).mockResolvedValue(null);
+
+    const res = await request(app).patch("/profile").send({ fullName: "New Name" });
+
+    expect(res.status).toBe(404);
+    expect(res.body).toEqual({ error: "User not found" });
+    expect(queries.updateUserProfile).toHaveBeenCalledWith(1, { fullName: "New Name" });
+  });
+
+  it("should update profile successfully", async () => {
+    vi.mocked(queries.updateUserProfile).mockResolvedValue({
+      userId: 1,
+      fullName: "New Name",
+      phoneNumber: "91234567",
+      email: "test@example.com",
+    });
+
+    const res = await request(app).patch("/profile").send({ fullName: "New Name" });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({
+      userId: 1,
+      fullName: "New Name",
+      phoneNumber: "91234567",
+      email: "test@example.com",
+    });
+    expect(queries.updateUserProfile).toHaveBeenCalledWith(1, { fullName: "New Name" });
+  });
+});
+
+describe("GET /profile", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should return 404 if user not found", async () => {
+    vi.mocked(queries.getUserProfile).mockResolvedValue(null);
+
+    const res = await request(app).get("/profile");
+
+    expect(res.status).toBe(404);
+    expect(res.body).toEqual({ error: "User not found" });
+    expect(queries.getUserProfile).toHaveBeenCalledWith(1);
+  });
+
+  it("should return user profile if found", async () => {
+    vi.mocked(queries.getUserProfile).mockResolvedValue({
+      fullName: "Test User",
+      phoneNumber: "91234567",
+      email: "test@example.com",
+    });
+
+    const res = await request(app).get("/profile");
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({
+      fullName: "Test User",
+      phoneNumber: "91234567",
+      email: "test@example.com",
+    });
+    expect(queries.getUserProfile).toHaveBeenCalledWith(1);
   });
 });

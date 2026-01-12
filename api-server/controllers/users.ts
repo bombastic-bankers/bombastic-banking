@@ -44,49 +44,44 @@ export async function login(req: Request, res: Response) {
 }
 
 /** Return the authenticated user's information. */
-export async function getUserInfo(req: Request, res: Response) {
-  res.send(await queries.getUserInfo(req.userId));
+export async function getUserAccOverview(req: Request, res: Response) {
+  res.send(await queries.getUserAccOverview(req.userId));
 }
 
 /**
- * update profile
+ * Update the user profile with the latest information
  */
-const updateProfileBodySchema = z
-  .object({
-    fullName: z.string().min(1).optional(),
-    phoneNumber: z.e164().optional(),
-    email: z.email().optional()
-  })
-  .refine(
-    (data) => data.fullName !== undefined || data.phoneNumber !== undefined || data.email !== undefined,
-    { message: "At least one field must be provided" }
-  );
-
-
 export async function updateProfile(req: Request, res: Response) {
   const userId = req.userId;
-    if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
-    const patch = updateProfileBodySchema.parse(req.body);
+  const patch = z
+    .object({
+      fullName: z.string().min(1).optional(),
+      phoneNumber: z.e164().optional(),
+      email: z.email().optional()
+    })
+    .refine(
+      (data) => data.fullName !== undefined ||
+        data.phoneNumber !== undefined ||
+        data.email !== undefined,
+      { message: "At least one field must be provided" }
+    )
+    .parse(req.body);
 
-    const updated = await queries.updateUserProfile(userId, patch);
+  const updated = await queries.updateUserProfile(userId, patch);
 
-    if (!updated) {
-      return res.status(404).json({ error: "User not found" });
-    }
+  if (!updated) {
+    return res.status(404).json({ error: "User not found" });
+  }
 
-    return res.json(updated);
+  return res.json(updated);
 }
 
 /**
- * get user profile
+ * Return the authenticated user's profile information 
  */
-
 export async function getUserProfile(req: Request, res: Response) {
   const userId = req.userId;
-  if (!userId) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
 
   const profile = await queries.getUserProfile(userId);
 
