@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
-import { JWT_SECRET } from "../env.js";
+import env from "../env.js";
 
 export function authenticate(req: Request, res: Response, next: NextFunction) {
   const auth = req.headers.authorization;
@@ -12,7 +12,7 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
   const token = auth.split(" ")[1];
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as jwt.JwtPayload;
+    const decoded = jwt.verify(token, env.JWT_SECRET) as jwt.JwtPayload;
     req.userId = decoded.userId; // attached decoded JWT payload
     next();
   } catch (err) {
