@@ -5,6 +5,7 @@ import { generateAuthTokens } from "../services/auth.js";
 import crypto from "crypto";
 import { generateEmailToken} from "./verify.js";
 import { sendVerificationEmail } from "./services/emailVerificationService.js";
+import { get } from "http";
 
 /** Create a new user account with the provided credentials. */
 export async function signUp(req: Request, res: Response) {
@@ -18,11 +19,56 @@ export async function signUp(req: Request, res: Response) {
     })
     .parse(req.body);
 
+  // check if email or phone number already exists
+  const existingUser = await queries.getUserByEmail(userInit.email);
+  if (existingUser) {
+    return res.status(409).json({ error: "Email already in use" });
+  }
 
-  return res.status(201).send();
+  const existingPhone = await queries.getUserByPhoneNumber(
+    userInit.phoneNumber
+  );
+  if (existingPhone) {
+    return res
+      .status(409)
+      .json({ error: "This phone number is already in use." });
+  }
+  const verificationRecord = await queries.getEmailVerificationByEmail(
+    userInit.email
+  );
+
+  if (!verificationRecord || !verificationRecord.verifiedAt) {
+    return res.status(403).json({
+      error:
+        "Verification incomplete. Please verify your email and phone first.",
+    });
+  }
+  if (new Date() > new Date(verificationRecord.expiresAt)) {
+    return res
+      .status(403)
+      .json({ error: "Verification expired. Please request a new link." });
+  }
+
+  // create user
+  const created = await queries.createUser({
+    fullName: userInit.fullName,
+    phoneNumber: userInit.phoneNumber,
+    email: userInit.email,
+    pin: userInit.pin,
+  });
+
+  if (!created) {
+    return res.status(500).json({ error: "Failed to create account" });
+  }
+  await queries.deleteEmailToken(verificationRecord.id);
+
+  return res
+    .status(201)
+    .json({ message: "Registration successful! You can now login." });
 }
 
-/** Authenticate a user and issue access and refresh tokens. */
+/* Log in an existing user */
+
 export async function login(req: Request, res: Response) {
   const { email, pin } = z
     .object({

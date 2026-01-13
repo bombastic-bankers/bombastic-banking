@@ -1,4 +1,14 @@
-import { pgTable, serial, integer, text, timestamp, numeric, primaryKey, boolean, varchar } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  serial,
+  integer,
+  text,
+  timestamp,
+  numeric,
+  primaryKey,
+  boolean,
+  varchar,
+} from "drizzle-orm/pg-core";
 
 /**
  * Users table stores both customer accounts and internal bank accounts.
@@ -13,8 +23,7 @@ export const users = pgTable("users", {
   fullName: text("full_name").notNull(),
   phoneNumber: text("phone_number").notNull(),
   email: text("email").notNull().unique(),
-  hashedPin: text("hashed_pin").notNull(),   
-
+  hashedPin: text("hashed_pin").notNull(),
 });
 export const emailVerificationCodes = pgTable("email_verification_codes", {
   id: serial("id").primaryKey(),
@@ -23,7 +32,12 @@ export const emailVerificationCodes = pgTable("email_verification_codes", {
   expiresAt: timestamp("expires_at").notNull(),
   verifiedAt: timestamp("verified_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-
+});
+export const smsVerificationCodes = pgTable("sms_verification_codes", {
+  id: serial("id").primaryKey(),
+  phoneNumber: text("phone_number").notNull().unique(),
+  verifiedAt: timestamp("verified_at"),
+  createdAt: timestamp("created_at").defaultNow(),
   isInternal: boolean("is_internal").notNull().default(false),
 });
 
