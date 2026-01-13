@@ -4,6 +4,7 @@ import { JWT_SECRET } from "../env.js";
 import { Request, Response } from "express";
 import z from "zod";
 import crypto from "crypto";
+import { get } from "http";
 
 /** Sign up a new user */
 export async function signUp(req: Request, res: Response) {
@@ -30,17 +31,20 @@ export async function signUp(req: Request, res: Response) {
       .status(409)
       .json({ error: "This phone number is already in use." });
   }
-  const verificationRecord = await queries.getEmailVerificationByEmail(
-    userInit.email
+  const emailRecord = await queries.getEmailVerificationByEmail(userInit.email);
+  const phoneRecord = await queries.getPhoneVerificationByPhoneNumber(
+    userInit.phoneNumber
   );
+  const emailDone = emailRecord && emailRecord.verifiedAt;
+  const phoneDone = phoneRecord && phoneRecord.verifiedAt;
 
-  if (!verificationRecord || !verificationRecord.verifiedAt) {
+  if (!emailDone || !phoneDone) {
     return res.status(403).json({
       error:
         "Verification incomplete. Please verify your email and phone first.",
     });
   }
-  if (new Date() > new Date(verificationRecord.expiresAt)) {
+  if (new Date() > new Date(emailRecord.expiresAt)) {
     return res
       .status(403)
       .json({ error: "Verification expired. Please request a new link." });
@@ -57,7 +61,7 @@ export async function signUp(req: Request, res: Response) {
   if (!created) {
     return res.status(500).json({ error: "Failed to create account" });
   }
-  await queries.deleteEmailToken(verificationRecord.id);
+  await queries.deleteEmailToken(emailRecord.id);
 
   return res
     .status(201)

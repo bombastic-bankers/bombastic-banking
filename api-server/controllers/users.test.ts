@@ -33,7 +33,12 @@ describe("POST /auth/signup", () => {
       expiresAt: new Date(Date.now() + 100000),
       createdAt: new Date(),
     });
-
+    vi.mocked(queries.getPhoneVerificationByPhoneNumber).mockResolvedValue({
+      id: 1,
+      phoneNumber: "+651234567890",
+      verifiedAt: new Date(),
+      createdAt: new Date(),
+    });
     vi.mocked(queries.getUserByEmail).mockResolvedValue(null);
 
     vi.mocked(queries.createUser).mockResolvedValue(true);
