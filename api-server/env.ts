@@ -28,6 +28,9 @@ const env = {
   get ABLY_API_KEY(): string {
     return getEnvOrThrow("ABLY_API_KEY");
   },
+  get NGROK_AUTHTOKEN(): string | undefined {
+    return process.env.NGROK_AUTHTOKEN;
+  },
 };
 
 export default env;
