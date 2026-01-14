@@ -16,7 +16,7 @@ import { ablyAuth } from "./controllers/ably.js";
 import { getContactsByPhoneNumber } from "./controllers/contacts.js";
 import env from "./env.js";
 import { atmParam } from "./middleware/atm.js";
-import { transferMoney } from "./controllers/transaction.js";
+import { transferMoney, getTransactionHistory} from "./controllers/transaction.js";
 import ngrok from "@ngrok/ngrok";
 
 const TESTING = process.env.NODE_ENV === "test";
@@ -47,6 +47,7 @@ app.use("/touchless/:atmId", touchless);
 
 app.post("/transfer", transferMoney);
 app.get("/contacts", getContactsByPhoneNumber);
+app.get("/transaction-history", getTransactionHistory)
 
 app.use(validationError);
 app.use(anyError);
