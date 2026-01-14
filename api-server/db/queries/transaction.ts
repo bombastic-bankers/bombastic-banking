@@ -1,6 +1,7 @@
 import { db } from "../index.js";
 import { ledger, transactions, users } from "../schema.js";
-import { eq, sql, sum } from "drizzle-orm";
+import { eq, sql, sum, desc, and, ne} from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 
 /**
  * Transfer money from one user to another. Returns false
@@ -48,4 +49,53 @@ export async function transferMoney(
   }
 
   return true;
+}
+
+
+/**
+ * Retrieves the transaction history for a given user ID,
+ * ordered by transaction timestamp in descending order.
+ *
+ * Each entry represents a transaction involving the user and may
+ * include counterparty information derived from related ledger entries.
+ *
+ * Returns an empty array if the user has no transactions.
+ */
+export async function getTransactionHistory(userId: number) {
+  const myLedger = alias(ledger, "myLedger");
+  const otherLedger = alias(ledger, "otherLedger");
+  const otherUser = alias(users, "otherUser");
+
+  return db
+    .select({
+      transactionId: transactions.transactionId,
+      timestamp: transactions.timestamp,
+      description: transactions.description,
+
+      myChange: sql<string>`sum(${myLedger.change})`.as("myChange"),
+
+      counterpartyUserId: otherUser.userId,
+      counterpartyName: otherUser.fullName,
+      counterpartyIsInternal: otherUser.isInternal,
+    })
+    .from(myLedger)
+    .innerJoin(transactions, eq(myLedger.transactionId, transactions.transactionId))
+    .leftJoin(
+      otherLedger,
+      and(
+        eq(otherLedger.transactionId, myLedger.transactionId),
+        ne(otherLedger.userId, userId),
+      ),
+    )
+    .leftJoin(otherUser, eq(otherUser.userId, otherLedger.userId))
+    .where(eq(myLedger.userId, userId))
+    .groupBy(
+      transactions.transactionId,
+      transactions.timestamp,
+      transactions.description,
+      otherUser.userId,
+      otherUser.fullName,
+      otherUser.isInternal,
+    )
+    .orderBy(desc(transactions.timestamp));
 }

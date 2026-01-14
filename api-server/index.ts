@@ -23,7 +23,7 @@ import { ablyAuth } from "./controllers/ably.js";
 import { getContactsByPhoneNumber } from "./controllers/contacts.js";
 import env from "./env.js";
 import { atmParam } from "./middleware/atm.js";
-import { transferMoney } from "./controllers/transaction.js";
+import { transferMoney, getTransactionHistory} from "./controllers/transaction.js";
 import ngrok from "@ngrok/ngrok";
 import { getVoiceToken } from "./controllers/voice.js";
 import {
@@ -69,6 +69,7 @@ touchless.post("/exit", exit);
 app.use("/touchless/:atmId", touchless);
 
 app.post("/transfer", transferMoney);
+app.get("/transaction-history", getTransactionHistory)
 app.get("/contacts", getContactsByPhoneNumber);
 
 app.get("/voice/token", getVoiceToken);
