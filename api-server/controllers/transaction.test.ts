@@ -138,3 +138,56 @@ describe("POST /transfer", () => {
     expect(queries.transferMoney).toHaveBeenCalledWith(1, 2, 100.5);
   });
 });
+
+// 
+vi.mock("../middleware/auth", () => ({
+  authenticate: (req: Request, _: Response, next: NextFunction) => {
+    req.userId = 1;
+    next();
+  },
+}));
+
+describe("GET /transaction-history", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should return results in descending timestamp order", async () => {
+    vi.mocked(queries.getTransactionHistory).mockResolvedValue([
+      {
+        transactionId: 2,
+        timestamp: new Date("2026-01-03T00:00:00.000Z"),
+        description: "Deposit",
+        myChange: "5.00",
+        counterpartyUserId: 9,
+        counterpartyName: "X",
+        counterpartyIsInternal: true,
+      },
+      {
+        transactionId: 1,
+        timestamp: new Date("2026-01-01T00:00:00.000Z"),
+        description: "NETS Payment",
+        myChange: "-2.00",
+        counterpartyUserId: 8,
+        counterpartyName: "Y",
+        counterpartyIsInternal: false,
+      },
+    ]);
+
+    const res = await request(app).get("/transaction-history");
+
+    expect(res.status).toBe(200);
+    expect(res.body[0].transactionId).toBe(2);
+    expect(res.body[1].transactionId).toBe(1);
+  });
+
+  it("should return an empty array if the user has no transactions", async () => {
+    vi.mocked(queries.getTransactionHistory).mockResolvedValue([]);
+
+    const res = await request(app).get("/transaction-history");
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual([]);
+    expect(queries.getTransactionHistory).toHaveBeenCalledWith(1);
+  });
+});
