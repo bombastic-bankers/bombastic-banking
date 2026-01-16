@@ -37,10 +37,10 @@ class TransactionsViewModel extends ChangeNotifier {
   List<Transaction> get currentMonthTransactions {
     final now = DateTime.now();
     final filtered = _transactions.where((t) {
-      return t.date.year == now.year && t.date.month == now.month;
+      return t.timestamp.year == now.year && t.timestamp.month == now.month;
     }).toList();
 
-    filtered.sort((a, b) => b.date.compareTo(a.date));
+    filtered.sort((a, b) => b.timestamp.compareTo(a.timestamp));
     return filtered;
   }
 
@@ -49,12 +49,16 @@ class TransactionsViewModel extends ChangeNotifier {
     final map = <DateTime, List<Transaction>>{};
 
     for (final t in currentMonthTransactions) {
-      final dayKey = DateTime(t.date.year, t.date.month, t.date.day);
+      final dayKey = DateTime(
+        t.timestamp.year,
+        t.timestamp.month,
+        t.timestamp.day,
+      );
       map.putIfAbsent(dayKey, () => []).add(t);
     }
 
     for (final entry in map.entries) {
-      entry.value.sort((a, b) => b.date.compareTo(a.date));
+      entry.value.sort((a, b) => b.timestamp.compareTo(a.timestamp));
     }
 
     return map;
