@@ -3,9 +3,6 @@ import z from "zod";
 import * as queries from "../db/queries/index.js";
 import { generateAuthTokens } from "../services/auth.js";
 import crypto from "crypto";
-import { generateEmailToken} from "./verify.js";
-import { sendVerificationEmail } from "./services/emailVerificationService.js";
-import { get } from "http";
 
 /** Create a new user account with the provided credentials. */
 export async function signUp(req: Request, res: Response) {
