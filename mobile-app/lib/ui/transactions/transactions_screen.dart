@@ -147,10 +147,10 @@ class _TransactionDaySection extends StatelessWidget {
 
           ...transactions.map(
             (t) => TransactionItem(
-              type: t.type,
-              title: t.title,
-              amount: t.amount,
-              date: t.date,
+              timestamp: t.timestamp,
+              description: t.description,
+              myChange: t.myChange,
+              counterpartyName: t.counterpartyName,
             ),
           ),
         ],
