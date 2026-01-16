@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class TransactionItem extends StatelessWidget {
-  final String type;
-  final String title;
-  final double amount;
-  final DateTime date;
+  final DateTime timestamp;
+  final String? description;
+  final String myChange;
+  final String? counterpartyName;
 
   const TransactionItem({
     super.key,
-    required this.type,
-    required this.title,
-    required this.amount,
-    required this.date,
+    required this.timestamp,
+    this.description,
+    required this.myChange,
+    this.counterpartyName,
   });
 
   @override
@@ -21,17 +21,20 @@ class TransactionItem extends StatelessWidget {
       elevation: 0,
       margin: const EdgeInsets.symmetric(vertical: 4),
       child: ListTile(
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(
+          description ?? 'No description',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         subtitle: Text(
-          DateFormat.yMMMd().format(date),
+          DateFormat.yMMMd().format(timestamp),
           style: TextStyle(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
         trailing: Text(
-          '\$${amount.toStringAsFixed(2)}',
+          "/$myChange",
           style: TextStyle(
-            color: amount < 0
+            color: myChange.startsWith('-')
                 ? Theme.of(context).colorScheme.error
                 : Theme.of(context).colorScheme.tertiary,
             fontWeight: FontWeight.bold,
