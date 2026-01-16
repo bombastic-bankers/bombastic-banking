@@ -4,31 +4,18 @@ import { z } from "zod";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
 import * as queries from "../db/queries/index.js";
-import { eq } from "drizzle-orm";
-import { emailVerificationCodes } from "../db/schema.js";
+
 import {
   TWILIO_SID,
   TWILIO_AUTH,
   TWILIO_VERIFY_SERVICE,
   MOCK_TWILIO_SMS,
 } from "../env.js";
-import { sendVerificationEmail } from "./services/emailVerificationService.js";
-import { db } from "../db/index.js";
 
 const client = twilio(TWILIO_SID, TWILIO_AUTH);
 const VERIFY_SERVICE = TWILIO_VERIFY_SERVICE;
 
-const mockOtpStore = new Map<string, string>();
-
-/** Generate a random email verification token */
-export function generateEmailToken() {
-  const token = crypto.randomBytes(32).toString("hex");
-  const expiry = new Date();
-  expiry.setHours(expiry.getHours() + 24);
-  return { token, expiry };
-}
-
-/** Send a phone OTP */
+// send OTP
 export async function sendPhoneOTP(req: Request, res: Response) {
   const { phoneNumber } = z
     .object({
@@ -37,6 +24,11 @@ export async function sendPhoneOTP(req: Request, res: Response) {
     .parse(req.body);
 
   try {
+    const user = await queries.getUserByPhoneNumber(phoneNumber);
+    if (!user) {
+      return res.status(404).json({ error: "Phone number not registered" });
+    }
+
     if (MOCK_TWILIO_SMS) {
       const mockOtp = Math.floor(100000 + Math.random() * 900000).toString();
       console.log("Mock OTP for", phoneNumber, ":", mockOtp);
@@ -55,7 +47,7 @@ export async function sendPhoneOTP(req: Request, res: Response) {
   }
 }
 
-/** Verify a phone OTP */
+// verify OTP
 export async function verifyPhoneOTP(req: Request, res: Response) {
   const { phoneNumber, otp } = z
     .object({
@@ -66,20 +58,15 @@ export async function verifyPhoneOTP(req: Request, res: Response) {
   console.log("VERIFY PHONE:", phoneNumber, "OTP:", otp);
 
   try {
+    const user = await queries.getUserByPhoneNumber(phoneNumber);
+    if (!user) {
+      return res.status(404).json({ error: "Phone number not registered" });
+    }
+
     if (MOCK_TWILIO_SMS) {
-      const storedOtp = mockOtpStore.get(phoneNumber);
-      if (storedOtp === otp) {
-        mockOtpStore.delete(phoneNumber);
-        console.log("Mock verify for", phoneNumber, "with OTP:", otp);
-        return res.json({
-          verified: true,
-          message: "Mock verification successful",
-        });
-      }
-      return res.status(400).json({
-        verified: false,
-        error: "Invalid OTP",
-      });
+      console.log("Mock verify:", phoneNumber, "OTP:", otp);
+      await queries.updatePhoneVerified(user.userId, true);
+      return res.json({ verified: true });
     }
 
     const result = await client.verify.v2
@@ -90,6 +77,7 @@ export async function verifyPhoneOTP(req: Request, res: Response) {
       });
 
     if (result.status === "approved") {
+      await queries.updatePhoneVerified(user.userId, true);
       return res.json({ verified: true });
     }
 
@@ -100,7 +88,14 @@ export async function verifyPhoneOTP(req: Request, res: Response) {
   }
 }
 
-/** Verify email link */
+export function generateEmailToken() {
+  const token = crypto.randomBytes(32).toString("hex");
+  const expiry = new Date();
+  expiry.setHours(expiry.getHours() + 24);
+  return { token, expiry };
+}
+
+// verify email link
 export async function verifyEmailLink(req: Request, res: Response) {
   try {
     const validation = z
@@ -108,16 +103,22 @@ export async function verifyEmailLink(req: Request, res: Response) {
         token: z.string(),
       })
       .safeParse(req.query);
+
     if (!validation.success) {
-      return res
-        .status(400)
-        .send("<h1>Invalid Link</h1><p>The verification token is missing </p>");
+      return res.status(400).send(`
+        <div style="font-family: sans-serif; text-align: center; padding-top: 50px;">
+          <h1 style="color: #dc3545;">Invalid Link</h1>
+          <p>The verification token is missing or malformed.</p>
+        </div>
+      `);
     }
+
     const { token } = validation.data;
 
-    const record = await queries.getEmailVerificationByToken(token);
+    // Fetch user by token
+    const user = await queries.getUserByEmailToken(token);
 
-    if (!record) {
+    if (!user) {
       return res
         .status(400)
         .send(
@@ -125,45 +126,33 @@ export async function verifyEmailLink(req: Request, res: Response) {
         );
     }
 
-    if (new Date() > record.expiresAt) {
+    if (user.emailTokenExpiry && new Date() > user.emailTokenExpiry) {
       return res
         .status(400)
         .send(
           "<h1>Expired Link</h1><p>This link has expired. Please request a new one from the app.</p>"
         );
     }
-    await db
-      .update(emailVerificationCodes)
-      .set({ verifiedAt: new Date() })
-      .where(eq(emailVerificationCodes.id, record.id));
+
+    if (user.emailverified) {
+      return res.send(
+        "<h1>Already Verified</h1><p>You have already verified your email. You can log in.</p>"
+      );
+    }
+
+    // Update user to set email as verified
+    await queries.verifyUserEmail(user.userId);
 
     res.send(`
       <div style="font-family: sans-serif; text-align: center; padding-top: 50px;">
-        <h1 style="color: #28a745;">Verification Successful!</h1> 
+        <h1 style="color: #28a745;">Verification Successful!</h1>
         <p>Your email has been verified. You can now log in to the app.</p>
       </div>
     `);
   } catch (err) {
+    console.error("EMAIL_VERIFY_ERROR:", err);
     res
       .status(500)
       .send("An error occurred during verification. Please try again later.");
-  }
-}
-
-/** Request email verification */
-export async function requestEmailVerification(req: Request, res: Response) {
-  try {
-    const { email } = z.object({ email: z.string().email() }).parse(req.body);
-
-    const { token, expiry } = generateEmailToken();
-
-    await queries.saveEmailToken(email, token, expiry);
-
-    await sendVerificationEmail(email, token);
-
-    res.json({ message: "Verification email sent!" });
-  } catch (err) {
-    console.error("EMAIL_REQ_ERROR:", err);
-    res.status(500).json({ error: "Failed to send verification email" });
   }
 }

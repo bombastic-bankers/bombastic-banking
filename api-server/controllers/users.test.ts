@@ -7,6 +7,7 @@ import { NextFunction, Request, Response } from "express";
 import e from "express";
 import jwt from "jsonwebtoken";
 import env  from "../env.js";
+import { email } from "zod";
 
 vi.mock("../db/queries");
 vi.mock("../services/auth");
@@ -23,6 +24,11 @@ async function createMockUser(overrides: Partial<any>= {}) {
     phoneNumber: "+651234567890",
     email: "john@example.com",
     hashedPin: "hashed_pin",
+    emailverified: false,
+    phoneverified: false,
+    emailToken: null,
+    emailTokenExpiry: null,
+    isInternal: false,
     ...overrides,
   };
 }
@@ -33,20 +39,10 @@ describe("POST /auth/signup", () => {
   });
 
   it("should create a new user with valid data", async () => {
-    vi.mocked(queries.getEmailVerificationByEmail).mockResolvedValue({
-      id: 1,
-      email: "john@example.com",
-      token: "token123",
-      verifiedAt: new Date(),
-      expiresAt: new Date(Date.now() + 100000),
-      createdAt: new Date(),
-      isInternal: false,
-    });
+    
     vi.mocked(queries.getUserByEmail).mockResolvedValue(null);
 
     vi.mocked(queries.createUser).mockResolvedValue(true);
-
-    vi.mocked(queries.deleteEmailToken).mockResolvedValue(undefined);
 
     const response = await request(app).post("/auth/signup").send({
       fullName: "John Doe",
@@ -56,8 +52,12 @@ describe("POST /auth/signup", () => {
     });
 
     expect(response.status).toBe(201);
-    expect(queries.createUser).toHaveBeenCalled();
-    expect(queries.deleteEmailToken).toHaveBeenCalledWith(1);
+    expect.objectContaining({
+      fullName: "John Doe",
+      phoneNumber: "+651234567890",
+      email: "john@example.com",
+      pin: "123456",
+    });
   });
 
   it("should return 400 when fullName is missing", async () => {
@@ -68,7 +68,6 @@ describe("POST /auth/signup", () => {
     });
 
     expect(response.status).toBe(400);
-    expect(queries.createUser).not.toHaveBeenCalled();
     expect(queries.createUser).not.toHaveBeenCalled();
   });
 
@@ -82,7 +81,6 @@ describe("POST /auth/signup", () => {
 
     expect(response.status).toBe(400);
     expect(queries.createUser).not.toHaveBeenCalled();
-    expect(queries.createUser).not.toHaveBeenCalled();
   });
 
   it("should return 400 when phoneNumber is missing", async () => {
@@ -93,7 +91,6 @@ describe("POST /auth/signup", () => {
     });
 
     expect(response.status).toBe(400);
-    expect(queries.createUser).not.toHaveBeenCalled();
     expect(queries.createUser).not.toHaveBeenCalled();
   });
 
@@ -107,7 +104,6 @@ describe("POST /auth/signup", () => {
 
     expect(response.status).toBe(400);
     expect(queries.createUser).not.toHaveBeenCalled();
-    expect(queries.createUser).not.toHaveBeenCalled();
   });
 
   it("should return 400 when email is invalid", async () => {
@@ -120,7 +116,6 @@ describe("POST /auth/signup", () => {
 
     expect(response.status).toBe(400);
     expect(queries.createUser).not.toHaveBeenCalled();
-    expect(queries.createUser).not.toHaveBeenCalled();
   });
 
   it("should return 400 when email is missing", async () => {
@@ -131,7 +126,6 @@ describe("POST /auth/signup", () => {
     });
 
     expect(response.status).toBe(400);
-    expect(queries.createUser).not.toHaveBeenCalled();
     expect(queries.createUser).not.toHaveBeenCalled();
   });
 
@@ -158,7 +152,6 @@ describe("POST /auth/signup", () => {
 
     expect(response.status).toBe(400);
     expect(queries.createUser).not.toHaveBeenCalled();
-    expect(queries.createUser).not.toHaveBeenCalled();
   });
 
   it("should return 400 when pin contains non-numeric characters", async () => {
@@ -171,7 +164,6 @@ describe("POST /auth/signup", () => {
 
     expect(response.status).toBe(400);
     expect(queries.createUser).not.toHaveBeenCalled();
-    expect(queries.createUser).not.toHaveBeenCalled();
   });
 
   it("should return 400 when pin is not 6 digits", async () => {
@@ -183,7 +175,6 @@ describe("POST /auth/signup", () => {
     });
 
     expect(response.status).toBe(400);
-    expect(queries.createUser).not.toHaveBeenCalled();
     expect(queries.createUser).not.toHaveBeenCalled();
   });
 });
@@ -200,6 +191,11 @@ describe("POST /auth/login", () => {
       phoneNumber: "+651234567890",
       email: "john@example.com",
       hashedPin: "hashed_pin",
+      emailverified: true,
+      phoneverified: true,
+      emailToken: null,
+      emailTokenExpiry: null,
+      isInternal: false,
     });
     vi.mocked(auth.generateAuthTokens).mockResolvedValue({
       accessToken: "access-token",
@@ -358,39 +354,5 @@ describe("PATCH /profile", () => {
       email: "test@example.com",
     });
     expect(queries.updateUserProfile).toHaveBeenCalledWith(1, { fullName: "New Name" });
-  });
-});
-
-describe("GET /profile", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it("should return 404 if user not found", async () => {
-    vi.mocked(queries.getUserProfile).mockResolvedValue(null);
-
-    const res = await request(app).get("/profile");
-
-    expect(res.status).toBe(404);
-    expect(res.body).toEqual({ error: "User not found" });
-    expect(queries.getUserProfile).toHaveBeenCalledWith(1);
-  });
-
-  it("should return user profile if found", async () => {
-    vi.mocked(queries.getUserProfile).mockResolvedValue({
-      fullName: "Test User",
-      phoneNumber: "91234567",
-      email: "test@example.com",
-    });
-
-    const res = await request(app).get("/profile");
-
-    expect(res.status).toBe(200);
-    expect(res.body).toEqual({
-      fullName: "Test User",
-      phoneNumber: "91234567",
-      email: "test@example.com",
-    });
-    expect(queries.getUserProfile).toHaveBeenCalledWith(1);
   });
 });

@@ -13,16 +13,11 @@ export const users = pgTable("users", {
   fullName: text("full_name").notNull(),
   phoneNumber: text("phone_number").notNull(),
   email: text("email").notNull().unique(),
-  hashedPin: text("hashed_pin").notNull(),   
-
-});
-export const emailVerificationCodes = pgTable("email_verification_codes", {
-  id: serial("id").primaryKey(),
-  email: text("email").notNull(),
-  token: varchar("token", { length: 255 }).notNull(),
-  expiresAt: timestamp("expires_at").notNull(),
-  verifiedAt: timestamp("verified_at"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+  hashedPin: text("hashed_pin").notNull(),
+  phoneverified: boolean("phoneverified").default(false),
+  emailverified: boolean("emailverified").default(false),
+  emailToken: varchar("emailtoken", { length: 255 }),      
+  emailTokenExpiry: timestamp("emailtokenexpiry"),    
 
   isInternal: boolean("is_internal").notNull().default(false),
 });
