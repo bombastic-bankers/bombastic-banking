@@ -70,19 +70,17 @@ export async function verifyPhoneOTP(req: Request, res: Response) {
     if (MOCK_TWILIO_SMS) {
       const storedOtp = mockOtpStore.get(phoneNumber);
 
-      const isTestEnv = process.env.NODE_ENV === "test";
-      const isValid = otp === storedOtp || (isTestEnv && otp === "123456");
+      const isTestEnv = process.env.NODE_ENV === 'test';
+      const isValid = (otp === storedOtp) || (isTestEnv && otp === '123456');
 
       if (isValid) {
         mockOtpStore.delete(phoneNumber);
-
-        await queries.savePhoneVerificationSuccess(phoneNumber);
         return res.json({
           verified: true,
           message: "Mock verification successful",
         });
       }
-
+      
       return res.status(400).json({
         verified: false,
         error: "Invalid OTP",
@@ -97,7 +95,6 @@ export async function verifyPhoneOTP(req: Request, res: Response) {
       });
 
     if (result.status === "approved") {
-      await queries.savePhoneVerificationSuccess(phoneNumber);
       return res.json({ verified: true });
     }
 
@@ -116,7 +113,6 @@ export async function verifyEmailLink(req: Request, res: Response) {
         token: z.string(),
       })
       .safeParse(req.query);
-
     if (!validation.success) {
       return res
         .status(400)
@@ -127,25 +123,18 @@ export async function verifyEmailLink(req: Request, res: Response) {
     const record = await queries.getEmailVerificationByToken(token);
 
     if (!record) {
-      return res.status(400).send(`
-          <div style='font-family: sans-serif; text-align: center; padding-top: 50px;'>
-          <h1 style='color: #28a745;'>Invalid Link</h1><p>This email has already been verified. You can proceed to sign up in the app.</p>
-        </div>
-    `);
-    }
-    if (record.verifiedAt) {
-      return res.status(400).send(`
-          <div style='font-family: sans-serif; text-align: center; padding-top: 50px;'>
-          <h1 style='color: #28a745;'>Email have already Verified</h1><p>This email has already been verified. You can proceed to sign up in the app.</p>
-        </div>
-    `);
+      return res
+        .status(400)
+        .send(
+          "<h1>Invalid Link</h1><p>This verification link is invalid or has already been used.</p>"
+        );
     }
 
     if (new Date() > record.expiresAt) {
       return res
         .status(400)
         .send(
-          "<h1 style='color: #dd3327;'>Expired Link</h1><p>This link has expired. Please request a new one from the app.</p>"
+          "<h1>Expired Link</h1><p>This link has expired. Please request a new one from the app.</p>"
         );
     }
     await db
@@ -156,7 +145,7 @@ export async function verifyEmailLink(req: Request, res: Response) {
     res.send(`
       <div style="font-family: sans-serif; text-align: center; padding-top: 50px;">
         <h1 style="color: #28a745;">Verification Successful!</h1> 
-        <p>Your email has been verified. You can now continue to proceed to sign up in the app.</p>
+        <p>Your email has been verified. You can now log in to the app.</p>
       </div>
     `);
   } catch (err) {

@@ -97,7 +97,7 @@ describe("GET /verify/email/confirm", () => {
       .query({ token: "invalid-token" });
 
     expect(res.status).toBe(400);
-    expect(res.text.toLocaleLowerCase()).toContain("invalid");
+    expect(res.text).toContain("invalid");
   });
 });
 
