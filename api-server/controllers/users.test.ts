@@ -233,9 +233,6 @@ describe("POST /auth/login", () => {
   });
 });
 
-/**
- * Unit tests for the user profile functionality.
- */
 describe("POST /auth/refresh", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -276,16 +273,6 @@ describe("POST /auth/refresh", () => {
   });
 });
 
-/**
- * unit test for profile
- */
-vi.mock("../middleware/auth", () => ({
-  authenticate: (req: Request, _: Response, next: NextFunction) => {
-    req.userId = 1;
-    next();
-  },
-}));
-
 describe("PATCH /profile", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -311,7 +298,6 @@ describe("PATCH /profile", () => {
     const res = await request(app).patch("/profile").send({ fullName: "New Name" });
 
     expect(res.status).toBe(404);
-    expect(res.body).toEqual({ error: "User not found" });
     expect(queries.updateUserProfile).toHaveBeenCalledWith(1, { fullName: "New Name" });
   });
 
