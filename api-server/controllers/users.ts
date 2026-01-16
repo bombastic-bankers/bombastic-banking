@@ -4,8 +4,10 @@ import { JWT_SECRET } from "../env.js";
 import { Request, Response } from "express";
 import z from "zod";
 import crypto from "crypto";
+import { sendVerificationEmail } from "./services/emailVerificationService.js";
+import { autoSendOTP } from "./services/smsVerificationService.js";
+import { generateEmailToken } from "./verify.js";
 
-/** Sign up a new user */
 export async function signUp(req: Request, res: Response) {
   const userInit = z
     .object({
@@ -22,49 +24,40 @@ export async function signUp(req: Request, res: Response) {
     return res.status(409).json({ error: "Email already in use" });
   }
 
-  const existingPhone = await queries.getUserByPhoneNumber(
-    userInit.phoneNumber
-  );
+  const existingPhone = await queries.getUserByPhoneNumber(userInit.phoneNumber);
   if (existingPhone) {
-    return res
-      .status(409)
-      .json({ error: "This phone number is already in use." });
+    return res.status(409).json({ error: "This phone number is already in use." });
   }
-  const verificationRecord = await queries.getEmailVerificationByEmail(
-    userInit.email
-  );
 
-  if (!verificationRecord || !verificationRecord.verifiedAt) {
-    return res.status(403).json({
-      error:
-        "Verification incomplete. Please verify your email and phone first.",
-    });
-  }
-  if (new Date() > new Date(verificationRecord.expiresAt)) {
-    return res
-      .status(403)
-      .json({ error: "Verification expired. Please request a new link." });
-  }
+  const { token: emailToken, expiry: emailTokenExpiry } = generateEmailToken();
 
   // create user
   const created = await queries.createUser({
-    fullName: userInit.fullName,
-    phoneNumber: userInit.phoneNumber,
-    email: userInit.email,
-    pin: userInit.pin,
+    ...userInit,
+    emailToken,
+    emailTokenExpiry,
   });
 
   if (!created) {
     return res.status(500).json({ error: "Failed to create account" });
   }
-  await queries.deleteEmailToken(verificationRecord.id);
 
-  return res
-    .status(201)
-    .json({ message: "Registration successful! You can now login." });
+  // automatically send verification email and OTP
+  try {
+    await sendVerificationEmail(userInit.email, emailToken);
+    await autoSendOTP(userInit.phoneNumber);
+    
+    return res.status(201).json({ 
+      message: "Registration successful! Please verify your email and phone number." 
+    });
+  } catch (error) {
+    console.error("AUTO_SEND_ERROR:", error);
+    return res.status(201).json({ 
+      message: "Account created, but verification codes failed to send. Please request a resend." 
+    });
+  }
 }
 
-/* Log in an existing user */
 
 export async function login(req: Request, res: Response) {
   const { email, pin } = z
@@ -78,10 +71,19 @@ export async function login(req: Request, res: Response) {
   if (user === null) {
     return res.status(400).json({ error: "Incorrect email or PIN" });
   }
-
+  // If either one is false, login fails
+  if (!user.emailverified || !user.phoneverified) {
+    return res.status(403).json({ 
+      error: "Account not fully verified", 
+      // emailVerified: user.emailverified,
+      // phoneVerified: user.phoneverified,
+      message: "Please ensure both your email and phone number are verified."
+    });
+  }
   const token = jwt.sign({ userId: user.userId }, JWT_SECRET, {
     expiresIn: "2m",
   });
+
   res.json({ token });
 }
 

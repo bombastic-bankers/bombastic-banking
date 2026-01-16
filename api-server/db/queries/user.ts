@@ -1,5 +1,5 @@
 import { db } from "../index.js";
-import { ledger, users,emailVerificationCodes } from "../schema.js";
+import { ledger, users } from "../schema.js";
 import { eq, sum, and } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
@@ -12,6 +12,8 @@ export async function createUser(user: {
   phoneNumber: string;
   email: string;
   pin: string;
+  emailToken?: string;        
+  emailTokenExpiry?: Date;
 }): Promise<boolean> {
   const inserted = await db
     .insert(users)
@@ -20,6 +22,8 @@ export async function createUser(user: {
       phoneNumber: user.phoneNumber,
       email: user.email,
       hashedPin: await bcrypt.hash(user.pin, 10),
+      emailToken: user.emailToken,
+      emailTokenExpiry: user.emailTokenExpiry,
     })
     .onConflictDoNothing()
     .returning();
@@ -52,34 +56,31 @@ export async function getUserByPhoneNumber(phoneNumber: string): Promise<typeof 
   const result = await db.select().from(users).where(eq(users.phoneNumber, phoneNumber)).limit(1);
   return result[0] ?? null;
 }
-export async function getUserByEmail(email: string): Promise<typeof users.$inferSelect | null> {
-  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
-  return result[0] ?? null;
-}
 
-export async function saveEmailToken(email: string, token: string, expiresAt: Date): Promise<void> {
-
-  await db.delete(emailVerificationCodes).where(eq(emailVerificationCodes.email, email));
-  await db.insert(emailVerificationCodes).values({
-    email,
-    token,
-    expiresAt
-  });
+// Update phoneVerified flag
+export async function updatePhoneVerified(userId: number, verified: boolean): Promise<void> {
+  await db.update(users).set({ phoneverified: verified }).where(eq(users.userId, userId));
 }
-export async function getEmailVerificationByToken(token: string): Promise<typeof emailVerificationCodes.$inferSelect | null> {
-  const result = await db.select().from(emailVerificationCodes).where(eq(emailVerificationCodes.token, token)).limit(1);
-  return result[0] ?? null;
-}
-export async function deleteEmailToken(id: number): Promise<void> {
-  await db.delete(emailVerificationCodes).where(eq(emailVerificationCodes.id, id));
-}
-
-export async function getEmailVerificationByEmail(email: string) {
+export async function getUserByEmail(email: string) {
   const result = await db
     .select()
-    .from(emailVerificationCodes)
-    .where(eq(emailVerificationCodes.email, email))
+    .from(users)
+    .where(eq(users.email, email))
     .limit(1);
-  
+
   return result[0] ?? null;
+}
+export async function getUserByEmailToken(token: string): Promise<typeof users.$inferSelect | null> {
+  const result = await db.select().from(users).where(eq(users.emailToken, token)).limit(1);
+  return result[0] ?? null;
+}
+
+export async function verifyUserEmail(userId: number) {
+  await db.update(users)
+    .set({ 
+      emailverified: true, 
+      emailToken: null, 
+      emailTokenExpiry: null 
+    })
+    .where(eq(users.userId, userId));
 }
