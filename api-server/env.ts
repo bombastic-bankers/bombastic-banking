@@ -43,5 +43,6 @@ export const TWILIO_SID = process.env.TWILIO_SID!;
 export const TWILIO_AUTH = process.env.TWILIO_AUTH!;
 export const TWILIO_VERIFY_SERVICE = process.env.TWILIO_VERIFY_SERVICE!;
 
-export const MOCK_EMAIL = process.env.MOCK_EMAIL === "true";
-export const MOCK_TWILIO_SMS = process.env.MOCK_TWILIO_SMS === "true";
+export const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY!;
+export const SENDGRID_VERIFIED_EMAIL = process.env.SENDGRID_VERIFIED_EMAIL!;
+export const NGROK_AUTHTOKEN = process.env.NGROK_AUTHTOKEN!;

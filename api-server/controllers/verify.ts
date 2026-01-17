@@ -1,21 +1,14 @@
 import { Request, Response } from "express";
 import twilio from "twilio";
 import { z } from "zod";
-import nodemailer from "nodemailer";
 import crypto from "crypto";
 import * as queries from "../db/queries/index.js";
-
-import {
-  TWILIO_SID,
-  TWILIO_AUTH,
-  TWILIO_VERIFY_SERVICE,
-  MOCK_TWILIO_SMS,
-} from "../env.js";
+import { TWILIO_SID, TWILIO_AUTH, TWILIO_VERIFY_SERVICE } from "../env.js";
 
 const client = twilio(TWILIO_SID, TWILIO_AUTH);
 const VERIFY_SERVICE = TWILIO_VERIFY_SERVICE;
 
-// send OTP
+/* send OTP to phone number */
 export async function sendPhoneOTP(req: Request, res: Response) {
   const { phoneNumber } = z
     .object({
@@ -27,12 +20,6 @@ export async function sendPhoneOTP(req: Request, res: Response) {
     const user = await queries.getUserByPhoneNumber(phoneNumber);
     if (!user) {
       return res.status(404).json({ error: "Phone number not registered" });
-    }
-
-    if (MOCK_TWILIO_SMS) {
-      const mockOtp = Math.floor(100000 + Math.random() * 900000).toString();
-      console.log("Mock OTP for", phoneNumber, ":", mockOtp);
-      return res.json({ message: "Mock OTP sent (check terminal)" });
     }
 
     await client.verify.v2.services(VERIFY_SERVICE).verifications.create({
@@ -47,7 +34,7 @@ export async function sendPhoneOTP(req: Request, res: Response) {
   }
 }
 
-// verify OTP
+/* verify OTP for phone number */
 export async function verifyPhoneOTP(req: Request, res: Response) {
   const { phoneNumber, otp } = z
     .object({
@@ -61,12 +48,6 @@ export async function verifyPhoneOTP(req: Request, res: Response) {
     const user = await queries.getUserByPhoneNumber(phoneNumber);
     if (!user) {
       return res.status(404).json({ error: "Phone number not registered" });
-    }
-
-    if (MOCK_TWILIO_SMS) {
-      console.log("Mock verify:", phoneNumber, "OTP:", otp);
-      await queries.updatePhoneVerified(user.userId, true);
-      return res.json({ verified: true });
     }
 
     const result = await client.verify.v2
@@ -95,7 +76,7 @@ export function generateEmailToken() {
   return { token, expiry };
 }
 
-// verify email link
+/* verify email link */
 export async function verifyEmailLink(req: Request, res: Response) {
   try {
     const validation = z
@@ -115,7 +96,7 @@ export async function verifyEmailLink(req: Request, res: Response) {
 
     const { token } = validation.data;
 
-    // Fetch user by token
+    /* Fetch user by email token */
     const user = await queries.getUserByEmailToken(token);
 
     if (!user) {
@@ -139,8 +120,6 @@ export async function verifyEmailLink(req: Request, res: Response) {
         "<h1>Already Verified</h1><p>You have already verified your email. You can log in.</p>"
       );
     }
-
-    // Update user to set email as verified
     await queries.verifyUserEmail(user.userId);
 
     res.send(`
