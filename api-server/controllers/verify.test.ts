@@ -8,8 +8,31 @@ import { autoSendOTP } from "./services/smsVerificationService.js";
 import { email } from "zod";
 vi.mock("../db/queries");
 
-process.env.MOCK_TWILIO_SMS = "true";
-process.env.MOCK_EMAIL = "true";
+vi.mock('twilio', () => {
+  return {
+    default: vi.fn(() => ({
+      verify: {
+        v2: {
+          services: vi.fn(() => ({
+            verifications: {
+              create: vi.fn().mockResolvedValue({ status: 'pending' }),
+            },
+            verificationChecks: {
+              create: vi.fn().mockResolvedValue({ status: 'approved' }),
+            },
+          })),
+        },
+      },
+    })),
+  };
+});
+
+vi.mock('@sendgrid/mail', () => ({
+  default: {
+    setApiKey: vi.fn(),
+    send: vi.fn().mockResolvedValue([{ statusCode: 202 }, {}]),
+  },
+}));
 
 async function createMockUser(overrides: Partial<any>= {}) {
   return {
