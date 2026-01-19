@@ -1,18 +1,17 @@
 <script lang="ts">
 	import '../app.css';
 	import { onMount } from 'svelte';
-	import { setSSEContext } from '$lib/context';
 
 	let { children } = $props();
 
-	let eventSource: EventSource | undefined = $state(undefined);
-	setSSEContext((event, listener) => {
-		if (!eventSource) return () => {};
-		eventSource.addEventListener(event, listener);
-		return () => eventSource?.removeEventListener(event, listener);
-	});
+	// Dispatch events received from the ATM server on window
 	onMount(() => {
-		eventSource = new EventSource('/commands');
+		const eventSource = new EventSource('/commands');
+		eventSource.addEventListener('message', (event) => {
+			const msg: { type: string; data: any } = JSON.parse(event.data);
+			// Remove dashes, so (e.g.) "deposit-start" becomes "depositstart"
+			window.dispatchEvent(new CustomEvent(msg.type.replaceAll('-', ''), { detail: msg.data }));
+		});
 	});
 </script>
 
@@ -20,50 +19,28 @@
 	<title>ATM Dashboard</title>
 </svelte:head>
 
-<!-- Fullscreen Machine Background -->
-<div class="flex h-screen w-screen items-center justify-center bg-[#111a27]">
-	<!-- ATM Frame -->
-	<div
-		class="relative flex h-[80%] w-[90%] max-w-[900px]
-           flex-col items-center rounded-3xl
-           border border-gray-700 bg-[#0c1525] shadow-xl"
-	>
-		<!-- OCBC Top Bar -->
-		<div
-			class="flex h-20 w-full items-center justify-center rounded-t-3xl bg-red-600
-                text-3xl font-semibold tracking-wide text-white"
-		>
-			OCBC
-		</div>
 
-		<!-- Main Screen Area -->
-		<div class="relative flex w-full flex-1 flex-col items-center px-8 pt-2 pb-10 text-center">
-			<!-- <div class="flex-1 w-full flex flex-col items-center text-center px-8 pt-4 pb-10 relative"> -->
+<!-- OUTER ATM BACKGROUND -->
+<div class="relative flex min-h-screen justify-center bg-black pt-10 pb-40">
 
-			<!-- Page-Specific Content -->
-			<div class="flex h-full w-full flex-col items-center pt-20">
-				{@render children()}
-			</div>
-		</div>
+    <!-- INNER SCREEN / WHITE BOX -->
+    <div class="w-[90%] max-w-[900px] h-[650px] bg-[#e5e7eb] rounded-2xl p-6 shadow-xl border border-gray-300">
+        {@render children()}
+    </div>
 
-		<!-- Bottom Vents + Card Slot -->
-		<div class="absolute bottom-6 flex w-full flex-col items-center">
-			<!-- Vents -->
-			<div class="mb-3 flex w-[60%] justify-between text-gray-600">
-				<div class="space-y-1">
-					<div class="h-1 w-8 rounded bg-gray-700"></div>
-					<div class="h-1 w-8 rounded bg-gray-700"></div>
-					<div class="h-1 w-8 rounded bg-gray-700"></div>
-				</div>
-				<div class="space-y-1">
-					<div class="h-1 w-8 rounded bg-gray-700"></div>
-					<div class="h-1 w-8 rounded bg-gray-700"></div>
-					<div class="h-1 w-8 rounded bg-gray-700"></div>
-				</div>
-			</div>
+    <!-- BOTTOM VENTS (below the screen) -->
+    <div class="absolute top-[calc(100vh+5rem)] w-[90%] max-w-[900px]
+         bg-white rounded-xl shadow-md flex items-center justify-center
+         gap-6 py-3 px-6">
 
-			<!-- Card Slot -->
-			<div class="h-5 w-64 rounded-lg bg-black shadow-inner"></div>
-		</div>
-	</div>
+		<img src="/logos/ocbc.png" class="h-6 object-contain" alt="OCBC" />
+		<img src="/logos/visa.png" class="h-6 object-contain" alt="Visa" />
+		<img src="/logos/plus.png" class="h-6 object-contain" alt="Plus" />
+		<img src="/logos/mastercard.png" class="h-6 object-contain" alt="Mastercard" />
+		<img src="/logos/maestro.png" class="h-6 object-contain" alt="Maestro" />
+		<img src="/logos/cirrus.png" class="h-6 object-contain" alt="Cirrus" />
+		<img src="/logos/unionpay.png" class="h-6 object-contain" alt="UnionPay" />
+		<img src="/logos/uob.png" class="h-6 object-contain" alt="UOB" />
+    </div>
+
 </div>
