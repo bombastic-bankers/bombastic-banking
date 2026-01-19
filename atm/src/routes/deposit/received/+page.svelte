@@ -1,31 +1,23 @@
 <script lang="ts">
-	import { sendEvent } from '$lib/realtime.remote';
-	import { deposit } from '$lib/simulate';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	
+
 	const amount = +page.url.searchParams.get('amount')!;
-	let depositCountingPromise = deposit();
-	
+
 	onMount(async () => {
-		await depositCountingPromise;
 		setTimeout(() => goto('/'), 10_000);
-		await sendEvent({
-			name: 'deposit-collected',
-		});
 	});
 </script>
 
 <div
-	class="w-full h-full rounded-2xl p-10 shadow-xl text-center flex flex-col items-center justify-center"
+	class="flex h-full w-full flex-col items-center justify-center rounded-2xl p-10 text-center shadow-xl"
 >
-
-	<h1 class="text-3xl font-extrabold text-gray-900 mb-2">
+	<h1 class="mb-2 text-3xl font-extrabold text-gray-900">
 		Received {amount}
 	</h1>
 
-	<p class="text-gray-800 text-lg mb-10">
+	<p class="mb-10 text-lg text-gray-800">
 		Please collect your receipt.<br />
 		Is there anything else you would like to do?
 	</p>
@@ -34,29 +26,28 @@
 	<div class="flex gap-8">
 		<button
 			on:click={() => goto('/deposit')}
-			class="w-56 h-20 rounded-xl bg-linear-to-b from-[#4b5563] to-[#1f2937]
-				text-white text-md font-medium shadow-lg hover:brightness-110 transition
-				flex items-center justify-center px-4 text-center"
+			class="text-md flex h-20 w-56 items-center justify-center
+				rounded-xl bg-linear-to-b from-[#4b5563] to-[#1f2937] px-4 text-center
+				font-medium text-white shadow-lg transition hover:brightness-110"
 		>
 			Another Deposit<br />transaction
 		</button>
 
 		<button
-			class="w-56 h-20 rounded-xl bg-linear-to-b from-[#4b5563] to-[#1f2937]
-				text-white text-md font-medium shadow-lg hover:brightness-110 transition
-				flex items-center justify-center px-4 text-center"
+			class="text-md flex h-20 w-56 items-center justify-center
+				rounded-xl bg-linear-to-b from-[#4b5563] to-[#1f2937] px-4 text-center
+				font-medium text-white shadow-lg transition hover:brightness-110"
 		>
 			Other Services
 		</button>
 
 		<button
 			on:click={() => goto('/')}
-			class="w-56 h-20 rounded-xl bg-linear-to-b from-[#4b5563] to-[#1f2937]
-				text-white text-md font-medium shadow-lg hover:brightness-110 transition
-				flex items-center justify-center px-4 text-center"
+			class="text-md flex h-20 w-56 items-center justify-center
+				rounded-xl bg-linear-to-b from-[#4b5563] to-[#1f2937] px-4 text-center
+				font-medium text-white shadow-lg transition hover:brightness-110"
 		>
 			End Transaction
 		</button>
 	</div>
 </div>
-

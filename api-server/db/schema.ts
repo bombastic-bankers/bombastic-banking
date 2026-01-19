@@ -61,7 +61,7 @@ export const ledger = pgTable("ledger", {
  * ATMs table stores physical ATM locations.
  */
 export const atms = pgTable("atms", {
-  atmId: integer("atm_id").primaryKey().generatedAlwaysAsIdentity(),
+  atmId: integer("atm_id").primaryKey().generatedByDefaultAsIdentity(),
   location: text("location").notNull(),
 });
 
@@ -78,14 +78,17 @@ export const touchlessSessions = pgTable(
       .references(() => users.userId, {
         onUpdate: "cascade",
         onDelete: "cascade",
-      }),
+      })
+      .notNull(),
     atmId: integer("atm_id")
       .unique()
       .references(() => atms.atmId, {
         onUpdate: "cascade",
         onDelete: "cascade",
-      }),
+      })
+      .notNull(),
     startedAt: timestamp("started_at").defaultNow().notNull(),
+    depositAmount: numeric("deposit_amount", { precision: 10, scale: 2 }),
   },
   (table) => [primaryKey({ columns: [table.userId, table.atmId] })],
 );

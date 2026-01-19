@@ -8,6 +8,7 @@ declare module "svelte/elements" {
         ondepositstart?: EventHandler<Event, T> | undefined | null;
         ondepositcount?: EventHandler<Event, T> | undefined | null;
         ondepositconfirm?: EventHandler<Event, T> | undefined | null;
-        onidle?: EventHandler<Event, T> | undefined | null;
+        ondepositcancel?: EventHandler<Event, T> | undefined | null;
+        onexit?: EventHandler<Event, T> | undefined | null;
     }
 }

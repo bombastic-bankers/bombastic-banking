@@ -1,5 +1,5 @@
 import Ably from "ably";
-import env from "./env.js";
+import env from "../env.js";
 
 function atmChannelName(atmId: number) {
   return `atm:${atmId}`;

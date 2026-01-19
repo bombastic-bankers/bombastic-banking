@@ -3,10 +3,10 @@ import request from "supertest";
 import { NextFunction, Request, Response } from "express";
 import app from "../index.js";
 import * as queries from "../db/queries/index.js";
-import * as realtime from "../realtime.js";
+import * as realtime from "../services/realtime.js";
 
 vi.mock("../db/queries");
-vi.mock("../realtime");
+vi.mock("../services/realtime");
 vi.mock("../middleware/auth", () => ({
   authenticate: (req: Request, _: Response, next: NextFunction) => {
     req.userId = 1;
@@ -20,7 +20,7 @@ describe("POST /touchless/:atmId/withdraw", () => {
   });
 
   it("should withdraw cash", async () => {
-    vi.mocked(queries.ensureTouchlessSession).mockResolvedValue(true);
+    vi.mocked(queries.ensureATMSession).mockResolvedValue({ depositAmount: null });
 
     const response = await request(app).post("/touchless/1/withdraw").send({ amount: 100.5 });
 
@@ -33,11 +33,12 @@ describe("POST /touchless/:atmId/withdraw", () => {
   });
 
   it("should return 409 if the ATM is in use by another user", async () => {
-    vi.mocked(queries.ensureTouchlessSession).mockResolvedValue(false);
+    vi.mocked(queries.ensureATMSession).mockResolvedValue(null);
 
     const response = await request(app).post("/touchless/1/withdraw").send({ amount: 100.5 });
 
     expect(response.status).toBe(409);
+    expect(queries.ensureATMSession).toBeCalledWith(1, 1);
     expect(queries.withdrawCash).not.toBeCalled();
   });
 
@@ -45,33 +46,31 @@ describe("POST /touchless/:atmId/withdraw", () => {
     const response = await request(app).post("/touchless/123abc/withdraw").send({ amount: 100.5 });
 
     expect(response.status).toBe(400);
+    expect(queries.ensureATMSession).not.toBeCalled();
     expect(queries.withdrawCash).not.toBeCalled();
   });
 
   it("should return 400 if the amount is negative", async () => {
-    vi.mocked(queries.ensureTouchlessSession).mockResolvedValue(true);
-
     const response = await request(app).post("/touchless/1/withdraw").send({ amount: -100.5 });
 
     expect(response.status).toBe(400);
+    expect(queries.ensureATMSession).not.toBeCalled();
     expect(queries.withdrawCash).not.toBeCalled();
   });
 
   it("should return 400 if the amount is 0", async () => {
-    vi.mocked(queries.ensureTouchlessSession).mockResolvedValue(true);
-
     const response = await request(app).post("/touchless/1/withdraw").send({ amount: 0 });
 
     expect(response.status).toBe(400);
+    expect(queries.ensureATMSession).not.toBeCalled();
     expect(queries.withdrawCash).not.toBeCalled();
   });
 
   it("should return 400 if the amount is not a multiple of 0.01", async () => {
-    vi.mocked(queries.ensureTouchlessSession).mockResolvedValue(true);
-
     const response = await request(app).post("/touchless/1/withdraw").send({ amount: 100.005 });
 
     expect(response.status).toBe(400);
+    expect(queries.ensureATMSession).not.toBeCalled();
     expect(queries.withdrawCash).not.toBeCalled();
   });
 });
@@ -82,11 +81,12 @@ describe("POST /touchless/:atmId/deposit/start", () => {
   });
 
   it("should initiate a cash deposit", async () => {
-    vi.mocked(queries.ensureTouchlessSession).mockResolvedValue(true);
+    vi.mocked(queries.ensureATMSession).mockResolvedValue({ depositAmount: null });
 
     const response = await request(app).post("/touchless/1/deposit/start");
 
     expect(response.status).toBe(200);
+    expect(queries.ensureATMSession).toBeCalledWith(1, 1);
     expect(realtime.sendToATM).toBeCalledWith(1, "deposit-start");
   });
 
@@ -94,15 +94,17 @@ describe("POST /touchless/:atmId/deposit/start", () => {
     const response = await request(app).post("/touchless/123abc/deposit/start");
 
     expect(response.status).toBe(400);
+    expect(queries.ensureATMSession).not.toBeCalled();
     expect(realtime.sendToATM).not.toBeCalled();
   });
 
   it("should return 409 if the ATM is in use by another user", async () => {
-    vi.mocked(queries.ensureTouchlessSession).mockResolvedValue(false);
+    vi.mocked(queries.ensureATMSession).mockResolvedValue(null);
 
     const response = await request(app).post("/touchless/999/deposit/start");
 
     expect(response.status).toBe(409);
+    expect(queries.ensureATMSession).toBeCalledWith(1, 999);
     expect(realtime.sendToATM).not.toBeCalled();
   });
 });
@@ -113,13 +115,14 @@ describe("POST /touchless/:atmId/deposit/count", async () => {
   });
 
   it("should count the deposited cash", async () => {
-    vi.mocked(queries.ensureTouchlessSession).mockResolvedValue(true);
+    vi.mocked(queries.ensureATMSession).mockResolvedValue({ depositAmount: null });
     vi.mocked(realtime.waitForATM).mockResolvedValue({ amount: 150.75 });
 
     const response = await request(app).post("/touchless/1/deposit/count");
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ amount: 150.75 });
+    expect(queries.ensureATMSession).toBeCalledWith(1, 1);
     expect(realtime.sendToATM).toBeCalledWith(1, "deposit-count");
     expect(realtime.waitForATM).toHaveBeenCalledWith(1, "deposit-review");
   });
@@ -128,16 +131,18 @@ describe("POST /touchless/:atmId/deposit/count", async () => {
     const response = await request(app).post("/touchless/123abc/deposit/count");
 
     expect(response.status).toBe(400);
+    expect(queries.ensureATMSession).not.toBeCalled();
     expect(realtime.sendToATM).not.toBeCalled();
     expect(realtime.waitForATM).not.toBeCalled();
   });
 
   it("should return 409 if the ATM is in use by another user", async () => {
-    vi.mocked(queries.ensureTouchlessSession).mockResolvedValue(false);
+    vi.mocked(queries.ensureATMSession).mockResolvedValue(null);
 
     const response = await request(app).post("/touchless/999/deposit/count");
 
     expect(response.status).toBe(409);
+    expect(queries.ensureATMSession).toBeCalledWith(1, 999);
     expect(realtime.sendToATM).not.toBeCalled();
     expect(realtime.waitForATM).not.toBeCalled();
   });
@@ -149,31 +154,32 @@ describe("POST /touchless/:atmId/deposit/confirm", async () => {
   });
 
   it("should confirm a cash deposit", async () => {
-    vi.mocked(queries.atmExists).mockResolvedValue(true);
-    vi.mocked(queries.ensureTouchlessSession).mockResolvedValue(true);
-    vi.mocked(realtime.waitForATM).mockResolvedValue({ amount: 100 });
+    vi.mocked(queries.ensureATMSession).mockResolvedValue({ depositAmount: 100.0 });
 
     const response = await request(app).post("/touchless/1/deposit/confirm");
 
     expect(response.status).toBe(200);
+    expect(queries.ensureATMSession).toBeCalledWith(1, 1);
     expect(realtime.sendToATM).toBeCalledWith(1, "deposit-confirm");
+    expect(queries.depositCash).toHaveBeenCalledWith(1, 100.0);
   });
 
   it("should return 400 if the ATM ID is invalid", async () => {
     const response = await request(app).post("/touchless/123abc/deposit/confirm");
 
     expect(response.status).toBe(400);
+    expect(queries.ensureATMSession).not.toBeCalled();
     expect(realtime.sendToATM).not.toBeCalled();
     expect(realtime.waitForATM).not.toBeCalled();
   });
 
   it("should return 409 if the ATM is in use by another user", async () => {
-    vi.mocked(queries.atmExists).mockResolvedValue(true);
-    vi.mocked(queries.ensureTouchlessSession).mockResolvedValue(false);
+    vi.mocked(queries.ensureATMSession).mockResolvedValue(null);
 
     const response = await request(app).post("/touchless/999/deposit/confirm");
 
     expect(response.status).toBe(409);
+    expect(queries.ensureATMSession).toBeCalledWith(1, 999);
     expect(realtime.sendToATM).not.toBeCalled();
     expect(realtime.waitForATM).not.toBeCalled();
   });
@@ -185,20 +191,20 @@ describe("POST /touchless/:atmId/exit", () => {
   });
 
   it("should end the touchless session", async () => {
-    vi.mocked(queries.endTouchlessSession).mockResolvedValue(true);
+    vi.mocked(queries.endATMSession).mockResolvedValue(true);
 
     const response = await request(app).post("/touchless/1/exit");
 
     expect(response.status).toBe(200);
-    expect(queries.endTouchlessSession).toHaveBeenCalledWith(1, 1);
+    expect(queries.endATMSession).toHaveBeenCalledWith(1, 1);
   });
 
   it("should return 404 if the ATM is not in use by the user", async () => {
-    vi.mocked(queries.endTouchlessSession).mockResolvedValue(false);
+    vi.mocked(queries.endATMSession).mockResolvedValue(false);
 
     const response = await request(app).post("/touchless/1/exit");
 
     expect(response.status).toBe(404);
-    expect(queries.endTouchlessSession).toHaveBeenCalledWith(1, 1);
+    expect(queries.endATMSession).toHaveBeenCalledWith(1, 1);
   });
 });

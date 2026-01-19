@@ -1,22 +1,17 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "../index.js";
-import { touchlessSessions, ledger, atms, transactions } from "../schema.js";
+import { touchlessSessions, ledger, transactions } from "../schema.js";
 import { CASH_VAULT_USER_ID } from "../constants.js";
 
 /**
- * Check if an ATM with the specified ID exists.
- */
-export async function atmExists(atmId: number): Promise<boolean> {
-  const result = await db.select().from(atms).where(eq(atms.atmId, atmId));
-  return result.length > 0;
-}
-
-/**
- * Initiate a touchless ATM session, returning `false` if the ATM is already in
+ * Initiate a touchless ATM session, returning `null` if the ATM is already in
  * use by another user or if the userId or atmId doesn't exist. No-op if the
  * user already has a session with that ATM.
  */
-export async function ensureTouchlessSession(userId: number, atmId: number): Promise<boolean> {
+export async function ensureATMSession(
+  userId: number,
+  atmId: number,
+): Promise<{ depositAmount: number | null } | null> {
   let result: (typeof touchlessSessions.$inferSelect)[];
   try {
     // If the insert fails because of a conflict (no error, result.length == 0),
@@ -29,27 +24,44 @@ export async function ensureTouchlessSession(userId: number, atmId: number): Pro
     // (error), it's because the userId or atmId doesn't exist.
     result = await db.insert(touchlessSessions).values({ userId, atmId }).onConflictDoNothing().returning();
   } catch (error) {
-    return false;
+    return null;
   }
 
   if (result.length > 0) {
-    return true;
+    return { depositAmount: toOptionalNumber(result[0].depositAmount) };
   }
 
-  // Check if session already exists for this user-ATM pair
+  // This will return no rows if the ATM is in use by another user
   const existing = await db
     .select()
     .from(touchlessSessions)
     .where(and(eq(touchlessSessions.userId, userId), eq(touchlessSessions.atmId, atmId)))
     .limit(1);
 
-  return existing.length > 0;
+  return { depositAmount: toOptionalNumber(existing[0]?.depositAmount) };
+}
+
+function toOptionalNumber(value: string | null | undefined): number | null {
+  return value === null || value === undefined ? null : +value;
+}
+
+/**
+ * Save the deposit amount for an active ATM session.
+ * Returns `false` if no such session exists.
+ */
+export async function setSessionDeposit(userId: number, atmId: number, amount: number): Promise<boolean> {
+  const results = await db
+    .update(touchlessSessions)
+    .set({ depositAmount: amount.toFixed(2) })
+    .where(and(eq(touchlessSessions.userId, userId), eq(touchlessSessions.atmId, atmId)))
+    .returning();
+  return results.length > 0;
 }
 
 /**
  * End a touchless ATM session.
  */
-export async function endTouchlessSession(userId: number, atmId: number): Promise<boolean> {
+export async function endATMSession(userId: number, atmId: number): Promise<boolean> {
   const result = await db
     .delete(touchlessSessions)
     .where(and(eq(touchlessSessions.userId, userId), eq(touchlessSessions.atmId, atmId)))

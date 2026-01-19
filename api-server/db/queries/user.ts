@@ -1,6 +1,6 @@
 import { db } from "../index.js";
 import { ledger, users } from "../schema.js";
-import { eq, sum, and } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 /**
@@ -60,7 +60,7 @@ export async function getUserAccOverview(userId: number): Promise<{ fullName: st
   const { fullName } = (await db.select({ fullName: users.fullName }).from(users).where(eq(users.userId, userId)))[0];
   const { accountBalance: accountBalanceString } = (
     await db
-      .select({ accountBalance: sum(ledger.change) })
+      .select({ accountBalance: sql`-sum(${ledger.change})` })
       .from(ledger)
       .where(eq(ledger.userId, userId))
   )[0];
@@ -78,26 +78,26 @@ export async function updateUserProfile(
     fullName?: string;
     phoneNumber?: string;
     email?: string;
-  }
+  },
 ): Promise<{
   userId: number;
   fullName: string;
   phoneNumber: string;
-  email: string
+  email: string;
 } | null> {
   const updatedRows = await db
     .update(users)
     .set({
       ...(patch.fullName !== undefined ? { fullName: patch.fullName } : {}),
       ...(patch.phoneNumber !== undefined ? { phoneNumber: patch.phoneNumber } : {}),
-      ...(patch.email !== undefined ? { email: patch.email } : {})
+      ...(patch.email !== undefined ? { email: patch.email } : {}),
     })
     .where(eq(users.userId, userId))
     .returning({
       userId: users.userId,
       fullName: users.fullName,
       phoneNumber: users.phoneNumber,
-      email: users.email
+      email: users.email,
     });
 
   return updatedRows[0] ?? null;
