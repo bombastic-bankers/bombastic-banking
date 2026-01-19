@@ -56,7 +56,7 @@ export async function getUserByPhoneNumber(phoneNumber: string): Promise<typeof 
 /**
  * Get user information including their current account balance.
  */
-export async function getUserInfo(userId: number): Promise<{ fullName: string; accountBalance: number }> {
+export async function getUserAccOverview(userId: number): Promise<{ fullName: string; accountBalance: number }> {
   const { fullName } = (await db.select({ fullName: users.fullName }).from(users).where(eq(users.userId, userId)))[0];
   const { accountBalance: accountBalanceString } = (
     await db
@@ -66,4 +66,59 @@ export async function getUserInfo(userId: number): Promise<{ fullName: string; a
   )[0];
 
   return { fullName, accountBalance: +(accountBalanceString ?? 0) };
+}
+
+/**
+ * Updates the user profile with the provided fields.
+ * Returns the complete updated profile, or `null` if no user exists with the given ID.
+ */
+export async function updateUserProfile(
+  userId: number,
+  patch: {
+    fullName?: string;
+    phoneNumber?: string;
+    email?: string;
+  }
+): Promise<{
+  userId: number;
+  fullName: string;
+  phoneNumber: string;
+  email: string
+} | null> {
+  const updatedRows = await db
+    .update(users)
+    .set({
+      ...(patch.fullName !== undefined ? { fullName: patch.fullName } : {}),
+      ...(patch.phoneNumber !== undefined ? { phoneNumber: patch.phoneNumber } : {}),
+      ...(patch.email !== undefined ? { email: patch.email } : {})
+    })
+    .where(eq(users.userId, userId))
+    .returning({
+      userId: users.userId,
+      fullName: users.fullName,
+      phoneNumber: users.phoneNumber,
+      email: users.email
+    });
+
+  return updatedRows[0] ?? null;
+}
+
+/**
+ * Retrieves a user's profile information by their unique ID.
+ */
+export async function getUserProfile(userId: number): Promise<{
+  fullName: string;
+  phoneNumber: string;
+  email: string;
+} | null> {
+  const rows = await db
+    .select({
+      fullName: users.fullName,
+      phoneNumber: users.phoneNumber,
+      email: users.email,
+    })
+    .from(users)
+    .where(eq(users.userId, userId));
+
+  return rows[0] ?? null;
 }
