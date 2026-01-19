@@ -1,6 +1,6 @@
 import { and, eq, gt } from "drizzle-orm";
-import { db } from ".."; // imports from db/index.ts
-import { refreshTokens } from "../schema";
+import { db } from "../index.js";
+import { refreshTokens } from "../schema.js";
 
 /**
  * Sets a refresh token for a user.

@@ -13,9 +13,11 @@ import {
   cancelCashDeposit,
 } from "./controllers/atm.js";
 import { ablyAuth } from "./controllers/ably.js";
-import { PORT } from "./env.js";
+import { getContactsByPhoneNumber } from "./controllers/contacts.js";
+import env from "./env.js";
 import { atmParam } from "./middleware/atm.js";
 import { transferMoney } from "./controllers/transaction.js";
+import ngrok from "@ngrok/ngrok";
 
 const TESTING = process.env.NODE_ENV === "test";
 
@@ -46,13 +48,20 @@ touchless.post("/exit", exit);
 app.use("/touchless/:atmId", touchless);
 
 app.post("/transfer", transferMoney);
+app.get("/contacts", getContactsByPhoneNumber);
 
 app.use(validationError);
 app.use(anyError);
 
 if (!TESTING) {
-  app.listen(PORT || 3000, () => {
-    console.log("Server running at http://localhost:3000");
+  const PORT = env.PORT || 3000;
+  app.listen(PORT, async () => {
+    console.log(`Server running at http://localhost:${PORT}`);
+
+    if (env.NGROK_AUTHTOKEN) {
+      const listener = await ngrok.forward({ addr: PORT, authtoken: env.NGROK_AUTHTOKEN });
+      console.log(`Forwarding to ngrok at ${listener.url()}`);
+    }
   });
 }
 

@@ -48,6 +48,8 @@ class ATMServicesScreen extends StatelessWidget {
 
               AppButton(
                 text: 'Withdraw',
+                color: Color(0xFF495A63),
+                height: 75,
                 onPressed: () => Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -60,6 +62,8 @@ class ATMServicesScreen extends StatelessWidget {
 
               AppButton(
                 text: 'Deposit',
+                color: Color(0xFF495A63),
+                height: 75,
                 onPressed: () => _handleDeposit(context),
               ),
             ],

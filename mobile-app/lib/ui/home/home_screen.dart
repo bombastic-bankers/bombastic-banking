@@ -36,24 +36,42 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Hello, ${vm.user?.fullName ?? ''}',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Hello, ${vm.user?.fullName ?? ''}',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
 
-              const SizedBox(height: 4),
-
-              Text(
-                'Good morning',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Theme.of(context).colorScheme.onPrimaryFixedVariant,
-                ),
+                      Text('Good morning', style: TextStyle(fontSize: 14)),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
+                  TextButton(
+                    onPressed: () {},
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: Size.zero,
+                      alignment: Alignment.topCenter,
+                    ),
+                    child: Text(
+                      'Logout',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.secondary,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 24),
 
               // Quick actions
               Container(
@@ -84,11 +102,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       onPressed: () => _handleDeposit(context),
                     ),
                     QuickAction(
-                      icon: Icons.payment_outlined,
-                      label: 'Pay',
-                      onPressed: () {},
-                    ),
-                    QuickAction(
                       icon: Icons.swap_horiz_outlined,
                       label: 'Transfer',
                       onPressed: () {},
@@ -104,7 +117,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer,
+                  color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
@@ -113,7 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text(
                       'Bombastic Account',
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 14,
                       ),
                     ),
@@ -122,8 +135,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     Text(
                       '\$${vm.user?.accountBalance.toStringAsFixed(2) ?? ''}',
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
                       ),
@@ -134,7 +147,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text(
                       'Available Balance',
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                        color: Theme.of(context).colorScheme.onSurface,
                         fontSize: 12,
                       ),
                     ),
@@ -144,28 +157,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const SizedBox(height: 24),
 
-              Container(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Recent Transactions',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Recent Transactions',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const TransactionsScreen(),
                       ),
                     ),
-                    TextButton(
-                      onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const TransactionsScreen(),
-                        ),
-                      ),
-                      child: const Text('See All'),
-                    ),
-                  ],
-                ),
+                    child: const Text('See All'),
+                  ),
+                ],
               ),
 
               const SizedBox(height: 12),

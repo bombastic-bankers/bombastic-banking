@@ -9,7 +9,7 @@ class UserService {
   /// Fetch basic user information.
   Future<UserAPIModel> getUser(String sessionToken) async {
     final response = await http.get(
-      Uri.parse('$baseUrl/user-info'),
+      Uri.parse('$baseUrl/account-overview'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $sessionToken',
