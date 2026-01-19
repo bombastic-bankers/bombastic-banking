@@ -25,6 +25,7 @@ import env from "./env.js";
 import { atmParam } from "./middleware/atm.js";
 import { transferMoney } from "./controllers/transaction.js";
 import ngrok from "@ngrok/ngrok";
+import { getVoiceToken } from "./controllers/voice.js";
 
 const TESTING = process.env.NODE_ENV === "test";
 
@@ -56,6 +57,8 @@ app.use("/touchless/:atmId", touchless);
 
 app.post("/transfer", transferMoney);
 app.get("/contacts", getContactsByPhoneNumber);
+
+app.get("/voice/token", getVoiceToken);
 
 app.use(validationError);
 app.use(anyError);
