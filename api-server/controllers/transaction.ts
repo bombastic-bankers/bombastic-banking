@@ -22,3 +22,18 @@ export async function transferMoney(req: Request, res: Response) {
 
   return res.status(200).send();
 }
+
+/**
+ * Retern the transaction history for a given user ID
+ */
+export async function getTransactionHistory(req: Request, res: Response) {
+  const userId = req.userId;
+
+  const transactionHistiry = await queries.getTransactionHistory(userId);
+
+  if (!transactionHistiry) {
+    return res.status(404).json({ error: "Transaction history not found" });
+  }
+
+  return res.json(transactionHistiry);
+}
