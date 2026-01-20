@@ -3,6 +3,8 @@ import 'package:bombastic_banking/ui/home/home_screen.dart';
 import 'package:bombastic_banking/ui/navbar_root/navbar_root_viewmodel.dart';
 import 'package:bombastic_banking/ui/profile/profile_screen.dart';
 import 'package:bombastic_banking/ui/transfer/transfer_contacts_screen.dart';
+import 'package:bombastic_banking/ui/Agent/agent_screen.dart';
+import 'package:bombastic_banking/ui/Agent/agent_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -19,6 +21,7 @@ class _NavbarRootScreenState extends State<NavbarRootScreen> {
   final List<Widget> _screens = [
     const HomeScreen(),
     const ATMServicesScreen(),
+    const AgentScreen(),
     const TransferScreen(),
     const ProfileScreen(),
   ];
@@ -49,7 +52,12 @@ class _NavbarRootScreenState extends State<NavbarRootScreen> {
         bottomNavigationBar: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
           currentIndex: vm.index,
-          onTap: (i) => vm.index = i,
+          onTap: (i) {
+            vm.index = i;
+            if (i == 2) {
+              context.read<AgentViewmodel>().initAssistant();
+            }
+          },
           selectedItemColor: Theme.of(context).colorScheme.primary,
           selectedFontSize: 12,
           unselectedItemColor: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -62,6 +70,7 @@ class _NavbarRootScreenState extends State<NavbarRootScreen> {
               icon: Icon(Icons.local_atm_outlined),
               label: 'ATM Services',
             ),
+            BottomNavigationBarItem(icon: Icon(Icons.call), label: 'Agent'),
             BottomNavigationBarItem(
               icon: Icon(Icons.payment_outlined),
               label: 'Pay & Transfer',
