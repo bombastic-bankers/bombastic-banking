@@ -75,26 +75,6 @@ class _AgentScreenState extends State<AgentScreen> {
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-
-            // Debug message list
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.black87,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: ListView.builder(
-                  itemCount: debugMessages.length,
-                  itemBuilder: (_, index) {
-                    return Text(
-                      debugMessages[index],
-                      style: const TextStyle(color: Colors.white, fontSize: 14),
-                    );
-                  },
-                ),
-              ),
-            ),
           ],
         ),
       ),

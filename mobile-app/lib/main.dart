@@ -72,7 +72,6 @@ class _BankAppState extends State<BankApp> {
   final _secureStorage = DefaultSecureStorage();
   final _nfcService = locator<NFCService>();
   final _atmService = locator<ATMService>();
-  late final AgentViewmodel _agentViewmodel;
   final _biometricService = BiometricService();
   final _navigatorKey = GlobalKey<NavigatorState>();
 
