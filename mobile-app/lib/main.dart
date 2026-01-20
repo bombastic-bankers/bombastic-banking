@@ -4,6 +4,7 @@ import 'package:bombastic_banking/repositories/nfc_repository.dart';
 import 'package:bombastic_banking/repositories/user_repository.dart';
 import 'package:bombastic_banking/repositories/transaction_repository.dart';
 import 'package:bombastic_banking/repositories/verification_repository.dart';
+import 'package:bombastic_banking/repositories/agent_repository.dart';
 import 'package:bombastic_banking/route_observer.dart';
 import 'package:bombastic_banking/services/atm_service.dart';
 import 'package:bombastic_banking/services/biometric_service.dart';
@@ -12,6 +13,8 @@ import 'package:bombastic_banking/services/user_service.dart';
 import 'package:bombastic_banking/services/transaction_service.dart';
 import 'package:bombastic_banking/services/verification_service.dart';
 import 'package:bombastic_banking/services/transfer_service.dart';
+import 'package:bombastic_banking/services/agent_service.dart';
+import 'package:bombastic_banking/services/permission_service.dart';
 import 'package:bombastic_banking/storage/secure_storage.dart';
 import 'package:bombastic_banking/ui/atm_services/deposit_confirmation/deposit_confirmation_viewmodel.dart';
 import 'package:bombastic_banking/ui/atm_services/deposit_start/deposit_start_viewmodel.dart';
@@ -31,6 +34,7 @@ import 'package:bombastic_banking/storage/signup_storage.dart';
 import 'package:bombastic_banking/ui/profile/profile_viewmodel.dart';
 import 'package:bombastic_banking/repositories/profile_repository.dart';
 import 'package:bombastic_banking/services/profile_service.dart';
+import 'package:bombastic_banking/ui/Agent/agent_viewmodel.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -140,6 +144,10 @@ class _BankAppState extends State<BankApp> {
     },
   );
 
+  late final _agentRepo = TokenRepository(
+    tokenService: TokenService(baseUrl: apiBaseUrl),
+    secureStorage: _secureStorage,
+  );
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -207,6 +215,12 @@ class _BankAppState extends State<BankApp> {
         ChangeNotifierProvider(
           create: (_) => EmailVerificationViewModel(
             verificationRepository: _verificationRepo,
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => AgentViewmodel(
+            tokenRepository: _agentRepo,
+            permissionService: PermissionService(),
           ),
         ),
         Provider.value(value: _sessionManager),
