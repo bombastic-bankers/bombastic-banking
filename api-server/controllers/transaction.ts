@@ -27,13 +27,12 @@ export async function transferMoney(req: Request, res: Response) {
  * Retern the transaction history for a given user ID
  */
 export async function getTransactionHistory(req: Request, res: Response) {
-  const userId = req.userId;
 
-  const transactionHistiry = await queries.getTransactionHistory(userId);
+  const transactionHistory = await queries.getTransactionHistory(req.userId);
 
-  if (!transactionHistiry) {
+  if (!transactionHistory) {
     return res.status(404).json({ error: "Transaction history not found" });
   }
 
-  return res.json(transactionHistiry);
+  return res.json(transactionHistory);
 }

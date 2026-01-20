@@ -1,6 +1,6 @@
 import { db } from "../index.js";
 import { ledger, transactions, users } from "../schema.js";
-import { eq, sql, sum, desc, and, ne} from "drizzle-orm";
+import { eq, sql, sum, desc, and, ne } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
 /**
@@ -61,7 +61,15 @@ export async function transferMoney(
  *
  * Returns an empty array if the user has no transactions.
  */
-export async function getTransactionHistory(userId: number) {
+export async function getTransactionHistory(userId: number): Promise<{
+  transactionId: number;
+  timestamp: Date;
+  description: string | null;
+  myChange: string;
+  counterpartyUserId: number | null;
+  counterpartyName: string | null;
+  counterpartyIsInternal: boolean | null;
+}[]> {
   const myLedger = alias(ledger, "myLedger");
   const otherLedger = alias(ledger, "otherLedger");
   const otherUser = alias(users, "otherUser");
@@ -71,9 +79,7 @@ export async function getTransactionHistory(userId: number) {
       transactionId: transactions.transactionId,
       timestamp: transactions.timestamp,
       description: transactions.description,
-
       myChange: sql<string>`sum(${myLedger.change})`.as("myChange"),
-
       counterpartyUserId: otherUser.userId,
       counterpartyName: otherUser.fullName,
       counterpartyIsInternal: otherUser.isInternal,
