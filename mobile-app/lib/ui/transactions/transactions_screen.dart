@@ -145,14 +145,23 @@ class _TransactionDaySection extends StatelessWidget {
 
           const SizedBox(height: 8),
 
-          ...transactions.map(
-            (t) => TransactionItem(
+          ...transactions.map((t) {
+            //  Invert the value (Bank View -> User View)
+            final amount = double.tryParse(t.myChange) ?? 0.0;
+
+            final userAmount = amount * -1;
+
+            return TransactionItem(
               timestamp: t.timestamp,
               description: t.description,
-              myChange: t.myChange,
+
+              myChange: userAmount > 0
+                  ? "+${userAmount.toStringAsFixed(2)}"
+                  : userAmount.toStringAsFixed(2),
+
               counterpartyName: t.counterpartyName,
-            ),
-          ),
+            );
+          }),
         ],
       ),
     );

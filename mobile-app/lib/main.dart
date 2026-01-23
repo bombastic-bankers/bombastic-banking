@@ -136,6 +136,7 @@ class _BankAppState extends State<BankApp> {
             userRepository: _userRepo,
             sessionManager: _sessionManager,
             secureStorage: _secureStorage,
+            transactionRepository: _transactionRepo,
           ),
         ),
         ChangeNotifierProvider(

@@ -27,7 +27,7 @@ class TransactionRepository {
           (api) => Transaction(
             id: api.transactionId,
             timestamp: api.timestamp,
-            description: api.description,
+            description: api.description ?? 'Transaction',
             myChange: api.myChange,
             counterpartyUserId: api.counterpartyUserId,
             counterpartyName: api.counterpartyName,
