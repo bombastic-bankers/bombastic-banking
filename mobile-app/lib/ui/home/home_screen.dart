@@ -206,30 +206,31 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               const SizedBox(height: 12),
 
               // Transaction history
-              TransactionItem(
-                description: 'Grocery Store',
-                myChange: '-54.23',
-                timestamp: DateTime(2025, 11, 15),
-                counterpartyName: 'SuperMart',
-              ),
-              TransactionItem(
-                description: 'Salary Credit',
-                myChange: '3200.00',
-                timestamp: DateTime(2025, 11, 14),
-                counterpartyName: 'Acme Corp',
-              ),
-              TransactionItem(
-                description: 'Electricity Bill',
-                myChange: '-120.50',
-                timestamp: DateTime(2025, 11, 12),
-                counterpartyName: 'PowerGrid Inc',
-              ),
-              TransactionItem(
-                description: 'Coffee Shop',
-                myChange: '-8.75',
-                timestamp: DateTime(2025, 11, 11),
-                counterpartyName: 'Cafe Good Beans',
-              ),
+              if (vm.recentTransactions.isEmpty)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(20),
+                    child: Text('No recent transactions'),
+                  ),
+                )
+              else
+                Column(
+                  children: vm.recentTransactions.map((t) {
+                    //  Invert the value (Bank View -> User View) 
+                    final amount = double.tryParse(t.myChange) ?? 0.0;
+                    final userAmount = amount * -1;
+                    return TransactionItem(
+                      description: t.description,
+
+                      myChange: userAmount > 0
+                          ? "+${userAmount.toStringAsFixed(2)}"
+                          : userAmount.toStringAsFixed(2),
+
+                      timestamp: t.timestamp,
+                      counterpartyName: t.counterpartyName,
+                    );
+                  }).toList(),
+                ),
             ],
           ),
         ),

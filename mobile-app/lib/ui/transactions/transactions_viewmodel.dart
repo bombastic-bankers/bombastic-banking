@@ -6,7 +6,10 @@ class TransactionsViewModel extends ChangeNotifier {
   final TransactionRepository _transactionRepository;
 
   TransactionsViewModel({required TransactionRepository transactionRepository})
-    : _transactionRepository = transactionRepository;
+      : _transactionRepository = transactionRepository {
+    //initialize selectedMonth to now
+    _selectedMonth = DateTime.now();
+  }
 
   var _isLoading = false;
   bool get isLoading => _isLoading;
@@ -33,22 +36,24 @@ class TransactionsViewModel extends ChangeNotifier {
     isLoading = false;
   }
 
-  /// Transactions for the month
   List<Transaction> get currentMonthTransactions {
-    final now = DateTime.now();
+    // Fallback to now() if null, though our constructor fixes this
+    final targetDate = _selectedMonth ?? DateTime.now(); 
+    
     final filtered = _transactions.where((t) {
-      return t.timestamp.year == now.year && t.timestamp.month == now.month;
+      return t.timestamp.year == targetDate.year && 
+             t.timestamp.month == targetDate.month;
     }).toList();
 
     filtered.sort((a, b) => b.timestamp.compareTo(a.timestamp));
     return filtered;
   }
 
-  /// Groups by day
   Map<DateTime, List<Transaction>> get groupedByDay {
     final map = <DateTime, List<Transaction>>{};
 
     for (final t in currentMonthTransactions) {
+      // Create a key with just Year/Month/Day (strip time)
       final dayKey = DateTime(
         t.timestamp.year,
         t.timestamp.month,
@@ -57,10 +62,7 @@ class TransactionsViewModel extends ChangeNotifier {
       map.putIfAbsent(dayKey, () => []).add(t);
     }
 
-    for (final entry in map.entries) {
-      entry.value.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-    }
-
+    // Sort entries if needed, or rely on UI to sort keys
     return map;
   }
 
@@ -72,9 +74,7 @@ class TransactionsViewModel extends ChangeNotifier {
   }
 
   DateTime? _selectedMonth;
-  DateTime? get selectedMonth {
-    return _selectedMonth;
-  }
+  DateTime? get selectedMonth => _selectedMonth;
 
   void selectMonth(DateTime month) {
     _selectedMonth = month;

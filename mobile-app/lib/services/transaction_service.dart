@@ -8,7 +8,7 @@ class TransactionsService {
 
   Future<List<TransactionAPIModel>> getTransactions(String sessionToken) async {
     final response = await http.get(
-      Uri.parse('$baseUrl/transactions'),
+      Uri.parse('$baseUrl/transaction-history'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $sessionToken',

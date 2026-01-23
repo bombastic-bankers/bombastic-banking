@@ -32,7 +32,7 @@ class TransactionItem extends StatelessWidget {
           ),
         ),
         trailing: Text(
-          "/$myChange",
+          "\$ $myChange",
           style: TextStyle(
             color: myChange.startsWith('-')
                 ? Theme.of(context).colorScheme.error
