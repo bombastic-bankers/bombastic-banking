@@ -8,6 +8,7 @@ import e from "express";
 import jwt from "jsonwebtoken";
 import env  from "../env.js";
 import { email } from "zod";
+import { error } from "console";
 
 vi.mock("../db/queries");
 vi.mock("../services/auth");
@@ -208,29 +209,21 @@ describe("POST /auth/login", () => {
     });
 
     expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty("token");
-    expect(response.body.token).toBeTypeOf("string");
-    const payload = jwt.verify(
-      response.body.token,
-      env.JWT_SECRET
-    ) as jwt.JwtPayload;
-    expect(payload.userId).toBe(1);
+    expect(response.body).toHaveProperty("accessToken");
+    expect(response.body).toHaveProperty("refreshToken");
+    expect(response.body.accessToken).toBeTypeOf("string");
   });
 
-  it("should return 400 when credentials are incorrect", async () => {
+  it("should return 401 when credentials are incorrect", async () => {
     vi.mocked(queries.getUserByCredentials).mockResolvedValue(null);
 
     const response = await request(app).post("/auth/login").send({
       email: "nonexistent@example.com",
       pin: "123457",
     });
-
-    expect(response.status).toBe(400);
-    expect(response.body).toHaveProperty("accessToken");
-    expect(response.body.accessToken).toBe("access-token");
-    expect(response.body).toHaveProperty("refreshToken");
-    expect(response.body.refreshToken).toBe("refresh-token");
-    expect(auth.generateAuthTokens).toHaveBeenCalledWith(1);
+    expect(response.status).toBe(401);
+    expect(response.body).toHaveProperty("error", "Incorrect email or PIN");
+    expect(auth.generateAuthTokens).not.toHaveBeenCalled();
   });
 
   it("should return 400 when email is invalid", async () => {
