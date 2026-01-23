@@ -14,14 +14,18 @@ export async function setRefreshToken(userId: number, token: string, expiresAt: 
 
 /**
  * Updates (resets) a refresh token with a new token and expiration date.
- * Returns `true` if the old token exists and is not expired, `false` otherwise.
+ * Returns the userId if the old token exists and is not expired, `null` otherwise.
  */
-export async function resetRefreshToken(oldToken: string, newToken: string, newExpiresAt: Date): Promise<boolean> {
+export async function resetRefreshToken(
+  oldToken: string,
+  newToken: string,
+  newExpiresAt: Date,
+): Promise<number | null> {
   const results = await db
     .update(refreshTokens)
     .set({ token: newToken, expiresAt: newExpiresAt })
     .where(and(eq(refreshTokens.token, oldToken), gt(refreshTokens.expiresAt, new Date())))
-    .returning();
+    .returning({ userId: refreshTokens.userId });
 
-  return results.length > 0;
+  return results[0]?.userId ?? null;
 }

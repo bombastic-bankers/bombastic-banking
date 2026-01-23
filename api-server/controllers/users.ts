@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import z from "zod";
 import * as queries from "../db/queries/index.js";
-import { generateAuthTokens } from "../services/auth.js";
+import { generateAccessToken, generateRefreshToken } from "../services/auth.js";
 
 /** Create a new user account with the provided credentials. */
 export async function signUp(req: Request, res: Response) {
@@ -35,7 +35,8 @@ export async function login(req: Request, res: Response) {
     return res.status(401).json({ error: "Incorrect email or PIN" });
   }
 
-  const { accessToken, refreshToken } = await generateAuthTokens(user.userId);
+  const accessToken = generateAccessToken(user.userId);
+  const refreshToken = generateRefreshToken();
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + 30);
   await queries.setRefreshToken(user.userId, refreshToken, expiresAt);
@@ -58,14 +59,11 @@ export async function updateProfile(req: Request, res: Response) {
     .object({
       fullName: z.string().min(1).optional(),
       phoneNumber: z.e164().optional(),
-      email: z.email().optional()
+      email: z.email().optional(),
     })
-    .refine(
-      (data) => data.fullName !== undefined ||
-        data.phoneNumber !== undefined ||
-        data.email !== undefined,
-      { message: "At least one field must be provided" }
-    )
+    .refine((data) => data.fullName !== undefined || data.phoneNumber !== undefined || data.email !== undefined, {
+      message: "At least one field must be provided",
+    })
     .parse(req.body);
 
   const updated = await queries.updateUserProfile(userId, patch);
@@ -78,7 +76,7 @@ export async function updateProfile(req: Request, res: Response) {
 }
 
 /**
- * Return the authenticated user's profile information 
+ * Return the authenticated user's profile information
  */
 export async function getUserProfile(req: Request, res: Response) {
   const userId = req.userId;
@@ -96,14 +94,15 @@ export async function getUserProfile(req: Request, res: Response) {
 export async function refreshSession(req: Request, res: Response) {
   const oldRefreshToken = z.string().parse(req.body.refreshToken);
 
-  const { accessToken, refreshToken: newRefreshToken } = await generateAuthTokens(req.userId);
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + 30);
+  const newRefreshToken = generateRefreshToken();
 
-  const success = await queries.resetRefreshToken(oldRefreshToken, newRefreshToken, expiresAt);
-  if (!success) {
+  const userId = await queries.resetRefreshToken(oldRefreshToken, newRefreshToken, expiresAt);
+  if (userId === null) {
     return res.status(401).json({ error: "Invalid or expired refresh token" });
   }
 
+  const accessToken = generateAccessToken(userId);
   res.json({ accessToken, refreshToken: newRefreshToken });
 }

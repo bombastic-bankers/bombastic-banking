@@ -47,7 +47,6 @@ describe("POST /auth/signup", () => {
 
     expect(response.status).toBe(400);
     expect(queries.createUser).not.toHaveBeenCalled();
-    expect(queries.createUser).not.toHaveBeenCalled();
   });
 
   it("should return 400 when fullName is empty", async () => {
@@ -60,7 +59,6 @@ describe("POST /auth/signup", () => {
 
     expect(response.status).toBe(400);
     expect(queries.createUser).not.toHaveBeenCalled();
-    expect(queries.createUser).not.toHaveBeenCalled();
   });
 
   it("should return 400 when phoneNumber is missing", async () => {
@@ -71,7 +69,6 @@ describe("POST /auth/signup", () => {
     });
 
     expect(response.status).toBe(400);
-    expect(queries.createUser).not.toHaveBeenCalled();
     expect(queries.createUser).not.toHaveBeenCalled();
   });
 
@@ -85,7 +82,6 @@ describe("POST /auth/signup", () => {
 
     expect(response.status).toBe(400);
     expect(queries.createUser).not.toHaveBeenCalled();
-    expect(queries.createUser).not.toHaveBeenCalled();
   });
 
   it("should return 400 when email is invalid", async () => {
@@ -98,7 +94,6 @@ describe("POST /auth/signup", () => {
 
     expect(response.status).toBe(400);
     expect(queries.createUser).not.toHaveBeenCalled();
-    expect(queries.createUser).not.toHaveBeenCalled();
   });
 
   it("should return 400 when email is missing", async () => {
@@ -110,11 +105,9 @@ describe("POST /auth/signup", () => {
 
     expect(response.status).toBe(400);
     expect(queries.createUser).not.toHaveBeenCalled();
-    expect(queries.createUser).not.toHaveBeenCalled();
   });
 
   it("should return 409 when email is already in use", async () => {
-    vi.mocked(queries.createUser).mockResolvedValue(false);
     vi.mocked(queries.createUser).mockResolvedValue(false);
 
     const response = await request(app).post("/auth/signup").send({
@@ -136,7 +129,6 @@ describe("POST /auth/signup", () => {
 
     expect(response.status).toBe(400);
     expect(queries.createUser).not.toHaveBeenCalled();
-    expect(queries.createUser).not.toHaveBeenCalled();
   });
 
   it("should return 400 when pin contains non-numeric characters", async () => {
@@ -149,7 +141,6 @@ describe("POST /auth/signup", () => {
 
     expect(response.status).toBe(400);
     expect(queries.createUser).not.toHaveBeenCalled();
-    expect(queries.createUser).not.toHaveBeenCalled();
   });
 
   it("should return 400 when pin is not 6 digits", async () => {
@@ -161,7 +152,6 @@ describe("POST /auth/signup", () => {
     });
 
     expect(response.status).toBe(400);
-    expect(queries.createUser).not.toHaveBeenCalled();
     expect(queries.createUser).not.toHaveBeenCalled();
   });
 });
@@ -180,10 +170,8 @@ describe("POST /auth/login", () => {
       hashedPin: "123456",
       isInternal: false,
     });
-    vi.mocked(auth.generateAuthTokens).mockResolvedValue({
-      accessToken: "access-token",
-      refreshToken: "refresh-token",
-    });
+    vi.mocked(auth.generateAccessToken).mockReturnValue("access-token");
+    vi.mocked(auth.generateRefreshToken).mockReturnValue("refresh-token");
 
     const response = await request(app).post("/auth/login").send({
       email: "john@example.com",
@@ -191,11 +179,12 @@ describe("POST /auth/login", () => {
     });
 
     expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty("accessToken");
-    expect(response.body.accessToken).toBe("access-token");
-    expect(response.body).toHaveProperty("refreshToken");
-    expect(response.body.refreshToken).toBe("refresh-token");
-    expect(auth.generateAuthTokens).toHaveBeenCalledWith(1);
+    expect(response.body).toEqual({
+      accessToken: "access-token",
+      refreshToken: "refresh-token",
+    });
+    expect(auth.generateAccessToken).toHaveBeenCalledWith(1);
+    expect(auth.generateRefreshToken).toBeCalled();
   });
 
   it("should return 400 when email is invalid", async () => {
@@ -206,7 +195,7 @@ describe("POST /auth/login", () => {
 
     expect(response.status).toBe(400);
     expect(queries.getUserByCredentials).not.toHaveBeenCalled();
-    expect(auth.generateAuthTokens).not.toHaveBeenCalled();
+    expect(auth.generateAccessToken).not.toHaveBeenCalled();
   });
 
   it("should return 400 when pin is invalid", async () => {
@@ -217,7 +206,7 @@ describe("POST /auth/login", () => {
 
     expect(response.status).toBe(400);
     expect(queries.getUserByCredentials).not.toHaveBeenCalled();
-    expect(auth.generateAuthTokens).not.toHaveBeenCalled();
+    expect(auth.generateAccessToken).not.toHaveBeenCalled();
   });
 
   it("should return 401 when user does not exist or wrong PIN", async () => {
@@ -229,7 +218,7 @@ describe("POST /auth/login", () => {
     });
 
     expect(response.status).toBe(401);
-    expect(auth.generateAuthTokens).not.toHaveBeenCalled();
+    expect(auth.generateAccessToken).not.toHaveBeenCalled();
   });
 });
 
@@ -242,12 +231,12 @@ describe("POST /auth/refresh", () => {
     const response = await request(app).post("/auth/refresh").send({});
 
     expect(response.status).toBe(400);
-    expect(auth.generateAuthTokens).not.toHaveBeenCalled();
+    expect(auth.generateAccessToken).not.toHaveBeenCalled();
     expect(queries.resetRefreshToken).not.toHaveBeenCalled();
   });
 
   it("should return 401 if refresh token is non-existent or expired", async () => {
-    vi.mocked(queries.resetRefreshToken).mockResolvedValue(false);
+    vi.mocked(queries.resetRefreshToken).mockResolvedValue(null);
 
     const response = await request(app).post("/auth/refresh").send({ refreshToken: "some-invalid-token" });
 
@@ -256,20 +245,20 @@ describe("POST /auth/refresh", () => {
   });
 
   it("should rotate tokens and return 200 on success", async () => {
-    vi.mocked(queries.resetRefreshToken).mockResolvedValue(true);
-    vi.mocked(auth.generateAuthTokens).mockResolvedValue({
-      accessToken: "new-access-token",
-      refreshToken: "new-refresh-token",
-    });
+    vi.mocked(queries.resetRefreshToken).mockResolvedValue(1);
+    vi.mocked(auth.generateAccessToken).mockReturnValue("new-access-token");
+    vi.mocked(auth.generateRefreshToken).mockReturnValue("new-refresh-token");
 
     const response = await request(app).post("/auth/refresh").send({ refreshToken: "valid-old-token" });
 
     expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty("accessToken");
-    expect(response.body.accessToken).toBe("new-access-token");
-    expect(response.body).toHaveProperty("refreshToken");
-    expect(response.body.refreshToken).toBe("new-refresh-token");
+    expect(response.body).toEqual({
+      accessToken: "new-access-token",
+      refreshToken: "new-refresh-token",
+    });
     expect(queries.resetRefreshToken).toHaveBeenCalledWith("valid-old-token", "new-refresh-token", expect.any(Date));
+    expect(auth.generateAccessToken).toHaveBeenCalledWith(1);
+    expect(auth.generateRefreshToken).toHaveBeenCalled();
   });
 });
 
