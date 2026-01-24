@@ -31,18 +31,30 @@ const env = {
   get NGROK_AUTHTOKEN(): string | undefined {
     return process.env.NGROK_AUTHTOKEN;
   },
+  get EMAIL_USER(): string {
+    return getEnvOrThrow("EMAIL_USER");
+  },
+  get EMAIL_PASS(): string {
+    return getEnvOrThrow("EMAIL_PASS");
+  },
+  get BASE_URL(): string {
+    return process.env.BASE_URL ?? "http://localhost:3000";
+  },
+  get TWILIO_SID(): string {
+    return getEnvOrThrow("TWILIO_SID");
+  },
+  get TWILIO_AUTH(): string {
+    return getEnvOrThrow("TWILIO_AUTH");
+  },
+  get TWILIO_VERIFY_SERVICE(): string {
+    return getEnvOrThrow("TWILIO_VERIFY_SERVICE");
+  },
+  get SENDGRID_API_KEY(): string {
+    return getEnvOrThrow("SENDGRID_API_KEY");
+  },
+  get SENDGRID_VERIFIED_EMAIL(): string {
+    return getEnvOrThrow("SENDGRID_VERIFIED_EMAIL");
+  }
 };
 
 export default env;
-
-export const EMAIL_USER = process.env.EMAIL_USER!;
-export const EMAIL_PASS = process.env.EMAIL_PASS!;
-export const BASE_URL = process.env.BASE_URL ?? "http://localhost:3000";
-
-export const TWILIO_SID = process.env.TWILIO_SID!;
-export const TWILIO_AUTH = process.env.TWILIO_AUTH!;
-export const TWILIO_VERIFY_SERVICE = process.env.TWILIO_VERIFY_SERVICE!;
-
-export const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY!;
-export const SENDGRID_VERIFIED_EMAIL = process.env.SENDGRID_VERIFIED_EMAIL!;
-export const NGROK_AUTHTOKEN = process.env.NGROK_AUTHTOKEN!;

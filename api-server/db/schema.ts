@@ -14,10 +14,8 @@ export const users = pgTable("users", {
   phoneNumber: text("phone_number").notNull(),
   email: text("email").notNull().unique(),
   hashedPin: text("hashed_pin").notNull(),
-  phoneverified: boolean("phoneverified").default(false),
-  emailverified: boolean("emailverified").default(false),
-  emailToken: varchar("emailtoken", { length: 255 }),      
-  emailTokenExpiry: timestamp("emailtokenexpiry"),    
+  phoneVerified: boolean("phone_verified").default(false),
+  emailVerified: boolean("email_verified").default(false),
 
   isInternal: boolean("is_internal").notNull().default(false),
 });

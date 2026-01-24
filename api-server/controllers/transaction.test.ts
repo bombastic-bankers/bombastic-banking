@@ -25,10 +25,8 @@ describe("POST /transfer", () => {
       email: "jane@example.com",
       hashedPin: "123456",
       isInternal: false,
-      phoneverified: true,
-      emailverified: true,
-      emailToken: null,
-      emailTokenExpiry: null,
+      phoneVerified: true,
+      emailVerified: true,
     });
     vi.mocked(queries.transferMoney).mockResolvedValue(true);
 
@@ -128,10 +126,8 @@ describe("POST /transfer", () => {
       email: "jane@example.com",
       hashedPin: "123456",
       isInternal: false,
-      phoneverified: true,
-      emailverified: true,
-      emailToken: null,
-      emailTokenExpiry: null,
+      phoneVerified: true,
+      emailVerified: true,
     });
     vi.mocked(queries.transferMoney).mockResolvedValue(false);
 

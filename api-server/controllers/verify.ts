@@ -1,14 +1,11 @@
 import { Request, Response } from "express";
-import twilio from "twilio";
 import { z } from "zod";
-import crypto from "crypto";
 import * as queries from "../db/queries/index.js";
-import { TWILIO_SID, TWILIO_AUTH, TWILIO_VERIFY_SERVICE } from "../env.js";
+import { sendOTP, checkOTP } from "../services/smsVerificationService.js";
+import { checkEmailOTP } from "../services/emailVerificationService.js";
 
-const client = twilio(TWILIO_SID, TWILIO_AUTH);
-const VERIFY_SERVICE = TWILIO_VERIFY_SERVICE;
-
-/* send OTP to phone number */
+/** * Send OTP to phone number
+ */
 export async function sendPhoneOTP(req: Request, res: Response) {
   const { phoneNumber } = z
     .object({
@@ -16,122 +13,68 @@ export async function sendPhoneOTP(req: Request, res: Response) {
     })
     .parse(req.body);
 
-  try {
-    const user = await queries.getUserByPhoneNumber(phoneNumber);
-    if (!user) {
-      return res.status(404).json({ error: "Phone number not registered" });
-    }
-
-    await client.verify.v2.services(VERIFY_SERVICE).verifications.create({
-      to: phoneNumber,
-      channel: "sms",
-    });
-
-    res.json({ message: "OTP sent successfully" });
-  } catch (err) {
-    console.error("SEND OTP ERROR:", err);
-    res.status(500).json({ error: "Failed to send OTP" });
+  const user = await queries.getUserByPhoneNumber(phoneNumber);
+  if (!user) {
+    return res.status(404).json({ error: "Phone number not registered" });
   }
+
+  await sendOTP(phoneNumber);
+
+  res.json({ message: "OTP sent successfully" });
 }
 
-/* verify OTP for phone number */
+/** * Verify OTP for phone number
+ */
 export async function verifyPhoneOTP(req: Request, res: Response) {
-  const { phoneNumber, otp } = z
-    .object({
-      phoneNumber: z.string(),
-      otp: z.string().length(6),
-    })
-    .parse(req.body);
-  console.log("VERIFY PHONE:", phoneNumber, "OTP:", otp);
-
   try {
+    const { phoneNumber, otp } = z
+      .object({
+        phoneNumber: z.string(),
+        otp: z.string().length(6),
+      })
+      .parse(req.query);
+
     const user = await queries.getUserByPhoneNumber(phoneNumber);
     if (!user) {
       return res.status(404).json({ error: "Phone number not registered" });
     }
+    const isApproved = await checkOTP(phoneNumber, otp);
 
-    const result = await client.verify.v2
-      .services(VERIFY_SERVICE)
-      .verificationChecks.create({
-        to: phoneNumber,
-        code: otp,
-      });
-
-    if (result.status === "approved") {
+    if (isApproved) {
       await queries.updatePhoneVerified(user.userId, true);
       return res.json({ verified: true });
     }
 
     res.status(400).json({ verified: false, error: "Invalid OTP" });
   } catch (err) {
-    console.error("VERIFY OTP ERROR:", err);
-    res.status(500).json({ error: "OTP verification failed" });
+    res.status(400).json({ error: "Missing or invalid query parameters" });
   }
 }
 
-export function generateEmailToken() {
-  const token = crypto.randomBytes(32).toString("hex");
-  const expiry = new Date();
-  expiry.setHours(expiry.getHours() + 24);
-  return { token, expiry };
-}
-
-/* verify email link */
+/** Verify Email using Twilio Verify */
 export async function verifyEmailLink(req: Request, res: Response) {
   try {
-    const validation = z
+    const { email, token } = z
       .object({
-        token: z.string(),
+        email: z.string().email(),
+        token: z.string().length(6),
       })
-      .safeParse(req.query);
+      .parse(req.query); 
 
-    if (!validation.success) {
-      return res.status(400).send(`
-        <div style="font-family: sans-serif; text-align: center; padding-top: 50px;">
-          <h1 style="color: #dc3545;">Invalid Link</h1>
-          <p>The verification token is missing or malformed.</p>
-        </div>
-      `);
-    }
-
-    const { token } = validation.data;
-
-    /* Fetch user by email token */
-    const user = await queries.getUserByEmailToken(token);
-
+    const user = await queries.getUserByEmail(email);
     if (!user) {
-      return res
-        .status(400)
-        .send(
-          "<h1>Invalid Link</h1><p>This verification link is invalid or has already been used.</p>"
-        );
+      return res.status(404).json({ error: "Email not registered" });
     }
 
-    if (user.emailTokenExpiry && new Date() > user.emailTokenExpiry) {
-      return res
-        .status(400)
-        .send(
-          "<h1>Expired Link</h1><p>This link has expired. Please request a new one from the app.</p>"
-        );
+    const isApproved = await checkEmailOTP(email, token);
+
+    if (isApproved) {
+      await queries.verifyUserEmail(user.userId);
+      return res.json({ verified: true }); 
     }
 
-    if (user.emailverified) {
-      return res.send(
-        "<h1>Already Verified</h1><p>You have already verified your email. You can log in.</p>"
-      );
-    }
-    await queries.verifyUserEmail(user.userId);
-
-    res.send(`
-      <div style="font-family: sans-serif; text-align: center; padding-top: 50px;">
-        <h1 style="color: #28a745;">Verification Successful!</h1>
-        <p>Your email has been verified. You can now log in to the app.</p>
-      </div>
-    `);
+    res.status(400).json({ verified: false, error: "Invalid email code" });
   } catch (err) {
-    console.error("EMAIL_VERIFY_ERROR:", err);
-    res
-      .status(500)
-      .send("An error occurred during verification. Please try again later.");
+    res.status(400).json({ error: "Missing or invalid parameters" });
   }
 }

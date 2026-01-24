@@ -4,15 +4,12 @@ import { eq, sql} from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 /**
- * Create a new user account. Returns whether the account already exists.
- */
+ * Create a new user account. */
 export async function createUser(user: {
   fullName: string;
   phoneNumber: string;
   email: string;
   pin: string;
-  emailToken?: string;        
-  emailTokenExpiry?: Date;
 }): Promise<boolean> {
   const hashedPin = await bcrypt.hash(user.pin, 10);
   const inserted = await db
@@ -21,9 +18,7 @@ export async function createUser(user: {
       fullName: user.fullName,
       phoneNumber: user.phoneNumber,
       email: user.email,
-      hashedPin: await bcrypt.hash(user.pin, 10),
-      emailToken: user.emailToken,
-      emailTokenExpiry: user.emailTokenExpiry,
+      hashedPin: hashedPin,
     })
     .onConflictDoNothing()
     .returning();
@@ -80,7 +75,6 @@ export async function getUserAccOverview(
 
 /**
  * Updates the user profile with the provided fields.
- * Returns the complete updated profile, or `null` if no user exists with the given ID.
  */
 export async function updateUserProfile(
   userId: number,
@@ -113,21 +107,36 @@ export async function updateUserProfile(
   return updatedRows[0] ?? null;
 }
 
-// Update phoneVerified flag
+/** Update phoneVerified flag */
 export async function updatePhoneVerified(userId: number, verified: boolean): Promise<void> {
-  await db.update(users).set({ phoneverified: verified }).where(eq(users.userId, userId));
-}
-export async function getUserByEmailToken(token: string): Promise<typeof users.$inferSelect | null> {
-  const result = await db.select().from(users).where(eq(users.emailToken, token)).limit(1);
-  return result[0] ?? null;
+  await db.update(users).set({ phoneVerified: verified }).where(eq(users.userId, userId));
 }
 
+/** Update emailVerified flag
+ */
 export async function verifyUserEmail(userId: number) {
   await db.update(users)
     .set({ 
-      emailverified: true, 
-      emailToken: null, 
-      emailTokenExpiry: null 
+      emailVerified: true,
     })
     .where(eq(users.userId, userId));
+}
+
+/**
+ * Retrieves a user's profile information by their unique ID.
+ */
+export async function getUserProfile(userId: number): Promise<{
+  fullName: string;
+  phoneNumber: string;
+  email: string;
+  } | null> {
+  const rows = await db
+    .select({
+      fullName: users.fullName,
+      phoneNumber: users.phoneNumber,
+      email: users.email,
+    })
+    .from(users)
+    .where(eq(users.userId, userId));
+  return rows[0] ?? null;
 }
