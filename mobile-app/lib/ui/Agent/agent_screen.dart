@@ -9,7 +9,13 @@ class AgentScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final vm = context.watch<AgentViewmodel>();
+    final vm = context.read<AgentViewmodel>();
+    final isConnecting = context.select<AgentViewmodel, bool>(
+      (v) => v.isConnecting,
+    );
+    final isConnected = context.select<AgentViewmodel, bool>(
+      (v) => v.isConnected,
+    );
 
     return Scaffold(
       appBar: AppBar(title: const Text('AI Agent')),
@@ -19,10 +25,13 @@ class AgentScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              vm.isConnecting
+              isConnecting
                   ? const CircularProgressIndicator(color: brandRed)
                   : const Text("Agent is active and listening..."),
               AppButton(text: 'End Session', onPressed: vm.endSession),
+              isConnected
+                  ? const Text("Agent is connected.")
+                  : const Text("Agent is not connected."),
             ],
           ),
         ),
