@@ -1,23 +1,30 @@
-import twilio from "twilio";
+import nodemailer from "nodemailer";
+import crypto from "crypto";
 import env from "../env.js";
 
-const client = twilio(env.TWILIO_SID, env.TWILIO_AUTH);
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: env.EMAIL_USER,
+    pass: env.EMAIL_PASS,
+  },
+});
+/** Send a verification email to the specified address with the given token. */
+export async function sendVerificationEmail(email: string, token: string) {
+  const link = `${env.BASE_URL}/verify/email/confirm?token=${token}`;
 
-/** * Sends a verification email via Twilio Verify.
- * Twilio handles the token generation and SendGrid delivery automatically.
- */
-export async function sendVerificationEmail(email: string) {
-  await client.verify.v2
-    .services(env.TWILIO_VERIFY_SERVICE)
-    .verifications.create({
-      to: email,
-      channel: "email",
-    });
+  await transporter.sendMail({
+    from: `"Bombastic Banking" <${env.EMAIL_USER}>`,
+    to: email,
+    subject: "Verify Your Account",
+    html: `<p>Click <a href="${link}">here</a> to verify your email. This link expires in 24 hours.</p>`,
+  });
 }
-export async function checkEmailOTP(email: string, token: string) {
-  const verificationCheck = await client.verify.v2
-    .services(env.TWILIO_VERIFY_SERVICE)
-    .verificationChecks.create({ to: email, code: token });
 
-  return verificationCheck.status === "approved";
+/** Generate a random email verification token and its expiry date (24 hours from now). */
+export function generateEmailToken() {
+  const token = crypto.randomBytes(32).toString("hex");
+  const expiry = new Date();
+  expiry.setHours(expiry.getHours() + 24);
+  return { token, expiry };
 }

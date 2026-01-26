@@ -2,7 +2,10 @@ import { Request, Response } from "express";
 import { z } from "zod";
 import * as queries from "../db/queries/index.js";
 import { sendOTP, checkOTP } from "../services/smsVerificationService.js";
-import { checkEmailOTP } from "../services/emailVerificationService.js";
+import {
+  sendVerificationEmail,
+  generateEmailToken,
+} from "../services/emailVerificationService.js";
 
 /** * Send OTP to phone number
  */
@@ -50,57 +53,61 @@ export async function verifyPhoneOTP(req: Request, res: Response) {
     res.status(400).json({ error: "Missing or invalid query parameters" });
   }
 }
-
-/** Verify Email using Twilio Verify */
+/** Verify email link */
 export async function verifyEmailLink(req: Request, res: Response) {
   try {
-    const { email, token } = req.query as { email?: string; token?: string };
+    const validation = z
+      .object({
+        token: z.string(),
+      })
+      .safeParse(req.query);
 
-    if (!email || !token) {
+    if (!validation.success) {
       return res.status(400).send(`
         <div style="font-family: sans-serif; text-align: center; padding-top: 50px;">
-          <h1 style="color: #dc3545;">Verification Failed</h1>
-          <p>Email or token missing.</p>
+          <h1 style="color: #dc3545;">Invalid Link</h1>
+          <p>The verification token is missing or malformed.</p>
         </div>
       `);
     }
 
-    const user = await queries.getUserByEmail(email);
+    const { token } = validation.data;
+
+    const user = await queries.getUserByEmailToken(token);
+
     if (!user) {
-      return res.status(404).send(`
-        <div style="font-family: sans-serif; text-align: center; padding-top: 50px;">
-          <h1 style="color: #dc3545;">Verification Failed</h1>
-          <p>Email not registered.</p>
-        </div>
-      `);
-    }
-
-    const isApproved = await checkEmailOTP(email, token);
-
-    if (isApproved) {
-      await queries.verifyUserEmail(user.userId);
-
-      return res.send(`
-        <div style="font-family: sans-serif; text-align: center; padding-top: 50px;">
-          <h1 style="color: #28a745;">Email Verified!</h1>
-          <p>Your email has been successfully verified.</p>
-        </div>
-      `);
-    } else {
       return res.status(400).send(`
-        <div style="font-family: sans-serif; text-align: center; padding-top: 50px;">
-          <h1 style="color: #dc3545;">Verification Failed</h1>
-          <p>Invalid or expired token.</p>
-        </div>
+        <h1>Invalid Link</h1>
+        <p>This verification link is invalid or has already been used.</p>
       `);
     }
-  } catch (err) {
-    console.error(err);
-    res.status(500).send(`
+
+    if (user.emailVerified) {
+      return res.send(`
+        <h1>Already Verified</h1>
+        <p>You have already verified your email. You can log in.</p>
+      `);
+    }
+
+    if (user.emailTokenExpiry && new Date() > user.emailTokenExpiry) {
+      return res.status(400).send(`
+        <h1>Expired Link</h1>
+        <p>This link has expired. Please request a new one from the app.</p>
+      `);
+    }
+
+    await queries.verifyUserEmail(user.userId);
+
+    return res.send(`
       <div style="font-family: sans-serif; text-align: center; padding-top: 50px;">
-        <h1 style="color: #dc3545;">Verification Failed</h1>
-        <p>Something went wrong. Please try again later.</p>
+        <h1 style="color: #28a745;">Verification Successful!</h1>
+        <p>Your email has been verified. You can now log in to the app.</p>
       </div>
     `);
+  } catch (err) {
+    console.error("EMAIL_VERIFY_ERROR:", err);
+    return res
+      .status(500)
+      .send("An error occurred during verification. Please try again later.");
   }
 }

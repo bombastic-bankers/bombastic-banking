@@ -49,12 +49,6 @@ const env = {
   get TWILIO_VERIFY_SERVICE(): string {
     return getEnvOrThrow("TWILIO_VERIFY_SERVICE");
   },
-  get SENDGRID_API_KEY(): string {
-    return getEnvOrThrow("SENDGRID_API_KEY");
-  },
-  get SENDGRID_VERIFIED_EMAIL(): string {
-    return getEnvOrThrow("SENDGRID_VERIFIED_EMAIL");
-  }
 };
 
 export default env;

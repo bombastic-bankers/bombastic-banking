@@ -41,7 +41,7 @@ app.post("/auth/refresh", refreshSession);
 app.post("/auth/ably", ablyAuth);
 app.post("/send/phone", sendPhoneOTP);
 app.post("/verify/phone", verifyPhoneOTP);
-app.get("/verify/email", verifyEmailLink);
+app.get("/verify/email/confirm", verifyEmailLink);
 app.use(authenticate);
 
 app.get("/account-overview", getUserAccOverview);
