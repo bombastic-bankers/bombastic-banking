@@ -34,13 +34,13 @@ async function createMockUser(overrides: Partial<any> = {}) {
 describe("Phone Verification", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("POST /verify/phone should return 200 if phone exists", async () => {
+  it("POST /send/phone should return 200 if phone exists", async () => {
     vi.mocked(queries.getUserByPhoneNumber).mockResolvedValue(
       await createMockUser(),
     );
 
     const res = await request(app)
-      .post("/verify/phone")
+      .post("/send/phone")
       .send({ phoneNumber: "+651234567890" });
 
     expect(res.status).toBe(200);
@@ -53,8 +53,8 @@ describe("Phone Verification", () => {
     );
   
     const res = await request(app)
-      .get("/verify/phone")
-      .query({ phoneNumber: "+651234567890", otp: "123456" });
+      .post("/verify/phone")
+      .send({ phoneNumber: "+651234567890", otp: "123456" });
 
     expect(res.status).toBe(200);
     expect(res.body.verified).toBe(true);
@@ -70,8 +70,8 @@ describe("Email Verification", () => {
     );
 
     const res = await request(app)
-      .get("/verify/email") 
-      .query({ email: "john@example.com", token: "123456" });
+      .post("/verify/email")
+      .send({ email: "john@example.com", token: "123456" });
 
     expect(res.status).toBe(200);
     expect(res.body.verified).toBe(true);
@@ -84,7 +84,7 @@ describe("Email Verification", () => {
 
     const res = await request(app)
       .get("/verify/email")
-      .query({ email: "john@example.com", token: "000000" });
+      .send({ email: "john@example.com", token: "000000" });
 
     expect(res.status).toBe(400);
     expect(res.body.verified).toBe(false);

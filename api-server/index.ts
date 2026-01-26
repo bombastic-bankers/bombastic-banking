@@ -39,8 +39,8 @@ app.post("/auth/signup", signUp);
 app.post("/auth/login", login);
 app.post("/auth/refresh", refreshSession);
 app.post("/auth/ably", ablyAuth);
-app.post("/verify/phone", sendPhoneOTP);
-app.get("/verify/phone", verifyPhoneOTP);
+app.post("/send/phone", sendPhoneOTP);
+app.post("/verify/phone", verifyPhoneOTP);
 app.get("/verify/email", verifyEmailLink);
 app.use(authenticate);
 

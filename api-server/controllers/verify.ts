@@ -32,7 +32,7 @@ export async function verifyPhoneOTP(req: Request, res: Response) {
         phoneNumber: z.string(),
         otp: z.string().length(6),
       })
-      .parse(req.query);
+      .parse(req.body);
 
     const user = await queries.getUserByPhoneNumber(phoneNumber);
     if (!user) {
@@ -54,27 +54,53 @@ export async function verifyPhoneOTP(req: Request, res: Response) {
 /** Verify Email using Twilio Verify */
 export async function verifyEmailLink(req: Request, res: Response) {
   try {
-    const { email, token } = z
-      .object({
-        email: z.string().email(),
-        token: z.string().length(6),
-      })
-      .parse(req.query); 
+    const { email, token } = req.query as { email?: string; token?: string };
+
+    if (!email || !token) {
+      return res.status(400).send(`
+        <div style="font-family: sans-serif; text-align: center; padding-top: 50px;">
+          <h1 style="color: #dc3545;">Verification Failed</h1>
+          <p>Email or token missing.</p>
+        </div>
+      `);
+    }
 
     const user = await queries.getUserByEmail(email);
     if (!user) {
-      return res.status(404).json({ error: "Email not registered" });
+      return res.status(404).send(`
+        <div style="font-family: sans-serif; text-align: center; padding-top: 50px;">
+          <h1 style="color: #dc3545;">Verification Failed</h1>
+          <p>Email not registered.</p>
+        </div>
+      `);
     }
 
     const isApproved = await checkEmailOTP(email, token);
 
     if (isApproved) {
       await queries.verifyUserEmail(user.userId);
-      return res.json({ verified: true }); 
-    }
 
-    res.status(400).json({ verified: false, error: "Invalid email code" });
+      return res.send(`
+        <div style="font-family: sans-serif; text-align: center; padding-top: 50px;">
+          <h1 style="color: #28a745;">Email Verified!</h1>
+          <p>Your email has been successfully verified.</p>
+        </div>
+      `);
+    } else {
+      return res.status(400).send(`
+        <div style="font-family: sans-serif; text-align: center; padding-top: 50px;">
+          <h1 style="color: #dc3545;">Verification Failed</h1>
+          <p>Invalid or expired token.</p>
+        </div>
+      `);
+    }
   } catch (err) {
-    res.status(400).json({ error: "Missing or invalid parameters" });
+    console.error(err);
+    res.status(500).send(`
+      <div style="font-family: sans-serif; text-align: center; padding-top: 50px;">
+        <h1 style="color: #dc3545;">Verification Failed</h1>
+        <p>Something went wrong. Please try again later.</p>
+      </div>
+    `);
   }
 }

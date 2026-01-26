@@ -14,10 +14,10 @@ export async function sendVerificationEmail(email: string) {
       channel: "email",
     });
 }
-export async function checkEmailOTP(email: string, code: string) {
+export async function checkEmailOTP(email: string, token: string) {
   const verificationCheck = await client.verify.v2
     .services(env.TWILIO_VERIFY_SERVICE)
-    .verificationChecks.create({ to: email, code: code });
+    .verificationChecks.create({ to: email, code: token });
 
   return verificationCheck.status === "approved";
 }
