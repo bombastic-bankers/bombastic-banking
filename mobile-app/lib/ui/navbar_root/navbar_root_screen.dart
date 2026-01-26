@@ -53,9 +53,12 @@ class _NavbarRootScreenState extends State<NavbarRootScreen> {
           type: BottomNavigationBarType.fixed,
           currentIndex: vm.index,
           onTap: (i) {
+            final agentVm = context.read<AgentViewmodel>();
+
             vm.index = i;
-            if (i == 2) {
-              context.read<AgentViewmodel>().initAssistant();
+
+            if (i == 2 && !agentVm.isConnected && !agentVm.isConnecting) {
+              agentVm.initAssistant();
             }
           },
           selectedItemColor: Theme.of(context).colorScheme.primary,
