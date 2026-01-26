@@ -26,16 +26,23 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:get_it/get_it.dart';
 import 'ui/login/login_screen.dart';
 import 'services/auth_service.dart';
 import 'services/session_manager.dart';
 import 'package:jwt_decode/jwt_decode.dart';
 import 'app_constants.dart';
 
+final locator = GetIt.instance;
+void setupLocator() {
+  locator.registerLazySingleton<NFCService>(() => NFCService());
+}
+
 Future main() async {
   await dotenv.load();
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  setupLocator();
   runApp(const BankApp());
 }
 
@@ -47,7 +54,8 @@ class BankApp extends StatefulWidget {
 
 class _BankAppState extends State<BankApp> {
   final _secureStorage = DefaultSecureStorage();
-  final _nfcService = NFCService();
+  final _nfcService = locator<NFCService>();
+  late final AgentViewmodel _agentViewmodel;
   final _biometricService = BiometricService();
   final _navigatorKey = GlobalKey<NavigatorState>();
 
@@ -128,6 +136,16 @@ class _BankAppState extends State<BankApp> {
     tokenService: TokenService(baseUrl: apiBaseUrl),
     secureStorage: _secureStorage,
   );
+  @override
+  void initState() {
+    super.initState();
+
+    _agentViewmodel = AgentViewmodel(
+      tokenRepository: _agentRepo,
+      permissionService: PermissionService(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
