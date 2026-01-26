@@ -24,7 +24,13 @@ class TransactionsViewModel extends ChangeNotifier {
   List<Transaction> get transactions => _transactions;
 
   Future<void> loadTransactions() async {
-    isLoading = true;
+    // reset to the most recent month (First button)
+    // whenever this page is loaded.
+    if (pastSixMonths.isNotEmpty) {
+      _selectedMonth = pastSixMonths.first;
+    }
+
+    isLoading = true; 
     errorMessage = null;
 
     try {
@@ -37,12 +43,11 @@ class TransactionsViewModel extends ChangeNotifier {
   }
 
   List<Transaction> get currentMonthTransactions {
-    // Fallback to now() if null, though our constructor fixes this
-    final targetDate = _selectedMonth ?? DateTime.now(); 
-    
+    final targetDate = _selectedMonth ?? DateTime.now();
+
     final filtered = _transactions.where((t) {
-      return t.timestamp.year == targetDate.year && 
-             t.timestamp.month == targetDate.month;
+      return t.timestamp.year == targetDate.year &&
+          t.timestamp.month == targetDate.month;
     }).toList();
 
     filtered.sort((a, b) => b.timestamp.compareTo(a.timestamp));
@@ -53,7 +58,7 @@ class TransactionsViewModel extends ChangeNotifier {
     final map = <DateTime, List<Transaction>>{};
 
     for (final t in currentMonthTransactions) {
-      // Create a key with just Year/Month/Day (strip time)
+      
       final dayKey = DateTime(
         t.timestamp.year,
         t.timestamp.month,
@@ -62,13 +67,13 @@ class TransactionsViewModel extends ChangeNotifier {
       map.putIfAbsent(dayKey, () => []).add(t);
     }
 
-    // Sort entries if needed, or rely on UI to sort keys
     return map;
   }
 
   List<DateTime> get pastSixMonths {
     final now = DateTime.now();
     return List.generate(6, (i) {
+      
       return DateTime(now.year, now.month - i, 1);
     });
   }
