@@ -4,6 +4,7 @@ import 'package:bombastic_banking/services/nfc_service.dart';
 import 'package:bombastic_banking/storage/secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:elevenlabs_agents/elevenlabs_agents.dart';
+import 'package:provider/provider.dart';
 import '../../services/permission_service.dart';
 import '../../repositories/agent_repository.dart';
 import '../../client_tools/client_tools.dart';
@@ -52,6 +53,9 @@ class AgentViewmodel extends ChangeNotifier {
           _isConnected = status == ConversationStatus.connected;
 
           _sendDebug('Agent status changed: $status');
+          if (status == ConversationStatus.disconnected) {
+            debugPrint('Agent Status: Disconnected');
+          }
 
           notifyListeners();
         },
