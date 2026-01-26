@@ -5,8 +5,12 @@ import 'package:bombastic_banking/ui/atm_services/withdraw_amount/withdraw_amoun
 import 'package:bombastic_banking/ui/transactions/transactions_screen.dart';
 import 'package:bombastic_banking/ui/home/home_viewmodel.dart';
 import 'package:bombastic_banking/ui/home/quick_action_widget.dart';
+<<<<<<< HEAD
 import 'package:bombastic_banking/ui/home/transaction_item_widget.dart';
 import 'package:bombastic_banking/ui/login/login_screen.dart';
+=======
+import 'package:intl/intl.dart';
+>>>>>>> f2cd36c (improve the transaction history UI)
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -184,53 +188,160 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
               const SizedBox(height: 24),
 
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Recent Transactions',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
+                child: Text(
+                  'Most recent transactions',
+                  style: TextStyle(
+                    fontSize: 18, // Slightly bigger title
+                    fontWeight: FontWeight.bold,
                   ),
-                  TextButton(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const TransactionsScreen(),
-                      ),
-                    ),
-                    child: const Text('See All'),
-                  ),
-                ],
+                ),
               ),
 
-              const SizedBox(height: 12),
-
-              // Transaction history
-              if (vm.recentTransactions.isEmpty)
-                const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(20),
-                    child: Text('No recent transactions'),
-                  ),
-                )
-              else
-                Column(
-                  children: vm.recentTransactions.map((t) {
-                    //  Invert the value (Bank View -> User View) 
-                    final amount = double.tryParse(t.myChange) ?? 0.0;
-                    final userAmount = amount * -1;
-                    return TransactionItem(
-                      description: t.description,
-
-                      myChange: userAmount > 0
-                          ? "+${userAmount.toStringAsFixed(2)}"
-                          : userAmount.toStringAsFixed(2),
-
-                      timestamp: t.timestamp,
-                      counterpartyName: t.counterpartyName,
-                    );
-                  }).toList(),
+              // Subtitle
+              const Padding(
+                padding: EdgeInsets.only(left: 4.0, bottom: 16.0),
+                child: Text(
+                  'Up to 50 (last 7 days only)',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
                 ),
+              ),
+
+              // The "Clean" Card
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16), // Rounded corners like Trans Page
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05), // Soft Shadow
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    if (vm.recentTransactions.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.all(24.0),
+                        child: Text('No recent transactions'),
+                      )
+                    else
+                      Column(
+                        children: vm.recentTransactions.map((t) {
+                          // Logic
+                          final amount = double.tryParse(t.myChange) ?? 0.0;
+                          final userAmount = amount * -1;
+                          final formattedAmount = userAmount.toStringAsFixed(2);
+                          final displayAmount = userAmount > 0
+                              ? "+$formattedAmount"
+                              : formattedAmount;
+                          
+                          final dateLabel = DateFormat('d MMM').format(t.timestamp);
+
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 24.0), // Clean spacing
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                // Left Side: Details
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      // Date (Small top label)
+                                      Text(
+                                        dateLabel,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      
+                                      // Category (Tiny)
+                                      Text(
+                                        "NETS QR", 
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          color: Colors.grey[500],
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      
+                                      // Merchant (Bold Black)
+                                      Text(
+                                        t.counterpartyName ?? "Unknown",
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black87,
+                                          height: 1.4,
+                                        ),
+                                      ),
+                                      
+                                      // Description (Grey)
+                                      Text(
+                                        t.description ?? "Transaction",
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey[700],
+                                          height: 1.4,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                                // Right Side: Amount
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 12.0, top: 12.0),
+                                  child: Text(
+                                    displayAmount,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black, // Matching Transaction Page Style
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      ),
+
+                    // View More Link
+                    const Divider(height: 1, color: Colors.black12),
+                    TextButton(
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const TransactionsScreen(),
+                        ),
+                      ),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        minimumSize: const Size(double.infinity, 40),
+                      ),
+                      child: const Text(
+                        'View More',
+                        style: TextStyle(
+                          color: Color(0xFF5D6BD4),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
             ],
           ),
         ),
