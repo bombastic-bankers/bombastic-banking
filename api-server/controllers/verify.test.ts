@@ -9,7 +9,7 @@ vi.mock("../db/queries");
 
 vi.mock("../services/emailVerificationService.js", () => ({
   sendVerificationEmail: vi.fn().mockResolvedValue(undefined),
-  checkEmailOTP: vi.fn().mockResolvedValue(true),
+  VerifyEmailLink: vi.fn().mockResolvedValue(true),
 }));
 
 vi.mock("../services/smsVerificationService.js", () => ({
@@ -26,6 +26,8 @@ async function createMockUser(overrides: Partial<any> = {}) {
     hashedPin: "hashed_pin",
     phoneVerified: true,
     emailVerified: true,
+    emailToken: null,
+    emailTokenExpiry: null,
     isInternal: false,
     ...overrides,
   };
@@ -51,7 +53,7 @@ describe("Phone Verification", () => {
     vi.mocked(queries.getUserByPhoneNumber).mockResolvedValue(
       await createMockUser(),
     );
-  
+
     const res = await request(app)
       .post("/verify/phone")
       .send({ phoneNumber: "+651234567890", otp: "123456" });
@@ -61,32 +63,54 @@ describe("Phone Verification", () => {
   });
 });
 
-describe("Email Verification", () => {
-  beforeEach(() => vi.clearAllMocks());
+describe("GET /verify/email/confirm", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
-  it("GET /verify/email should return 200 for correct code", async () => {
-    vi.mocked(queries.getUserByEmail).mockResolvedValue(
-      await createMockUser({ emailVerified: false }),
+  it("should verify email successfully", async () => {
+    vi.mocked(queries.getUserByEmailToken).mockResolvedValue(
+      await createMockUser({
+        emailVerified: false,
+        emailTokenExpiry: new Date(Date.now() + 60_000), // still valid
+      }),
     );
 
+    vi.mocked(queries.verifyUserEmail).mockResolvedValue(undefined);
+
     const res = await request(app)
-      .post("/verify/email")
-      .send({ email: "john@example.com", token: "123456" });
+      .get("/verify/email/confirm")
+      .query({ token: "valid-token" });
 
     expect(res.status).toBe(200);
-    expect(res.body.verified).toBe(true);
+    expect(res.text).toContain("Verification Successful");
     expect(queries.verifyUserEmail).toHaveBeenCalled();
   });
 
-  it("GET /verify/email should return 400 for incorrect code", async () => {
-    vi.mocked(queries.getUserByEmail).mockResolvedValue(await createMockUser());
-    vi.mocked(emailService.checkEmailOTP).mockResolvedValueOnce(false);
+  it("should reject expired token", async () => {
+    vi.mocked(queries.getUserByEmailToken).mockResolvedValue(
+      await createMockUser({
+        emailVerified: false,
+        emailTokenExpiry: new Date(Date.now() - 1000), // expired
+      }),
+    );
 
     const res = await request(app)
-      .get("/verify/email")
-      .send({ email: "john@example.com", token: "000000" });
+      .get("/verify/email/confirm")
+      .query({ token: "expired-token" });
 
     expect(res.status).toBe(400);
-    expect(res.body.verified).toBe(false);
+    expect(res.text).toContain("Expired");
+  });
+
+  it("should reject invalid token", async () => {
+    vi.mocked(queries.getUserByEmailToken).mockResolvedValue(null);
+
+    const res = await request(app)
+      .get("/verify/email/confirm")
+      .query({ token: "invalid-token" });
+
+    expect(res.status).toBe(400);
+    expect(res.text).toContain("Invalid");
   });
 });

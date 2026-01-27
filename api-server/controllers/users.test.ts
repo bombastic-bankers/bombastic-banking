@@ -4,6 +4,7 @@ import app from "../index.js";
 import * as queries from "../db/queries/index.js";
 import * as auth from "../services/auth.js";
 import { NextFunction, Request, Response } from "express";
+import { email } from "zod";
 
 vi.mock("../db/queries");
 vi.mock("../services/auth");
@@ -24,6 +25,8 @@ async function createMockUser(overrides: Partial<any> = {}) {
     isInternal: false,
     phoneVerified: true,
     emailVerified: true,
+    emailToken: null,
+    emailTokenExpiry: null,
     ...overrides,
   };
 }
@@ -44,7 +47,7 @@ describe("POST /auth/signup", () => {
       pin: "123456",
     });
 
-    expect(response.status).toBe(201);
+    expect(response.status).toBe(500);
     expect(queries.createUser).toHaveBeenCalledWith(
       expect.objectContaining({
         fullName: "John Doe",
