@@ -50,6 +50,7 @@ await db
 const [{ transactionId }] = await db
   .insert(transactions)
   .values({
+    type: "internal",
     description: "Initial bank capitalization",
   })
   .returning();

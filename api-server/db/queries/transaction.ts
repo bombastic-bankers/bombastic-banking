@@ -25,6 +25,7 @@ export async function transferMoney(
       const [{ transactionId }] = await tx
         .insert(transactions)
         .values({
+          type: "transfer",
           description: description ?? "Transfer",
         })
         .returning();

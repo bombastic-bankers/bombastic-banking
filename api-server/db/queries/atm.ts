@@ -77,6 +77,7 @@ export async function withdrawCash(userId: number, amount: number): Promise<void
     const [{ transactionId }] = await tx
       .insert(transactions)
       .values({
+        type: "atm",
         description: "Cash withdrawal",
       })
       .returning();
@@ -104,6 +105,7 @@ export async function depositCash(userId: number, amount: number): Promise<void>
     const [{ transactionId }] = await tx
       .insert(transactions)
       .values({
+        type: "atm",
         description: "Cash deposit",
       })
       .returning();

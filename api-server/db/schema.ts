@@ -1,4 +1,4 @@
-import { pgTable, serial, integer, text, timestamp, numeric, primaryKey, boolean } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, text, timestamp, numeric, primaryKey, boolean, pgEnum } from "drizzle-orm/pg-core";
 
 /**
  * Users table stores both customer accounts and internal bank accounts.
@@ -24,8 +24,11 @@ export const users = pgTable("users", {
  * deposit, transfer) and contains multiple ledger entries that must balance
  * according to double-entry accounting (assets + liabilities = 0).
  */
+
+export const transactionTypeEnum = pgEnum('transaction_type', ['atm', 'transfer', 'internal']);
 export const transactions = pgTable("transactions", {
   transactionId: integer("transaction_id").primaryKey().generatedAlwaysAsIdentity(),
+  type: transactionTypeEnum("transaction_type").notNull(),
   description: text("description"),
   timestamp: timestamp("timestamp").defaultNow().notNull(),
 });
