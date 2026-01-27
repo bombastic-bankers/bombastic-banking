@@ -27,6 +27,8 @@ describe("POST /transfer", () => {
       isInternal: false,
       phoneVerified: true,
       emailVerified: true,
+      emailToken: null,
+      emailTokenExpiry: null,
     });
     vi.mocked(queries.transferMoney).mockResolvedValue(true);
 
@@ -128,6 +130,8 @@ describe("POST /transfer", () => {
       isInternal: false,
       phoneVerified: true,
       emailVerified: true,
+      emailToken: null,
+      emailTokenExpiry: null,
     });
     vi.mocked(queries.transferMoney).mockResolvedValue(false);
 
