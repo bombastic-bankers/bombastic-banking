@@ -10,7 +10,6 @@ class HomeViewModel extends ChangeNotifier {
   final SecureStorage _secureStorage;
 
   User? user;
-  var userLoaded = false;
 
   HomeViewModel({
     required UserRepository userRepository,
@@ -23,7 +22,6 @@ class HomeViewModel extends ChangeNotifier {
   /// Refreshes [user] from the repository, returning the updated user.
   Future<User> refreshUser() async {
     user = await _userRepository.getUser();
-    userLoaded = true;
     notifyListeners();
     return user!;
   }
@@ -34,7 +32,6 @@ class HomeViewModel extends ChangeNotifier {
     _sessionManager.stopMonitoring();
     await _secureStorage.deleteSessionToken();
     user = null;
-    userLoaded = false;
     notifyListeners();
   }
 }
