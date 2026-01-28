@@ -24,6 +24,8 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'ui/login/login_screen.dart';
 import 'services/auth_service.dart';
+import 'services/session_manager.dart';
+import 'package:jwt_decode/jwt_decode.dart';
 import 'app_constants.dart';
 
 Future main() async {
@@ -43,6 +45,7 @@ class _BankAppState extends State<BankApp> {
   final _secureStorage = DefaultSecureStorage();
   final _nfcService = NFCService();
   final _biometricService = BiometricService();
+  final _navigatorKey = GlobalKey<NavigatorState>();
 
   late final _authRepo = AuthRepository(
     authService: AuthService(baseUrl: apiBaseUrl),
@@ -65,6 +68,57 @@ class _BankAppState extends State<BankApp> {
     atmService: ATMService(baseUrl: apiBaseUrl),
     secureStorage: _secureStorage,
   );
+  late final _sessionManager = SessionManager(
+    getSessionExpiry: () async {
+      final accessToken = await _secureStorage.getSessionToken();
+      if (accessToken == null) return null;
+
+      try {
+        // Decode JWT to extract expiration time
+        final decodedToken = Jwt.parseJwt(accessToken);
+        final exp = decodedToken['exp'] as int?;
+        if (exp == null) return null;
+
+        return DateTime.fromMillisecondsSinceEpoch(exp * 1000);
+      } catch (e) {
+        debugPrint('Error decoding access token: $e');
+        return null;
+      }
+    },
+    onRefreshSession: () async {
+      final refreshToken = await _secureStorage.getRefreshToken();
+      if (refreshToken == null) return false;
+      return await _authRepo.loginWithRefreshToken(refreshToken);
+    },
+    onSessionEnd: (reason) async {
+      // Clear only the session token (preserve refresh token for biometric login)
+      await _secureStorage.deleteSessionToken();
+
+      final context = _navigatorKey.currentContext;
+      if (context != null && context.mounted) {
+        final message = switch (reason) {
+          SessionEndReason.inactivity => 'Session timed out due to inactivity',
+          SessionEndReason.refreshFailed => null,
+        };
+
+        if (message != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(message),
+              backgroundColor: Theme.of(context).colorScheme.error,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+
+      // Navigate to login screen
+      _navigatorKey.currentState?.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => LoginScreen()),
+        (_) => false,
+      );
+    },
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -72,10 +126,17 @@ class _BankAppState extends State<BankApp> {
       providers: [
         ChangeNotifierProvider(create: (_) => NavbarRootViewModel()),
         ChangeNotifierProvider(
-          create: (_) => LoginViewModel(authRepository: _authRepo),
+          create: (context) => LoginViewModel(
+            authRepository: _authRepo,
+            sessionManager: _sessionManager,
+          ),
         ),
         ChangeNotifierProvider(
-          create: (_) => HomeViewModel(userRepository: _userRepo),
+          create: (_) => HomeViewModel(
+            userRepository: _userRepo,
+            sessionManager: _sessionManager,
+            secureStorage: _secureStorage,
+          ),
         ),
         ChangeNotifierProvider(
           create: (_) =>
@@ -94,35 +155,42 @@ class _BankAppState extends State<BankApp> {
           create: (_) =>
               DepositConfirmationViewModel(atmRepository: _atmRepository),
         ),
+        Provider.value(value: _sessionManager),
       ],
-      child: MaterialApp(
-        title: 'Bombastic Banking',
-        navigatorObservers: [routeObserver],
-        theme: ThemeData(
-          scaffoldBackgroundColor: Theme.of(context).colorScheme.surface,
-          appBarTheme: AppBarTheme(
-            backgroundColor: Theme.of(context).colorScheme.surface,
-            titleTextStyle: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+      child: GestureDetector(
+        onTap: () => _sessionManager.recordActivity(),
+        onPanDown: (_) => _sessionManager.recordActivity(),
+        onScaleStart: (_) => _sessionManager.recordActivity(),
+        child: MaterialApp(
+          title: 'Bombastic Banking',
+          navigatorKey: _navigatorKey,
+          navigatorObservers: [routeObserver],
+          theme: ThemeData(
+            scaffoldBackgroundColor: Theme.of(context).colorScheme.surface,
+            appBarTheme: AppBarTheme(
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              titleTextStyle: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
             ),
+            colorScheme: const ColorScheme(
+              brightness: Brightness.light,
+              primary: Color(0xFFE50513),
+              onPrimary: Color(0xFFF9F5F6),
+              secondary: Color(0xFF5D6BD4),
+              onSecondary: Color(0xFFDDDFEC),
+              error: Colors.red,
+              onError: Colors.white,
+              surface: Colors.white,
+              onSurface: Color(0xFF232125),
+              tertiary: Color(0xFF3EB489),
+            ),
+            useMaterial3: true,
           ),
-          colorScheme: const ColorScheme(
-            brightness: Brightness.light,
-            primary: Color(0xFFE50513),
-            onPrimary: Color(0xFFF9F5F6),
-            secondary: Color(0xFF5D6BD4),
-            onSecondary: Color(0xFFDDDFEC),
-            error: Colors.red,
-            onError: Colors.white,
-            surface: Colors.white,
-            onSurface: Color(0xFF232125),
-            tertiary: Color(0xFF3EB489),
-          ),
-          useMaterial3: true,
+          home: LoginScreen(),
         ),
-        home: LoginScreen(),
       ),
     );
   }

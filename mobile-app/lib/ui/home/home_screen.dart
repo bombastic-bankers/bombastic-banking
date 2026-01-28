@@ -5,6 +5,7 @@ import 'package:bombastic_banking/ui/transactions/transactions_screen.dart';
 import 'package:bombastic_banking/ui/home/home_viewmodel.dart';
 import 'package:bombastic_banking/ui/home/quick_action_widget.dart';
 import 'package:bombastic_banking/ui/home/transaction_item_widget.dart';
+import 'package:bombastic_banking/ui/login/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -57,7 +58,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                   TextButton(
-                    onPressed: () {},
+                    onPressed: () async {
+                      await vm.logout();
+                      if (context.mounted) {
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(
+                            builder: (_) => const LoginScreen(),
+                          ),
+                          (_) => false,
+                        );
+                      }
+                    },
                     style: TextButton.styleFrom(
                       padding: EdgeInsets.zero,
                       minimumSize: Size.zero,

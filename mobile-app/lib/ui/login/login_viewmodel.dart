@@ -1,16 +1,21 @@
 import 'package:bombastic_banking/repositories/auth_repository.dart';
 import 'package:bombastic_banking/services/biometric_service.dart';
+import 'package:bombastic_banking/services/session_manager.dart';
 import 'package:flutter/material.dart';
 
 class LoginViewModel extends ChangeNotifier {
   final AuthRepository _authRepo;
+  final SessionManager _sessionManager;
   bool loading = false;
 
   /// Whether the user can log in with biometrics.
   bool canUseBiometrics = false;
 
-  LoginViewModel({required AuthRepository authRepository})
-    : _authRepo = authRepository;
+  LoginViewModel({
+    required AuthRepository authRepository,
+    required SessionManager sessionManager,
+  }) : _authRepo = authRepository,
+       _sessionManager = sessionManager;
 
   /// Updates [canUseBiometrics].
   Future<void> checkBiometricAvailability() async {
@@ -23,10 +28,15 @@ class LoginViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      return await _authRepo.login(email, pin)
-          ? const LoginSuccess()
-          : const LoginFailure('Incorrect email or PIN');
+      final success = await _authRepo.login(email, pin);
+      if (success) {
+        await _sessionManager.startMonitoring();
+        return const LoginSuccess();
+      } else {
+        return const LoginFailure('Incorrect email or PIN');
+      }
     } catch (e) {
+      debugPrint('Error logging in: $e');
       return const LoginFailure('An error occurred. Please try again.');
     } finally {
       loading = false;
@@ -57,9 +67,13 @@ class LoginViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      return await _authRepo.loginWithRefreshToken(refreshToken)
-          ? const LoginSuccess()
-          : const LoginFailure('Session expired. Please login again.');
+      final success = await _authRepo.loginWithRefreshToken(refreshToken);
+      if (success) {
+        await _sessionManager.startMonitoring();
+        return const LoginSuccess();
+      } else {
+        return const LoginFailure('Session expired. Please login again.');
+      }
     } catch (e) {
       return const LoginFailure('An error occurred. Please try again.');
     } finally {
