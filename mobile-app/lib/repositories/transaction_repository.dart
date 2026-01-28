@@ -25,11 +25,14 @@ class TransactionRepository {
     return apiTransactions
         .map(
           (api) => Transaction(
-            id: api.id,
+            id: api.transactionId,
+            timestamp: api.timestamp,
+            description: api.description ?? 'Transaction',
+            myChange: api.myChange,
+            counterpartyUserId: api.counterpartyUserId,
+            counterpartyName: api.counterpartyName,
+            counterpartyIsInternal: api.counterpartyIsInternal,
             type: api.type,
-            title: api.title,
-            amount: api.amount,
-            date: api.date,
           ),
         )
         .toList();

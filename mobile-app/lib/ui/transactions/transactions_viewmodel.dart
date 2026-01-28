@@ -6,7 +6,10 @@ class TransactionsViewModel extends ChangeNotifier {
   final TransactionRepository _transactionRepository;
 
   TransactionsViewModel({required TransactionRepository transactionRepository})
-    : _transactionRepository = transactionRepository;
+      : _transactionRepository = transactionRepository {
+    //initialize selectedMonth to now
+    _selectedMonth = DateTime.now();
+  }
 
   var _isLoading = false;
   bool get isLoading => _isLoading;
@@ -21,7 +24,13 @@ class TransactionsViewModel extends ChangeNotifier {
   List<Transaction> get transactions => _transactions;
 
   Future<void> loadTransactions() async {
-    isLoading = true;
+    // reset to the most recent month (First button)
+    // whenever this page is loaded.
+    if (pastSixMonths.isNotEmpty) {
+      _selectedMonth = pastSixMonths.first;
+    }
+
+    isLoading = true; 
     errorMessage = null;
 
     try {
@@ -33,28 +42,29 @@ class TransactionsViewModel extends ChangeNotifier {
     isLoading = false;
   }
 
-  /// Transactions for the month
   List<Transaction> get currentMonthTransactions {
-    final now = DateTime.now();
+    final targetDate = _selectedMonth ?? DateTime.now();
+
     final filtered = _transactions.where((t) {
-      return t.date.year == now.year && t.date.month == now.month;
+      return t.timestamp.year == targetDate.year &&
+          t.timestamp.month == targetDate.month;
     }).toList();
 
-    filtered.sort((a, b) => b.date.compareTo(a.date));
+    filtered.sort((a, b) => b.timestamp.compareTo(a.timestamp));
     return filtered;
   }
 
-  /// Groups by day
   Map<DateTime, List<Transaction>> get groupedByDay {
     final map = <DateTime, List<Transaction>>{};
 
     for (final t in currentMonthTransactions) {
-      final dayKey = DateTime(t.date.year, t.date.month, t.date.day);
+      
+      final dayKey = DateTime(
+        t.timestamp.year,
+        t.timestamp.month,
+        t.timestamp.day,
+      );
       map.putIfAbsent(dayKey, () => []).add(t);
-    }
-
-    for (final entry in map.entries) {
-      entry.value.sort((a, b) => b.date.compareTo(a.date));
     }
 
     return map;
@@ -63,14 +73,13 @@ class TransactionsViewModel extends ChangeNotifier {
   List<DateTime> get pastSixMonths {
     final now = DateTime.now();
     return List.generate(6, (i) {
+      
       return DateTime(now.year, now.month - i, 1);
     });
   }
 
   DateTime? _selectedMonth;
-  DateTime? get selectedMonth {
-    return _selectedMonth;
-  }
+  DateTime? get selectedMonth => _selectedMonth;
 
   void selectMonth(DateTime month) {
     _selectedMonth = month;
