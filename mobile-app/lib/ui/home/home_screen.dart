@@ -1,3 +1,4 @@
+import 'package:bombastic_banking/route_observer.dart';
 import 'package:bombastic_banking/ui/atm_services/deposit_start/deposit_start_screen.dart';
 import 'package:bombastic_banking/ui/atm_services/nfc_prompt/nfc_prompt_widget.dart';
 import 'package:bombastic_banking/ui/atm_services/withdraw_amount/withdraw_amount_screen.dart';
@@ -16,13 +17,28 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with RouteAware {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+  }
 
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPush() {
     final vm = context.read<HomeViewModel>();
-    if (vm.userLoaded) return;
+    vm.refreshUser();
+  }
+
+  @override
+  void didPopNext() {
+    final vm = context.read<HomeViewModel>();
     vm.refreshUser();
   }
 
