@@ -1,6 +1,3 @@
-process.env.EMAIL_USER = "test@example.com";
-process.env.EMAIL_PASS = "dummy_pass";
-
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import request from "supertest";
 import app from "../index.js";
@@ -17,6 +14,15 @@ vi.mock("../middleware/auth", () => ({
     next();
   },
 }));
+vi.mock("../services/emailVerificationService.js", () => ({
+  sendVerificationEmail: vi.fn().mockResolvedValue(undefined),
+  VerifyEmailLink: vi.fn().mockResolvedValue(true),
+}));
+vi.mock("../services/smsVerificationService.js", () => ({
+  sendOTP: vi.fn().mockResolvedValue({ status: "pending" }),
+  checkOTP: vi.fn().mockResolvedValue(true),
+}));
+
 
 async function createMockUser(overrides: Partial<any> = {}) {
   return {
