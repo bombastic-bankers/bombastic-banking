@@ -138,3 +138,41 @@ describe("POST /transfer", () => {
     expect(queries.transferMoney).toHaveBeenCalledWith(1, 2, 100.5);
   });
 });
+
+
+describe("GET /transaction-history", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should return results in descending timestamp order", async () => {
+    const mockTransactionHistory = [
+      {
+        transactionId: 2,
+        timestamp: ("2026-01-03T00:00:00.000Z"),
+        description: "Deposit",
+        myChange: "5.00",
+        counterpartyUserId: 9,
+        counterpartyName: "X",
+        counterpartyIsInternal: true,
+      },
+      {
+        transactionId: 1,
+        timestamp: "2026-01-01T00:00:00.000Z",
+        description: "NETS Payment",
+        myChange: "-2.00",
+        counterpartyUserId: 8,
+        counterpartyName: "Y",
+        counterpartyIsInternal: false,
+      },
+    ];
+
+    vi.mocked(queries.getTransactionHistory).mockResolvedValue(
+      mockTransactionHistory.map(t => ({ ...t, timestamp: new Date(t.timestamp) }))
+    );
+
+    const res = await request(app).get("/transaction-history");
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual(mockTransactionHistory);
+  });
+});
