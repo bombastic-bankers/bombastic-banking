@@ -6,6 +6,7 @@ class Transaction {
   final int? counterpartyUserId;
   final String? counterpartyName;
   final bool? counterpartyIsInternal;
+  final String type;
 
   const Transaction({
     required this.id,
@@ -15,6 +16,7 @@ class Transaction {
     this.counterpartyUserId,
     this.counterpartyName,
     this.counterpartyIsInternal,
+    required this.type,
   });
 
   factory Transaction.fromJson(Map<String, dynamic> json) {
@@ -26,6 +28,7 @@ class Transaction {
       counterpartyUserId: json['counterpartyUserId'],
       counterpartyName: json['counterpartyName'],
       counterpartyIsInternal: json['counterpartyIsInternal'],
+      type: json['type'],
     );
   }
 }

@@ -5,12 +5,8 @@ import 'package:bombastic_banking/ui/atm_services/withdraw_amount/withdraw_amoun
 import 'package:bombastic_banking/ui/transactions/transactions_screen.dart';
 import 'package:bombastic_banking/ui/home/home_viewmodel.dart';
 import 'package:bombastic_banking/ui/home/quick_action_widget.dart';
-<<<<<<< HEAD
-import 'package:bombastic_banking/ui/home/transaction_item_widget.dart';
 import 'package:bombastic_banking/ui/login/login_screen.dart';
-=======
 import 'package:intl/intl.dart';
->>>>>>> f2cd36c (improve the transaction history UI)
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -214,7 +210,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(16), // Rounded corners like Trans Page
+                  borderRadius: BorderRadius.circular(
+                    16,
+                  ), // Rounded corners like Trans Page
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.05), // Soft Shadow
@@ -240,11 +238,15 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                           final displayAmount = userAmount > 0
                               ? "+$formattedAmount"
                               : formattedAmount;
-                          
-                          final dateLabel = DateFormat('d MMM').format(t.timestamp);
+
+                          final dateLabel = DateFormat(
+                            'd MMM',
+                          ).format(t.timestamp);
 
                           return Padding(
-                            padding: const EdgeInsets.only(bottom: 24.0), // Clean spacing
+                            padding: const EdgeInsets.only(
+                              bottom: 24.0,
+                            ), // Clean spacing
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -252,7 +254,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                                 // Left Side: Details
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       // Date (Small top label)
                                       Text(
@@ -264,20 +267,26 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                                         ),
                                       ),
                                       const SizedBox(height: 4),
-                                      
+
                                       // Category (Tiny)
                                       Text(
-                                        "NETS QR", 
+                                        "NETS QR",
                                         style: TextStyle(
                                           fontSize: 10,
                                           color: Colors.grey[500],
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),
-                                      
+
                                       // Merchant (Bold Black)
                                       Text(
-                                        t.counterpartyName ?? "Unknown",
+                                        t.type == 'transfer'
+                                            ? (t.counterpartyName ?? 'Transfer')
+                                            : t.type == 'atm'
+                                            ? amount > 0
+                                                  ? "Withdrawal"
+                                                  : "Deposit"
+                                            : '',
                                         style: const TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.bold,
@@ -285,7 +294,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                                           height: 1.4,
                                         ),
                                       ),
-                                      
+
                                       // Description (Grey)
                                       Text(
                                         t.description ?? "Transaction",
@@ -301,13 +310,22 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
                                 // Right Side: Amount
                                 Padding(
-                                  padding: const EdgeInsets.only(left: 12.0, top: 12.0),
+                                  padding: const EdgeInsets.only(
+                                    left: 12.0,
+                                    top: 12.0,
+                                  ),
                                   child: Text(
                                     displayAmount,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.black, // Matching Transaction Page Style
+                                      color: amount > 0
+                                          ? Theme.of(
+                                              context,
+                                            ).colorScheme.primary
+                                          : Theme.of(
+                                              context,
+                                            ).colorScheme.tertiary,
                                     ),
                                   ),
                                 ),
