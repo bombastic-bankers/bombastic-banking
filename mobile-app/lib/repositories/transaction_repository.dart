@@ -32,6 +32,7 @@ class TransactionRepository {
             counterpartyUserId: api.counterpartyUserId,
             counterpartyName: api.counterpartyName,
             counterpartyIsInternal: api.counterpartyIsInternal,
+            type: api.type,
           ),
         )
         .toList();

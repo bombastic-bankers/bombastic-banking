@@ -82,7 +82,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                             ? BorderSide.none
                             : const BorderSide(color: Colors.grey, width: 0.5),
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 12),
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
                       ),
                       child: Text(
                         DateFormat.yMMM().format(month),
@@ -101,22 +103,21 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               child: vm.isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : vm.errorMessage != null
-                      ? Center(child: Text(vm.errorMessage!))
-                      : dayKeys.isEmpty
-                          ? const Center(
-                              child: Text('No transactions this month'))
-                          : ListView.builder(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
-                              itemCount: dayKeys.length,
-                              itemBuilder: (context, index) {
-                                final day = dayKeys[index];
-                                final items = grouped[day] ?? [];
-                                return _TransactionDaySection(
-                                  date: day,
-                                  transactions: items,
-                                );
-                              },
-                            ),
+                  ? Center(child: Text(vm.errorMessage!))
+                  : dayKeys.isEmpty
+                  ? const Center(child: Text('No transactions this month'))
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: dayKeys.length,
+                      itemBuilder: (context, index) {
+                        final day = dayKeys[index];
+                        final items = grouped[day] ?? [];
+                        return _TransactionDaySection(
+                          date: day,
+                          transactions: items,
+                        );
+                      },
+                    ),
             ),
           ],
         ),
@@ -174,11 +175,14 @@ class _TransactionDaySection extends StatelessWidget {
             final userAmount = amount * -1;
             final formattedAmount = userAmount.toStringAsFixed(2);
             // Add '+' only if positive
-            final displayAmount =
-                userAmount > 0 ? "+$formattedAmount" : formattedAmount;
+            final displayAmount = userAmount > 0
+                ? "+$formattedAmount"
+                : formattedAmount;
 
             return Padding(
-              padding: const EdgeInsets.only(bottom: 24.0), // Spacing between items
+              padding: const EdgeInsets.only(
+                bottom: 24.0,
+              ), // Spacing between items
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -197,7 +201,13 @@ class _TransactionDaySection extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          t.counterpartyName ?? "Unknown Merchant",
+                          t.type == 'transfer'
+                              ? (t.counterpartyName ?? 'Transfer')
+                              : t.type == 'atm'
+                              ? amount > 0
+                                    ? "Withdrawal"
+                                    : "Deposit"
+                              : '',
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -216,16 +226,18 @@ class _TransactionDaySection extends StatelessWidget {
                       ],
                     ),
                   ),
-                  
+
                   // RIGHT SIDE: Amount
                   Padding(
                     padding: const EdgeInsets.only(left: 12.0),
                     child: Text(
                       displayAmount,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black, // Image shows black text for amounts
+                        color: amount > 0
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.tertiary,
                       ),
                     ),
                   ),

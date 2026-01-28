@@ -1,8 +1,7 @@
 import { db } from "../index.js";
 import { ledger, transactions, users } from "../schema.js";
-import { eq, sql, sum, desc, and, ne } from "drizzle-orm";
+import { eq, sql, sum, and, desc, ne } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
-
 /**
  * Transfer money from one user to another. Returns false
  * if the transfer fails due to insufficient funds.
@@ -69,6 +68,7 @@ export async function getTransactionHistory(userId: number): Promise<{
   counterpartyUserId: number | null;
   counterpartyName: string | null;
   counterpartyIsInternal: boolean | null;
+  type: string;
 }[]> {
   const myLedger = alias(ledger, "myLedger");
   const otherLedger = alias(ledger, "otherLedger");
@@ -83,6 +83,7 @@ export async function getTransactionHistory(userId: number): Promise<{
       counterpartyUserId: otherUser.userId,
       counterpartyName: otherUser.fullName,
       counterpartyIsInternal: otherUser.isInternal,
+      type: transactions.type,
     })
     .from(myLedger)
     .innerJoin(transactions, eq(myLedger.transactionId, transactions.transactionId))
