@@ -40,6 +40,7 @@ class TransactionAPIModel {
   final int? counterpartyUserId;
   final String? counterpartyName;
   final bool? counterpartyIsInternal;
+  final String type;
 
   TransactionAPIModel({
     required this.transactionId,
@@ -49,6 +50,7 @@ class TransactionAPIModel {
     this.counterpartyUserId,
     this.counterpartyName,
     this.counterpartyIsInternal,
+    required this.type,
   });
 
   factory TransactionAPIModel.fromJson(Map<String, dynamic> json) {
@@ -60,6 +62,7 @@ class TransactionAPIModel {
       counterpartyUserId: json['counterpartyUserId'] as int?,
       counterpartyName: json['counterpartyName'] as String?,
       counterpartyIsInternal: json['counterpartyIsInternal'] as bool?,
+      type: json['type'] as String,
     );
   }
 }
