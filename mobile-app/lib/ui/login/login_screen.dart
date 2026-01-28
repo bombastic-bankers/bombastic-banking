@@ -41,7 +41,26 @@ class _LoginScreenState extends State<LoginScreen> {
     final result = await vm.loginWithBiometrics();
 
     if (!mounted) return;
+    _handleLoginResult(result);
+  }
 
+  Future<void> _attemptPINLogin() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final vm = context.read<LoginViewModel>();
+    final result = await vm.login(_email.text, _pin.text);
+
+    if (!mounted) return;
+
+    if (result is LoginSuccess) {
+      _email.clear();
+      _pin.clear();
+    }
+
+    _handleLoginResult(result);
+  }
+
+  void _handleLoginResult(LoginResult result) {
     switch (result) {
       case LoginSuccess():
         Navigator.of(context).pushAndRemoveUntil(
@@ -121,63 +140,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: AppButton(
                       text: vm.loading ? 'Logging in...' : 'Login',
                       color: const Color(0xFF495A63),
-                      onPressed: vm.loading
-                          ? null
-                          : () async {
-                              if (_formKey.currentState!.validate()) {
-                                final result = await vm.login(
-                                  _email.text,
-                                  _pin.text,
-                                );
-
-                                if (!context.mounted) return;
-
-                                switch (result) {
-                                  case LoginSuccess():
-                                    _email.clear();
-                                    _pin.clear();
-                                    Navigator.of(context).pushAndRemoveUntil(
-                                      MaterialPageRoute(
-                                        builder: (_) => NavbarRootScreen(),
-                                      ),
-                                      (_) => false,
-                                    );
-                                  case LoginFailure(:final message):
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(message),
-                                        backgroundColor: Theme.of(
-                                          context,
-                                        ).colorScheme.error,
-                                        behavior: SnackBarBehavior.floating,
-                                      ),
-                                    );
-                                  case LoginCancelled():
-                                    break;
-                                }
-                              }
-                            },
+                      onPressed: vm.loading ? null : _attemptPINLogin,
                     ),
                   ),
-                  if (vm.canUseBiometrics) const SizedBox(width: 12),
-                  if (vm.canUseBiometrics)
-                    SizedBox(
-                      height: 50,
-                      width: 50,
-                      child: IconButton(
-                        icon: const Icon(Icons.fingerprint, size: 32),
-                        style: IconButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            side: BorderSide(
-                              color: Theme.of(context).colorScheme.outline,
-                            ),
-                          ),
-                          padding: EdgeInsets.zero,
-                        ),
-                        onPressed: vm.loading ? null : _attemptBiometricLogin,
-                      ),
+                  if (vm.canUseBiometrics) ...[
+                    const SizedBox(width: 12),
+                    _BiometricButton(
+                      onPressed: vm.loading ? null : _attemptBiometricLogin,
                     ),
+                  ],
                 ],
               ),
 
@@ -206,5 +177,30 @@ class _LoginScreenState extends State<LoginScreen> {
       return 'PIN must be 6 digits';
     }
     return null;
+  }
+}
+
+class _BiometricButton extends StatelessWidget {
+  final VoidCallback? onPressed;
+
+  const _BiometricButton({required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 50,
+      width: 50,
+      child: IconButton(
+        icon: const Icon(Icons.fingerprint, size: 32),
+        style: IconButton.styleFrom(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+            side: BorderSide(color: Theme.of(context).colorScheme.outline),
+          ),
+          padding: EdgeInsets.zero,
+        ),
+        onPressed: onPressed,
+      ),
+    );
   }
 }
