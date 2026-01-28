@@ -1,6 +1,7 @@
 // lib/services/auth_service.dart
 import 'dart:async';
 import 'dart:convert';
+import 'package:bombastic_banking/domain/auth.dart';
 import 'package:http/http.dart' as http;
 
 class AuthService {
@@ -9,7 +10,7 @@ class AuthService {
   AuthService({required this.baseUrl});
 
   /// Retrieve a session token from user credentials. Throws [InvalidCredentialsException] if credentials are invalid.
-  Future<String> login(String email, String pin) async {
+  Future<AuthTokens> login(String email, String pin) async {
     final response = await http.post(
       Uri.parse('$baseUrl/auth/login'),
       headers: {'Content-Type': 'application/json'},
@@ -17,11 +18,36 @@ class AuthService {
     );
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body)['accessToken'];
+      final data = jsonDecode(response.body);
+      return AuthTokens(
+        accessToken: data['accessToken'],
+        refreshToken: data['refreshToken'],
+      );
     } else if (response.statusCode == 401) {
       throw InvalidCredentialsException();
     } else {
       throw Exception('Failed to login: ${response.body}');
+    }
+  }
+
+  /// Refresh the session using a refresh token. Throws [InvalidCredentialsException] if token is invalid or expired.
+  Future<AuthTokens> refreshSession(String refreshToken) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/auth/refresh'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'refreshToken': refreshToken}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return AuthTokens(
+        accessToken: data['accessToken'],
+        refreshToken: data['refreshToken'],
+      );
+    } else if (response.statusCode == 401) {
+      throw InvalidCredentialsException();
+    } else {
+      throw Exception('Failed to refresh session: ${response.body}');
     }
   }
 }

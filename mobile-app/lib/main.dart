@@ -5,6 +5,7 @@ import 'package:bombastic_banking/repositories/user_repository.dart';
 import 'package:bombastic_banking/repositories/transaction_repository.dart';
 import 'package:bombastic_banking/route_observer.dart';
 import 'package:bombastic_banking/services/atm_service.dart';
+import 'package:bombastic_banking/services/biometric_service.dart';
 import 'package:bombastic_banking/services/nfc_service.dart';
 import 'package:bombastic_banking/services/user_service.dart';
 import 'package:bombastic_banking/services/transaction_service.dart';
@@ -41,10 +42,12 @@ class BankApp extends StatefulWidget {
 class _BankAppState extends State<BankApp> {
   final _secureStorage = DefaultSecureStorage();
   final _nfcService = NFCService();
+  final _biometricService = BiometricService();
 
   late final _authRepo = AuthRepository(
     authService: AuthService(baseUrl: apiBaseUrl),
     secureStorage: _secureStorage,
+    biometricService: _biometricService,
   );
   late final _userRepo = UserRepository(
     userService: UserService(baseUrl: apiBaseUrl),

@@ -24,6 +24,44 @@ class _LoginScreenState extends State<LoginScreen> {
   final _pin = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    // Wait for the widget tree to be fully built before checking biometrics
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final vm = context.read<LoginViewModel>();
+      await vm.checkBiometricAvailability();
+      if (vm.canUseBiometrics) {
+        _attemptBiometricLogin();
+      }
+    });
+  }
+
+  Future<void> _attemptBiometricLogin() async {
+    final vm = context.read<LoginViewModel>();
+    final result = await vm.loginWithBiometrics();
+
+    if (!mounted) return;
+
+    switch (result) {
+      case LoginSuccess():
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => NavbarRootScreen()),
+          (_) => false,
+        );
+      case LoginFailure(:final message):
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      case LoginCancelled():
+        break;
+    }
+  }
+
+  @override
   void dispose() {
     _email.dispose();
     _pin.dispose();
@@ -41,92 +79,115 @@ class _LoginScreenState extends State<LoginScreen> {
         //   onPressed: () => Navigator.pop(context),
         // ),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  width: double.infinity,
-                  child: TextFormField(
-                    controller: _email,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(labelText: 'Email'),
-                    validator: emailValidator,
-                  ),
+      body: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: double.infinity,
+                child: TextFormField(
+                  controller: _email,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(labelText: 'Email'),
+                  validator: emailValidator,
                 ),
+              ),
 
-                const SizedBox(height: 30),
+              const SizedBox(height: 30),
 
-                SizedBox(
-                  width: double.infinity,
-                  child: TextFormField(
-                    controller: _pin,
-                    keyboardType: TextInputType.number,
-                    obscureText: true,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                      LengthLimitingTextInputFormatter(6),
-                    ],
-                    decoration: const InputDecoration(labelText: 'PIN'),
-                    validator: pinValidator,
-                  ),
+              SizedBox(
+                width: double.infinity,
+                child: TextFormField(
+                  controller: _pin,
+                  keyboardType: TextInputType.number,
+                  obscureText: true,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(6),
+                  ],
+                  decoration: const InputDecoration(labelText: 'PIN'),
+                  validator: pinValidator,
                 ),
+              ),
 
-                const SizedBox(height: 30),
+              const SizedBox(height: 30),
 
-                if (vm.errorMessage != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 20.0),
-                    child: Text(
-                      vm.errorMessage!,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
-                        fontWeight: FontWeight.bold,
-                      ),
+              Row(
+                children: [
+                  Expanded(
+                    child: AppButton(
+                      text: vm.loading ? 'Logging in...' : 'Login',
+                      color: const Color(0xFF495A63),
+                      onPressed: vm.loading
+                          ? null
+                          : () async {
+                              if (_formKey.currentState!.validate()) {
+                                final result = await vm.login(
+                                  _email.text,
+                                  _pin.text,
+                                );
+
+                                if (!context.mounted) return;
+
+                                switch (result) {
+                                  case LoginSuccess():
+                                    _email.clear();
+                                    _pin.clear();
+                                    Navigator.of(context).pushAndRemoveUntil(
+                                      MaterialPageRoute(
+                                        builder: (_) => NavbarRootScreen(),
+                                      ),
+                                      (_) => false,
+                                    );
+                                  case LoginFailure(:final message):
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(message),
+                                        backgroundColor: Theme.of(
+                                          context,
+                                        ).colorScheme.error,
+                                        behavior: SnackBarBehavior.floating,
+                                      ),
+                                    );
+                                  case LoginCancelled():
+                                    break;
+                                }
+                              }
+                            },
                     ),
                   ),
+                  if (vm.canUseBiometrics) const SizedBox(width: 12),
+                  if (vm.canUseBiometrics)
+                    SizedBox(
+                      height: 50,
+                      width: 50,
+                      child: IconButton(
+                        icon: const Icon(Icons.fingerprint, size: 32),
+                        style: IconButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            side: BorderSide(
+                              color: Theme.of(context).colorScheme.outline,
+                            ),
+                          ),
+                          padding: EdgeInsets.zero,
+                        ),
+                        onPressed: vm.loading ? null : _attemptBiometricLogin,
+                      ),
+                    ),
+                ],
+              ),
 
-                SizedBox(
-                  width: double.infinity,
-                  child: AppButton(
-                    text: vm.loading ? 'LOGGING IN...' : 'Login',
-                    color: const Color(0xFF495A63),
-                    onPressed: vm.loading
-                        ? null
-                        : () async {
-                            if (_formKey.currentState!.validate()) {
-                              final success = await vm.login(
-                                _email.text,
-                                _pin.text,
-                              );
-                              if (success && context.mounted) {
-                                _email.clear();
-                                _pin.clear();
-                                Navigator.of(context).pushAndRemoveUntil(
-                                  MaterialPageRoute(
-                                    builder: (_) => NavbarRootScreen(),
-                                  ),
-                                  (_) => false,
-                                );
-                              }
-                            }
-                          },
-                  ),
-                ),
+              const SizedBox(height: 20),
 
-                const SizedBox(height: 20),
-
-                const Text(
-                  "Trouble logging in",
-                  style: TextStyle(color: Color.fromARGB(255, 49, 77, 136)),
-                ),
-              ],
-            ),
+              const Text(
+                "Trouble logging in?",
+                style: TextStyle(color: Color.fromARGB(255, 49, 77, 136)),
+              ),
+            ],
           ),
         ),
       ),
