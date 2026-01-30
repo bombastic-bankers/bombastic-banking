@@ -15,54 +15,55 @@
 	});
 </script>
 
+<svelte:window onexit={() => goto('/')} />
+
 {#await withdrawPromise}
-	<div class="w-full h-full bg-linear-to-b from-[#273245] to-[#1d2735] 
-            rounded-2xl shadow-xl border border-[#394354] 
-            flex flex-col items-center justify-center p-6">
-
-		<p class="text-2xl font-bold text-white text-center">
-				Withdrawing ${amount} in progress...
+	<div
+		class="flex h-full w-full flex-col items-center
+            justify-center rounded-2xl border border-[#394354]
+            bg-linear-to-b from-[#273245] to-[#1d2735] p-6 shadow-xl"
+	>
+		<p class="text-center text-2xl font-bold text-white">
+			Withdrawing ${amount} in progress...
 		</p>
-
 	</div>
 {:then}
-	<div class="w-full h-full bg-[#e5e7eb] rounded-2xl p-10 shadow-xl text-center border border-gray-300 flex flex-col items-center justify-center"
->
-		<h1 class="text-3xl font-extrabold text-gray-900 mb-2">
-			Withdraw Completed
-		</h1>
+	<div
+		class="flex h-full w-full flex-col items-center justify-center rounded-2xl border border-gray-300 bg-[#e5e7eb] p-10 text-center shadow-xl"
+	>
+		<h1 class="mb-2 text-3xl font-extrabold text-gray-900">Withdraw Completed</h1>
 
-		<p class="text-gray-800 text-lg mb-10">
+		<p class="mb-10 text-lg text-gray-800">
 			Please collect your receipt.<br />
 			Is there anything else you would like to do?
 		</p>
 
 		<div class="flex gap-8">
-
 			<button
 				onclick={() => goto('/withdraw')}
-				class="w-56 h-20 rounded-xl bg-linear-to-b from-[#4b5563] to-[#1f2937]
-					text-white text-md font-medium shadow-lg hover:brightness-110 transition
-					flex items-center justify-center px-4 text-center"
+				class="text-md flex h-20 w-56 items-center justify-center
+					rounded-xl bg-linear-to-b from-[#4b5563] to-[#1f2937] px-4 text-center
+					font-medium text-white shadow-lg transition hover:brightness-110"
 			>
 				Another Withdraw
 			</button>
 
-			<button class="w-56 h-20 rounded-xl bg-linear-to-b from-[#4b5563] to-[#1f2937]
-				text-white text-md font-medium shadow-lg hover:brightness-110 transition
-				flex items-center justify-center px-4 text-center">
+			<button
+				class="text-md flex h-20 w-56 items-center justify-center
+				rounded-xl bg-linear-to-b from-[#4b5563] to-[#1f2937] px-4 text-center
+				font-medium text-white shadow-lg transition hover:brightness-110"
+			>
 				Other Services
 			</button>
 
 			<button
 				onclick={() => goto('/')}
-				class="w-56 h-20 rounded-xl bg-linear-to-b from-[#4b5563] to-[#1f2937]
-					text-white text-md font-medium shadow-lg hover:brightness-110 transition
-					flex items-center justify-center px-4 text-center"
+				class="text-md flex h-20 w-56 items-center justify-center
+					rounded-xl bg-linear-to-b from-[#4b5563] to-[#1f2937] px-4 text-center
+					font-medium text-white shadow-lg transition hover:brightness-110"
 			>
 				End Transaction
 			</button>
-
 		</div>
 	</div>
 {/await}
