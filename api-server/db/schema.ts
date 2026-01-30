@@ -11,15 +11,27 @@ import { pgTable, integer, text, timestamp, numeric, primaryKey, boolean, pgEnum
 export const users = pgTable("users", {
   userId: integer("user_id").primaryKey().generatedByDefaultAsIdentity(),
   fullName: text("full_name").notNull(),
-  phoneNumber: text("phone_number").notNull(),
+  phoneNumber: text("phone_number").notNull().unique(),
   email: text("email").notNull().unique(),
   hashedPin: text("hashed_pin").notNull(),
-  phoneVerified: boolean("phone_verified").default(false),
-  emailVerified: boolean("email_verified").default(false),
-  emailToken: varchar("email_token", { length: 64 }),
-  emailTokenExpiry: timestamp("email_token_expiry"),
-
+  phoneVerified: boolean("phone_verified").default(false).notNull(),
+  emailVerified: boolean("email_verified").default(false).notNull(),
   isInternal: boolean("is_internal").notNull().default(false),
+});
+
+/**
+ * Email verifications table stores pending email verification tokens.
+ * Each user can have at most one pending verification at a time.
+ */
+export const emailVerifications = pgTable("email_verifications", {
+  userId: integer("user_id")
+    .primaryKey()
+    .references(() => users.userId, {
+      onUpdate: "cascade",
+      onDelete: "cascade",
+    }),
+  token: text("token").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
 });
 
 /**
@@ -107,6 +119,6 @@ export const refreshTokens = pgTable("refresh_tokens", {
   userId: integer("user_id")
     .unique()
     .references(() => users.userId, { onDelete: "cascade" }), // deletes token if user is deleted
-  expiresAt: timestamp("expires_at").notNull(),
+  expiresAt: timestamp("expires_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

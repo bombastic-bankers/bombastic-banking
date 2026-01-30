@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import morgan from "morgan";
-import { authenticate } from "./middleware/auth.js";
+import { authenticate, requireVerified } from "./middleware/auth.js";
 import { validationError, anyError } from "./middleware/error.js";
 import {
   getUserAccOverview,
@@ -26,7 +26,12 @@ import { atmParam } from "./middleware/atm.js";
 import { transferMoney } from "./controllers/transaction.js";
 import ngrok from "@ngrok/ngrok";
 import { getVoiceToken } from "./controllers/voice.js";
-import { sendPhoneOTP,verifyPhoneOTP,verifyEmailLink } from "./controllers/verify.js";  
+import {
+  sendSMSVerification,
+  confirmSMSVerification,
+  sendEmailVerification,
+  confirmEmailVerification,
+} from "./controllers/verify.js";
 
 const TESTING = process.env.NODE_ENV === "test";
 
@@ -39,10 +44,15 @@ app.post("/auth/signup", signUp);
 app.post("/auth/login", login);
 app.post("/auth/refresh", refreshSession);
 app.post("/auth/ably", ablyAuth);
-app.post("/send/phone", sendPhoneOTP);
-app.post("/verify/phone", verifyPhoneOTP);
-app.get("/verify/email/confirm", verifyEmailLink);
+
 app.use(authenticate);
+
+app.post("/verification/sms", sendSMSVerification);
+app.post("/verification/sms/confirm", confirmSMSVerification);
+app.post("/verification/email", sendEmailVerification);
+app.get("/verification/email/confirm", confirmEmailVerification);
+
+app.use(requireVerified);
 
 app.get("/account-overview", getUserAccOverview);
 app.get("/profile", getUserProfile);
