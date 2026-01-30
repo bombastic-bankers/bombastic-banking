@@ -2,8 +2,7 @@ import { Request, Response } from "express";
 import z from "zod";
 import * as queries from "../db/queries/index.js";
 import { generateAccessToken, generateRefreshToken } from "../services/auth.js";
-import { generateEmailToken, sendVerificationEmail } from "../services/emailVerificationService.js";
-import { sendOTP } from "../services/smsVerificationService.js";
+import { EmailAlreadyExistsError, PhoneNumberAlreadyExistsError } from "../db/queries/errors.js";
 
 /** Create a new user account with the provided credentials. */
 export async function signUp(req: Request, res: Response) {
@@ -16,52 +15,35 @@ export async function signUp(req: Request, res: Response) {
     })
     .parse(req.body);
 
-  // check if email or phone number already exists
-  const existingUser = await queries.getUserByEmail(userInit.email);
-  if (existingUser) {
-    return res.status(409).json({ error: "Email already in use" });
-  }
-
-  const existingPhone = await queries.getUserByPhoneNumber(userInit.phoneNumber);
-  if (existingPhone) {
-    return res.status(409).json({ error: "This phone number is already in use." });
-  }
-
-  // create user
-  const created = await queries.createUser({
-    fullName: userInit.fullName,
-    phoneNumber: userInit.phoneNumber,
-    email: userInit.email,
-    pin: userInit.pin,
-  });
-
-  if (!created) {
-    return res.status(500).json({ error: "Failed to create account" });
-  }
-  const user = await queries.getUserByEmail(userInit.email);
-  if (!user) {
-    return res.status(500).json({ error: "Failed to retrieve new account" });
-  }
-  const { token, expiry } = generateEmailToken();
-  await queries.saveEmailToken(user.userId, token, expiry);
+  let userId: number;
 
   try {
-    await sendVerificationEmail(userInit.email, token);
-    await sendOTP(userInit.phoneNumber);
-
-    return res.status(201).json({
-      message: "Registration successful! Please verify your email and phone number.",
+    userId = await queries.createUser({
+      fullName: userInit.fullName,
+      phoneNumber: userInit.phoneNumber,
+      email: userInit.email,
+      pin: userInit.pin,
     });
   } catch (error) {
-    console.error("AUTO_SEND_ERROR:", error);
-    return res.status(201).json({
-      message: "Account created, but verification codes failed to send. Please request a resend.",
-    });
+    if (error instanceof EmailAlreadyExistsError) {
+      return res.status(409).json({ error: "Email already in use" });
+    }
+
+    if (error instanceof PhoneNumberAlreadyExistsError) {
+      return res.status(409).json({ error: "This phone number is already in use." });
+    }
+
+    throw error;
   }
+
+  const accessToken = generateAccessToken({ userId });
+  const refreshToken = generateRefreshToken();
+  await queries.setRefreshToken(userId, refreshToken, null);
+
+  res.status(201).json({ accessToken, refreshToken });
 }
 
 /** Authenticate a user and issue access and refresh tokens. */
-
 export async function login(req: Request, res: Response) {
   const { email, pin } = z
     .object({
@@ -69,17 +51,20 @@ export async function login(req: Request, res: Response) {
       pin: z.string().regex(/[0-9]{6}/),
     })
     .parse(req.body);
+
   const user = await queries.getUserByCredentials(email, pin);
   if (user === null) {
     return res.status(401).json({ error: "Incorrect email or PIN" });
   }
+
   if (!user.emailVerified || !user.phoneVerified) {
     return res.status(403).json({
       error: "Account not fully verified",
       message: "Please ensure both your email and phone number are verified.",
     });
   }
-  const accessToken = generateAccessToken(user.userId);
+
+  const accessToken = generateAccessToken({ userId: user.userId, verified: true });
   const refreshToken = generateRefreshToken();
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + 30);
@@ -141,11 +126,11 @@ export async function refreshSession(req: Request, res: Response) {
   expiresAt.setDate(expiresAt.getDate() + 30);
   const newRefreshToken = generateRefreshToken();
 
-  const userId = await queries.resetRefreshToken(oldRefreshToken, newRefreshToken, expiresAt);
-  if (userId === null) {
+  const user = await queries.resetRefreshToken(oldRefreshToken, newRefreshToken, expiresAt);
+  if (user === null) {
     return res.status(401).json({ error: "Invalid or expired refresh token" });
   }
 
-  const accessToken = generateAccessToken(userId);
+  const accessToken = generateAccessToken({ userId: user.userId, verified: user.phoneVerified && user.emailVerified });
   res.json({ accessToken, refreshToken: newRefreshToken });
 }

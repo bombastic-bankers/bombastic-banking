@@ -10,14 +10,10 @@ vi.mock("../middleware/auth", () => ({
     req.userId = 1;
     next();
   },
-}));
-vi.mock("../services/emailVerificationService.js", () => ({
-  sendVerificationEmail: vi.fn().mockResolvedValue(undefined),
-  VerifyEmailLink: vi.fn().mockResolvedValue(true),
-}));
-vi.mock("../services/smsVerificationService.js", () => ({
-  sendOTP: vi.fn().mockResolvedValue({ status: "pending" }),
-  checkOTP: vi.fn().mockResolvedValue(true),
+  requireVerified: (req: Request, _: Response, next: NextFunction) => {
+    req.userVerified = true;
+    next();
+  },
 }));
 
 describe("POST /transfer", () => {
@@ -35,8 +31,6 @@ describe("POST /transfer", () => {
       isInternal: false,
       phoneVerified: true,
       emailVerified: true,
-      emailToken: null,
-      emailTokenExpiry: null,
     });
     vi.mocked(queries.transferMoney).mockResolvedValue(true);
 
@@ -138,8 +132,6 @@ describe("POST /transfer", () => {
       isInternal: false,
       phoneVerified: true,
       emailVerified: true,
-      emailToken: null,
-      emailTokenExpiry: null,
     });
     vi.mocked(queries.transferMoney).mockResolvedValue(false);
 
