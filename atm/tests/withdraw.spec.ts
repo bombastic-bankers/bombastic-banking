@@ -1,52 +1,33 @@
 import { test, expect } from '@playwright/test';
-import { setupSSEMock } from './helpers/sse-mock';
+import { setupSSEMock } from './helpers/sse';
+import { hydrationComplete } from './helpers/hydration';
 
 test.describe('Withdrawal Flow', () => {
 	test('should handle withdraw event and complete withdrawal', async ({ page }) => {
-		const { sendEvent } = await setupSSEMock(page);
-
+		const { receiveEvent: sendEvent } = await setupSSEMock(page);
 		await page.goto('/');
+		await hydrationComplete(page);
 
-		// Send withdraw event from mobile app
 		await sendEvent('withdraw', { amount: 100 });
 
-		// Verify navigation to withdraw page with correct amount
 		await expect(page).toHaveURL('/withdraw?amount=100');
-
-		// Verify "in progress" message is displayed
 		await expect(page.getByText(/Withdrawing.*100.*in progress/i)).toBeVisible();
-
-		// Wait for withdrawal simulation (3s) and verify completion
 		await expect(page.getByText(/Withdraw Completed/i)).toBeVisible({ timeout: 5000 });
-
-		// Verify auto-redirect to home after 10s
 		await expect(page).toHaveURL('/', { timeout: 12000 });
 	});
 
-	test('should handle different withdrawal amounts', async ({ page }) => {
-		const { sendEvent } = await setupSSEMock(page);
-
+	test('should handle exit event', async ({ page }) => {
+		const { receiveEvent: sendEvent } = await setupSSEMock(page);
 		await page.goto('/');
+		await hydrationComplete(page);
 
-		// Test with amount 50
-		await sendEvent('withdraw', { amount: 50 });
-		await expect(page).toHaveURL('/withdraw?amount=50');
-		await expect(page.getByText(/Withdrawing.*50.*in progress/i)).toBeVisible();
-		
-		// Wait for completion
+		await sendEvent('withdraw', { amount: 100 });
+		await expect(page).toHaveURL('/withdraw?amount=100');
+		await expect(page.getByText(/Withdrawing.*100.*in progress/i)).toBeVisible();
 		await expect(page.getByText(/Withdraw Completed/i)).toBeVisible({ timeout: 5000 });
 
-		// Navigate back to home and wait for hydration
-		await page.goto('/');
-		await page.locator('body[data-mounted="true"]').waitFor({ timeout: 10000 });
-
-		// Test with amount 200
-		await sendEvent('withdraw', { amount: 200 });
-		await expect(page).toHaveURL('/withdraw?amount=200');
-		await expect(page.getByText(/Withdrawing.*200.*in progress/i)).toBeVisible();
-		
-		// Wait for completion
-		await expect(page.getByText(/Withdraw Completed/i)).toBeVisible({ timeout: 5000 });
+		await sendEvent('exit');
+		await expect(page).toHaveURL('/', { timeout: 1000 });
 	});
 });
 

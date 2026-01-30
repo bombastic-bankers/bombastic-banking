@@ -10,6 +10,8 @@
 	});
 </script>
 
+<svelte:window onexit={() => goto('/')} />
+
 <div
 	class="flex h-full w-full flex-col items-center justify-center rounded-2xl p-10 text-center shadow-xl"
 >
