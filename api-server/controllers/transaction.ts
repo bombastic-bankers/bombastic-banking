@@ -24,7 +24,7 @@ export async function transferMoney(req: Request, res: Response) {
 }
 
 /**
- * Retern the transaction history for a given user ID
+ * Returns the transaction history for a given user ID
  */
 export async function getTransactionHistory(req: Request, res: Response) {
 
