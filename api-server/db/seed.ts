@@ -23,7 +23,7 @@ await db.insert(users).values([
   {
     userId: CASH_VAULT_USER_ID,
     fullName: "Cash Vault",
-    phoneNumber: "00000000",
+    phoneNumber: "+6500000000",
     email: "cash-vault@internal.bombastic-banking",
     hashedPin: await bcrypt.hash("internal", 10),
     isInternal: true,
@@ -31,7 +31,7 @@ await db.insert(users).values([
   {
     userId: SHAREHOLDER_EQUITY_USER_ID,
     fullName: "Shareholder Equity",
-    phoneNumber: "00000000",
+    phoneNumber: "+6500000001",
     email: "shareholder-equity@internal.bombastic-banking",
     hashedPin: await bcrypt.hash("internal", 10),
     isInternal: true,
