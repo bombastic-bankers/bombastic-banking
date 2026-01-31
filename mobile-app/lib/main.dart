@@ -18,6 +18,7 @@ import 'package:bombastic_banking/ui/home/home_viewmodel.dart';
 import 'package:bombastic_banking/ui/transactions/transactions_viewmodel.dart';
 import 'package:bombastic_banking/ui/login/login_viewmodel.dart';
 import 'package:bombastic_banking/ui/navbar_root/navbar_root_viewmodel.dart';
+import 'package:bombastic_banking/ui/signup/signup_viewmodel.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -124,6 +125,8 @@ class _BankAppState extends State<BankApp> {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        Provider.value(value: _authRepo),
+        Provider.value(value: _sessionManager),
         ChangeNotifierProvider(create: (_) => NavbarRootViewModel()),
         ChangeNotifierProvider(
           create: (context) => LoginViewModel(
@@ -155,6 +158,12 @@ class _BankAppState extends State<BankApp> {
         ChangeNotifierProvider(
           create: (_) =>
               DepositConfirmationViewModel(atmRepository: _atmRepository),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => SignupViewModel(
+            authRepository: _authRepo,
+            sessionManager: _sessionManager,
+          ),
         ),
         Provider.value(value: _sessionManager),
       ],

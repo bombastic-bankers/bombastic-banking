@@ -1,6 +1,10 @@
 import 'package:bombastic_banking/ui/login/login_viewmodel.dart';
 import 'package:bombastic_banking/ui/navbar_root/navbar_root_screen.dart';
+import 'package:bombastic_banking/ui/signup/signup_viewmodel.dart';
 import 'package:bombastic_banking/widgets/app_button.dart';
+import 'package:bombastic_banking/repositories/auth_repository.dart';
+import 'package:bombastic_banking/services/session_manager.dart';
+import '../signup/signup_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -154,9 +158,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const SizedBox(height: 20),
 
-              const Text(
-                "Trouble logging in?",
-                style: TextStyle(color: Color.fromARGB(255, 49, 77, 136)),
+              TextButton(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SignupScreen()),
+                ),
+                child: Text(
+                  'Don\'t have an account? Sign up',
+                  style: TextStyle(color: Color.fromARGB(255, 49, 77, 136)),
+                ),
               ),
             ],
           ),
