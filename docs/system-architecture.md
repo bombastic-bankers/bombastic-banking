@@ -2,7 +2,7 @@
 
 This document explains the architecture of Bombastic Banking, an accessible digital banking prototype. The system comprises three main parts: a mobile app, an ATM server, and an API server.
 
-The system's main feature is "touchless ATM transactions", which allows users to operate ATMs from their mobile phones. Each ATM has their own NTAG213 NFC tag containing the ATM's ID. We plan to move to NTAG424 DNA for proper security, and to integrate an agentic voice assistant in the near future.
+The system's main feature is "touchless ATM transactions", which allows users to operate ATMs from their mobile phones. Each ATM has their own NTAG213 NFC tag containing the ATM's ID. We plan to move to NTAG424 DNA for proper security. Our other features are an agentic voice assistant and user-to-user transfers.
 
 For this prototype, we have no cash-related hardware, so all cash transactions are simulated.
 
@@ -36,6 +36,7 @@ For this prototype, we have no cash-related hardware, so all cash transactions a
 - **API server:** Express on Vercel.
 - **Database:** Neon Postgres.
 - **Realtime messaging:** Ably.
+- **Voice agent:** ElevenLabs.
 
 ## 4. System components
 
