@@ -3,6 +3,7 @@ import { z } from "zod";
 import * as queries from "../db/queries/index.js";
 import { sendOTP, checkOTP } from "../services/smsVerificationService.js";
 import { sendVerificationEmail, generateEmailToken } from "../services/emailVerificationService.js";
+import * as realtime from "../services/realtime.js";
 
 /**
  * Send OTP to authenticated user's phone number.
@@ -86,10 +87,34 @@ export async function confirmEmailVerification(req: Request, res: Response) {
       `);
   }
 
+  await realtime.notifyEmailVerified(user.userId);
+
   return res.send(`
     <div style="font-family: sans-serif; text-align: center; padding-top: 50px;">
       <h1 style="color: #28a745;">Verification Successful!</h1>
       <p>Your email has been verified. You can now log in to the app.</p>
     </div>
   `);
+}
+
+/**
+ * Wait for email verification to complete.
+ * Returns 200 immediately if already verified, otherwise waits for verification event.
+ */
+export async function waitForEmailVerification(req: Request, res: Response) {
+  const user = await queries.getUserById(req.userId!);
+  if (!user) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  if (user.emailVerified) {
+    return res.json({ verified: true });
+  }
+
+  try {
+    await realtime.waitForEmailVerification(user.userId);
+    res.json({ verified: true });
+  } catch (error) {
+    res.status(408).json({ error: "Verification timeout" });
+  }
 }
