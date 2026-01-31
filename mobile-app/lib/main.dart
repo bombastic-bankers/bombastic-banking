@@ -11,6 +11,7 @@ import 'package:bombastic_banking/services/nfc_service.dart';
 import 'package:bombastic_banking/services/user_service.dart';
 import 'package:bombastic_banking/services/transaction_service.dart';
 import 'package:bombastic_banking/services/verification_service.dart';
+import 'package:bombastic_banking/services/transfer_service.dart';
 import 'package:bombastic_banking/storage/secure_storage.dart';
 import 'package:bombastic_banking/ui/atm_services/deposit_confirmation/deposit_confirmation_viewmodel.dart';
 import 'package:bombastic_banking/ui/atm_services/deposit_start/deposit_start_viewmodel.dart';
@@ -58,6 +59,8 @@ class _BankAppState extends State<BankApp> {
   final _nfcService = NFCService();
   final _biometricService = BiometricService();
   final _navigatorKey = GlobalKey<NavigatorState>();
+
+  late final _transferService = TransferService(baseUrl: apiBaseUrl);
 
   late final _authRepo = AuthRepository(
     authService: AuthService(baseUrl: apiBaseUrl),
@@ -144,6 +147,7 @@ class _BankAppState extends State<BankApp> {
         Provider.value(value: _authRepo),
         Provider.value(value: _sessionManager),
         Provider.value(value: _signupStorage as SignupStorage),
+        Provider.value(value: _transferService),
         ChangeNotifierProvider(create: (_) => NavbarRootViewModel()),
         ChangeNotifierProvider(
           create: (context) => LoginViewModel(
