@@ -27,8 +27,21 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+  launcher_name: ^1.0.2
 
 flutter:
   uses-material-design: true
   assets:
     - .env
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  adaptive_icon_foreground: "assets/icon/icon.png"
+  adaptive_icon_background: "#ffffff"
+  ios: true
+  image_path: "assets/icon/icon.png"
+  remove_alpha_ios: true
+
+launcher_name:
+  default: Bombastic Banking
