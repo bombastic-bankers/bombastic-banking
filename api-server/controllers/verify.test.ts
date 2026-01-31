@@ -4,11 +4,13 @@ import app from "../index.js";
 import * as queries from "../db/queries/index.js";
 import * as smsService from "../services/smsVerificationService.js";
 import * as emailService from "../services/emailVerificationService.js";
+import * as realtime from "../services/realtime.js";
 import { NextFunction, Request, Response } from "express";
 
 vi.mock("../db/queries");
 vi.mock("../services/smsVerificationService.js");
 vi.mock("../services/emailVerificationService.js");
+vi.mock("../services/realtime.js");
 vi.mock("../middleware/auth", () => ({
   authenticate: (req: Request, _: Response, next: NextFunction) => {
     req.userId = 1;
@@ -198,5 +200,38 @@ describe("GET /verification/email/confirm", () => {
 
     expect(res.status).toBe(400);
     expect(queries.verifyUserEmailByToken).not.toHaveBeenCalled();
+  });
+});
+
+describe("GET /verification/email/wait", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("should return immediately if already verified", async () => {
+    vi.mocked(queries.getUserById).mockResolvedValue(createMockUser({ emailVerified: true }));
+    vi.mocked(realtime.waitForEmailVerification).mockResolvedValue(undefined);
+
+    const res = await request(app).get("/verification/email/wait");
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ verified: true });
+  });
+
+  it("should return 404 if user not found", async () => {
+    vi.mocked(queries.getUserById).mockResolvedValue(null);
+    vi.mocked(realtime.waitForEmailVerification).mockResolvedValue(undefined);
+
+    const res = await request(app).get("/verification/email/wait");
+
+    expect(res.status).toBe(404);
+  });
+
+  it("should timeout if verification doesn't happen", async () => {
+    vi.mocked(queries.getUserById).mockResolvedValue(createMockUser({ emailVerified: false }));
+    vi.mocked(realtime.waitForEmailVerification).mockRejectedValue(new Error("Verification timeout"));
+
+    const res = await request(app).get("/verification/email/wait");
+
+    expect(res.status).toBe(408);
+    expect(res.body).toEqual({ error: "Verification timeout" });
   });
 });
