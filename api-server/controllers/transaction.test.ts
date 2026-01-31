@@ -147,7 +147,6 @@ describe("POST /transfer", () => {
   });
 });
 
-
 describe("GET /transaction-history", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -157,12 +156,13 @@ describe("GET /transaction-history", () => {
     const mockTransactionHistory = [
       {
         transactionId: 2,
-        timestamp: ("2026-01-03T00:00:00.000Z"),
+        timestamp: "2026-01-03T00:00:00.000Z",
         description: "Deposit",
         myChange: "5.00",
         counterpartyUserId: 9,
         counterpartyName: "X",
         counterpartyIsInternal: true,
+        type: "transfer",
       },
       {
         transactionId: 1,
@@ -172,11 +172,12 @@ describe("GET /transaction-history", () => {
         counterpartyUserId: 8,
         counterpartyName: "Y",
         counterpartyIsInternal: false,
+        type: "transfer",
       },
     ];
 
     vi.mocked(queries.getTransactionHistory).mockResolvedValue(
-      mockTransactionHistory.map(t => ({ ...t, timestamp: new Date(t.timestamp) }))
+      mockTransactionHistory.map((t) => ({ ...t, timestamp: new Date(t.timestamp) })),
     );
 
     const res = await request(app).get("/transaction-history");
