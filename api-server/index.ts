@@ -76,6 +76,7 @@ app.use("/touchless/:atmId", touchless);
 app.post("/transfer", transferMoney);
 app.get("/transaction-history", getTransactionHistory);
 app.get("/contacts", getContactsByPhoneNumber);
+app.post("/contacts", getContactsByPhoneNumber);
 
 app.get("/voice/token", getVoiceToken);
 
