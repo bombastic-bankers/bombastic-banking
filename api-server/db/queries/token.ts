@@ -24,10 +24,10 @@ export async function resetRefreshToken(
   const results = await db
     .update(refreshTokens)
     .set({ token: newToken, expiresAt: newExpiresAt })
-    .from(refreshTokens)
-    .innerJoin(users, eq(refreshTokens.userId, users.userId))
+    .from(users)
     .where(
       and(
+        eq(refreshTokens.userId, users.userId),
         eq(refreshTokens.token, oldToken),
         or(isNull(refreshTokens.expiresAt), gt(refreshTokens.expiresAt, new Date())),
       ),
