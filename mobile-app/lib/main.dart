@@ -3,12 +3,14 @@ import 'package:bombastic_banking/repositories/auth_repository.dart';
 import 'package:bombastic_banking/repositories/nfc_repository.dart';
 import 'package:bombastic_banking/repositories/user_repository.dart';
 import 'package:bombastic_banking/repositories/transaction_repository.dart';
+import 'package:bombastic_banking/repositories/verification_repository.dart';
 import 'package:bombastic_banking/route_observer.dart';
 import 'package:bombastic_banking/services/atm_service.dart';
 import 'package:bombastic_banking/services/biometric_service.dart';
 import 'package:bombastic_banking/services/nfc_service.dart';
 import 'package:bombastic_banking/services/user_service.dart';
 import 'package:bombastic_banking/services/transaction_service.dart';
+import 'package:bombastic_banking/services/verification_service.dart';
 import 'package:bombastic_banking/storage/secure_storage.dart';
 import 'package:bombastic_banking/ui/atm_services/deposit_confirmation/deposit_confirmation_viewmodel.dart';
 import 'package:bombastic_banking/ui/atm_services/deposit_start/deposit_start_viewmodel.dart';
@@ -18,7 +20,11 @@ import 'package:bombastic_banking/ui/home/home_viewmodel.dart';
 import 'package:bombastic_banking/ui/transactions/transactions_viewmodel.dart';
 import 'package:bombastic_banking/ui/login/login_viewmodel.dart';
 import 'package:bombastic_banking/ui/navbar_root/navbar_root_viewmodel.dart';
-import 'package:bombastic_banking/ui/signup/signup_viewmodel.dart';
+import 'package:bombastic_banking/ui/signup/signup_form/signup_viewmodel.dart';
+import 'package:bombastic_banking/ui/signup/sms_otp/sms_otp_viewmodel.dart';
+import 'package:bombastic_banking/ui/signup/email_verification/email_verification_viewmodel.dart';
+import 'package:bombastic_banking/ui/signup/signup_pin/signup_pin_viewmodel.dart';
+import 'package:bombastic_banking/storage/signup_storage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -69,6 +75,11 @@ class _BankAppState extends State<BankApp> {
     atmService: ATMService(baseUrl: apiBaseUrl),
     secureStorage: _secureStorage,
   );
+  late final _verificationRepo = VerificationRepository(
+    verificationService: VerificationService(baseUrl: apiBaseUrl),
+    secureStorage: _secureStorage,
+  );
+  late final _signupStorage = DefaultSignupStorage();
   late final _sessionManager = SessionManager(
     getSessionExpiry: () async {
       final accessToken = await _secureStorage.getSessionToken();
@@ -160,9 +171,22 @@ class _BankAppState extends State<BankApp> {
               DepositConfirmationViewModel(atmRepository: _atmRepository),
         ),
         ChangeNotifierProvider(
-          create: (_) => SignupViewModel(
+          create: (_) => SignupViewModel(signupStorage: _signupStorage),
+        ),
+        ChangeNotifierProvider(
+          create: (_) =>
+              SMSOTPViewModel(verificationRepository: _verificationRepo),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => SignupPinViewModel(
             authRepository: _authRepo,
             sessionManager: _sessionManager,
+            signupStorage: _signupStorage,
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => EmailVerificationViewModel(
+            verificationRepository: _verificationRepo,
           ),
         ),
         Provider.value(value: _sessionManager),
