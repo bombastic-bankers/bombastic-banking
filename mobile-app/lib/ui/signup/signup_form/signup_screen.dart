@@ -1,6 +1,6 @@
-import 'package:bombastic_banking/ui/signup/signup_viewmodel.dart';
+import 'package:bombastic_banking/ui/signup/signup_form/signup_viewmodel.dart';
 import 'package:bombastic_banking/widgets/app_button.dart';
-import 'package:bombastic_banking/ui/signup/signup_pin_screen.dart';
+import 'package:bombastic_banking/ui/signup/signup_pin/signup_pin_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -127,12 +127,17 @@ class _SignupScreenState extends State<SignupScreen> {
               const SizedBox(height: 20),
               AppButton(
                 text: 'Next',
-                onPressed: () {
+                onPressed: () async {
                   if (_formKey.currentState!.validate()) {
                     final vm = context.read<SignupViewModel>();
                     vm.fullName = _fullname.text;
                     vm.email = _email.text;
                     vm.phoneNumber = _phoneNumber.text;
+
+                    // Save signup data to SharedPreferences
+                    await vm.saveSignupData();
+
+                    if (!context.mounted) return;
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (_) => const PINScreen()),
@@ -147,11 +152,3 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 }
-
-/*Future<void> _attemptSignup() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    final vm = context.read<SignupViewModel>();
-    final result = await vm.signup(_email.text, _pin.text);
-
-    if (!mounted) return; */

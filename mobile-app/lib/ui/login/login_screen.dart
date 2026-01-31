@@ -1,10 +1,7 @@
 import 'package:bombastic_banking/ui/login/login_viewmodel.dart';
 import 'package:bombastic_banking/ui/navbar_root/navbar_root_screen.dart';
-import 'package:bombastic_banking/ui/signup/signup_viewmodel.dart';
 import 'package:bombastic_banking/widgets/app_button.dart';
-import 'package:bombastic_banking/repositories/auth_repository.dart';
-import 'package:bombastic_banking/services/session_manager.dart';
-import '../signup/signup_screen.dart';
+import '../signup/signup_form/signup_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
