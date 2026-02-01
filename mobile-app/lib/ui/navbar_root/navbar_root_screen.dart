@@ -54,7 +54,7 @@ class _NavbarRootScreenState extends State<NavbarRootScreen> {
               label: 'Pay & Transfer',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.more_horiz),
+              icon: Icon(Icons.person_outlined),
               label: 'Profile',
             ),
           ],

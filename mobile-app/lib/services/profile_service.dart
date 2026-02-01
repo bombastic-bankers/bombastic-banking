@@ -19,7 +19,7 @@ class ProfileService {
 
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = jsonDecode(response.body);
-      return Profile.fromMap(data);
+      return Profile.fromJson(data);
     } else {
       throw Exception('Failed to fetch profile: ${response.statusCode}');
     }
