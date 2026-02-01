@@ -1,4 +1,5 @@
 import 'package:action_slider/action_slider.dart';
+import 'package:bombastic_banking/app_constants.dart';
 import 'package:bombastic_banking/domain/user.dart';
 import 'package:bombastic_banking/services/transfer_service.dart';
 import 'package:bombastic_banking/storage/secure_storage.dart';
@@ -22,9 +23,7 @@ class ConfirmationScreen extends StatefulWidget {
 }
 
 class _ConfirmationScreenState extends State<ConfirmationScreen> {
-  final _transferService = TransferService(
-    baseUrl: 'https://cheri-phalangeal-complicatedly.ngrok-free.dev',
-  );
+  final _transferService = TransferService(baseUrl: apiBaseUrl);
 
   final _storage = DefaultSecureStorage();
 
