@@ -8,7 +8,7 @@ class TransferService {
 
   TransferService({required this.baseUrl, required this.secureStorage});
 
-  Future<void> transferMoney({
+  Future<int> transferMoney({
     required String recipient,
     required num amount,
   }) async {
@@ -28,7 +28,8 @@ class TransferService {
     );
 
     if (response.statusCode == 200) {
-      return; // Success
+      final data = jsonDecode(response.body);
+      return data['transactionId']; // Success
     } else {
       // Parse error message from response body if available
       String errorMessage;
