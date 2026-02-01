@@ -6,6 +6,10 @@ import 'package:provider/provider.dart';
 import '../../services/permission_service.dart';
 import '../../repositories/agent_repository.dart';
 import '../../client_tools/client_tools.dart';
+import '../../client_tools/transfer_tool.dart';
+import '../../services/transfer_service.dart';
+import '../../storage/secure_storage.dart';
+import '../../app_constants.dart';
 import '../atm_services/nfc_prompt/nfc_prompt_widget.dart';
 
 class AgentViewmodel extends ChangeNotifier {
@@ -31,6 +35,12 @@ class AgentViewmodel extends ChangeNotifier {
     required PermissionService permissionService,
   }) : _repository = tokenRepository,
        _permissionService = permissionService {
+    // Instantiate TransferService directly
+    final transferService = TransferService(
+      baseUrl: apiBaseUrl,
+      secureStorage: DefaultSecureStorage(),
+    );
+
     _agentClient = ConversationClient(
       callbacks: ConversationCallbacks(
         onConnect: ({required conversationId}) {
@@ -67,6 +77,10 @@ class AgentViewmodel extends ChangeNotifier {
               builder: (_) => const NFCPromptWidget(),
             );
           },
+        ),
+        'transfer_money': TransferTool(
+          transferService,
+          sendUpdate: (message) => _agentClient.sendContextualUpdate(message),
         ),
       },
     );
