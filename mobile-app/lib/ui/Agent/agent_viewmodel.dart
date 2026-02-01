@@ -4,10 +4,12 @@ import 'package:bombastic_banking/services/nfc_service.dart';
 import 'package:bombastic_banking/storage/secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:elevenlabs_agents/elevenlabs_agents.dart';
-import 'package:provider/provider.dart';
 import '../../services/permission_service.dart';
 import '../../repositories/agent_repository.dart';
 import '../../client_tools/client_tools.dart';
+import '../../client_tools/transfer_tool.dart';
+import '../../services/transfer_service.dart';
+import '../../app_constants.dart';
 import '../atm_services/nfc_prompt/nfc_prompt_widget.dart';
 
 class AgentViewmodel extends ChangeNotifier {
@@ -42,6 +44,12 @@ class AgentViewmodel extends ChangeNotifier {
   }) : _repository = tokenRepository,
        _permissionService = permissionService,
        _secureStorage = secureStorage {
+    // Instantiate TransferService directly
+    final transferService = TransferService(
+      baseUrl: apiBaseUrl,
+      secureStorage: DefaultSecureStorage(),
+    );
+
     _agentClient = ConversationClient(
       callbacks: ConversationCallbacks(
         onConnect: ({required conversationId}) {
@@ -134,6 +142,10 @@ class AgentViewmodel extends ChangeNotifier {
           onResult: (msg) {
             _agentClient.sendContextualUpdate('Deposit $msg');
           },
+        ),
+        'transfer_money': TransferTool(
+          transferService,
+          sendUpdate: (message) => _agentClient.sendContextualUpdate(message),
         ),
       },
     );

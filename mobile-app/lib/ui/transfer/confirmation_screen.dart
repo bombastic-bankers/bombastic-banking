@@ -23,7 +23,10 @@ class ConfirmationScreen extends StatefulWidget {
 }
 
 class _ConfirmationScreenState extends State<ConfirmationScreen> {
-  final _transferService = TransferService(baseUrl: apiBaseUrl);
+  final _transferService = TransferService(
+    baseUrl: apiBaseUrl,
+    secureStorage: DefaultSecureStorage(),
+  );
 
   final _storage = DefaultSecureStorage();
 
@@ -38,9 +41,8 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
       if (token == null) throw Exception("Not logged in");
 
       final transactionId = await _transferService.transferMoney(
-        token,
-        widget.recipient.phoneNumber!,
-        widget.amount,
+        recipient: widget.recipient.phoneNumber!,
+        amount: widget.amount,
       );
 
       controller.success();

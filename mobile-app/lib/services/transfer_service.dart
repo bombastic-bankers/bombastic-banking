@@ -1,33 +1,47 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../storage/secure_storage.dart';
 
 class TransferService {
   final String baseUrl;
+  final SecureStorage secureStorage;
 
-  TransferService({required this.baseUrl});
+  TransferService({required this.baseUrl, required this.secureStorage});
 
-  Future<int> transferMoney(
-    String authToken,
-    String recipientPhone,
-    double amount,
-  ) async {
-    final url = Uri.parse('$baseUrl/transfer');
+  Future<void> transferMoney({
+    required String recipient,
+    required num amount,
+  }) async {
+    final sessionToken = await secureStorage.getSessionToken();
 
-    final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $authToken', // Sending the session token
-      },
-      body: jsonEncode({'recipient': recipientPhone, 'amount': amount}),
-    );
-
-    if (response.statusCode != 200) {
-      final error = jsonDecode(response.body)['error'] ?? 'Transfer failed';
-      throw Exception(error);
+    if (sessionToken == null) {
+      throw Exception('No session token available. Please log in again.');
     }
 
-    final data = jsonDecode(response.body);
-    return data['transactionId'];
+    final response = await http.post(
+      Uri.parse('$baseUrl/transfer'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $sessionToken',
+      },
+      body: jsonEncode({'recipient': recipient, 'amount': amount}),
+    );
+
+    if (response.statusCode == 200) {
+      return; // Success
+    } else {
+      // Parse error message from response body if available
+      String errorMessage;
+      try {
+        final errorBody = jsonDecode(response.body);
+        errorMessage =
+            errorBody['message'] ?? errorBody['error'] ?? response.body;
+      } catch (_) {
+        errorMessage = response.body.isNotEmpty
+            ? response.body
+            : 'Transfer failed with status ${response.statusCode}';
+      }
+      throw Exception(errorMessage);
+    }
   }
 }
