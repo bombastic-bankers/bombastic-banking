@@ -1,5 +1,21 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Represents the current stage of the signup flow
+enum SignupStage {
+  none,
+  emailVerification,
+  smsOtp;
+
+  String toJson() => name;
+
+  static SignupStage fromJson(String value) {
+    return SignupStage.values.firstWhere(
+      (stage) => stage.name == value,
+      orElse: () => SignupStage.none,
+    );
+  }
+}
+
 /// Storage for temporary signup data.
 /// This data persists across app restarts but is cleared after successful verification.
 abstract class SignupStorage {
@@ -10,6 +26,8 @@ abstract class SignupStorage {
   });
   Future<SignupData?> getSignupData();
   Future<void> clearSignupData();
+  Future<void> saveSignupStage(SignupStage stage);
+  Future<SignupStage> getSignupStage();
 }
 
 /// Signup storage using `SharedPreferences`.
@@ -17,6 +35,7 @@ class DefaultSignupStorage implements SignupStorage {
   static const String _fullNameKey = 'signup_fullname';
   static const String _emailKey = 'signup_email';
   static const String _phoneNumberKey = 'signup_phonenumber';
+  static const String _signupStageKey = 'signup_stage';
 
   @override
   Future<void> saveSignupData({
@@ -54,6 +73,21 @@ class DefaultSignupStorage implements SignupStorage {
     await prefs.remove(_fullNameKey);
     await prefs.remove(_emailKey);
     await prefs.remove(_phoneNumberKey);
+    await prefs.remove(_signupStageKey);
+  }
+
+  @override
+  Future<void> saveSignupStage(SignupStage stage) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_signupStageKey, stage.toJson());
+  }
+
+  @override
+  Future<SignupStage> getSignupStage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final stageString = prefs.getString(_signupStageKey);
+    if (stageString == null) return SignupStage.none;
+    return SignupStage.fromJson(stageString);
   }
 }
 

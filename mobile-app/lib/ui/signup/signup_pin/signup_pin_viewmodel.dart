@@ -18,8 +18,6 @@ class SignupPinViewModel extends ChangeNotifier {
        _sessionManager = sessionManager,
        _signupStorage = signupStorage;
 
-  /// Perform signup with the provided PIN
-  /// Retrieves signup data from SignupDataService and calls the signup API
   Future<SignupResult> signup(String pin) async {
     loading = true;
     notifyListeners();
@@ -45,7 +43,7 @@ class SignupPinViewModel extends ChangeNotifier {
       );
 
       if (success) {
-        await _sessionManager.startMonitoring();
+        await _sessionManager.startMonitoring(ignoreInactivityTimeout: true);
         return SignupSuccess(email: signupData.email);
       } else {
         return const SignupFailure('Invalid or used email');
@@ -57,6 +55,10 @@ class SignupPinViewModel extends ChangeNotifier {
       loading = false;
       notifyListeners();
     }
+  }
+
+  Future<void> saveEmailVerificationStage() async {
+    await _signupStorage.saveSignupStage(SignupStage.emailVerification);
   }
 }
 

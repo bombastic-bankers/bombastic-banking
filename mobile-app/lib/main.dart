@@ -24,6 +24,8 @@ import 'package:bombastic_banking/ui/signup/signup_form/signup_viewmodel.dart';
 import 'package:bombastic_banking/ui/signup/sms_otp/sms_otp_viewmodel.dart';
 import 'package:bombastic_banking/ui/signup/email_verification/email_verification_viewmodel.dart';
 import 'package:bombastic_banking/ui/signup/signup_pin/signup_pin_viewmodel.dart';
+import 'package:bombastic_banking/ui/signup/email_verification/email_verification_screen.dart';
+import 'package:bombastic_banking/ui/signup/sms_otp/sms_otp_screen.dart';
 import 'package:bombastic_banking/storage/signup_storage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
@@ -138,6 +140,7 @@ class _BankAppState extends State<BankApp> {
       providers: [
         Provider.value(value: _authRepo),
         Provider.value(value: _sessionManager),
+        Provider.value(value: _signupStorage as SignupStorage),
         ChangeNotifierProvider(create: (_) => NavbarRootViewModel()),
         ChangeNotifierProvider(
           create: (context) => LoginViewModel(
@@ -174,8 +177,10 @@ class _BankAppState extends State<BankApp> {
           create: (_) => SignupViewModel(signupStorage: _signupStorage),
         ),
         ChangeNotifierProvider(
-          create: (_) =>
-              SMSOTPViewModel(verificationRepository: _verificationRepo),
+          create: (_) => SMSOTPViewModel(
+            verificationRepository: _verificationRepo,
+            signupStorage: _signupStorage,
+          ),
         ),
         ChangeNotifierProvider(
           create: (_) => SignupPinViewModel(
@@ -223,7 +228,57 @@ class _BankAppState extends State<BankApp> {
             ),
             useMaterial3: true,
           ),
-          home: LoginScreen(),
+          home: FutureBuilder<SignupStage>(
+            future: () async {
+              return await _signupStorage.getSignupStage();
+            }(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              final stage = snapshot.data!;
+              return switch (stage) {
+                SignupStage.emailVerification => FutureBuilder<SignupData?>(
+                  future: () async {
+                    return await _signupStorage.getSignupData();
+                  }(),
+                  builder: (context, dataSnapshot) {
+                    if (!dataSnapshot.hasData) {
+                      return const Scaffold(
+                        body: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+                    final signupData = dataSnapshot.data;
+                    if (signupData == null) {
+                      return LoginScreen();
+                    }
+                    return FutureBuilder<void>(
+                      future: _sessionManager.startMonitoring(
+                        ignoreInactivityTimeout: true,
+                        attemptRefreshNow: true,
+                      ),
+                      builder: (context, _) {
+                        return EmailVerificationScreen(email: signupData.email);
+                      },
+                    );
+                  },
+                ),
+                SignupStage.smsOtp => FutureBuilder<void>(
+                  future: _sessionManager.startMonitoring(
+                    ignoreInactivityTimeout: true,
+                    attemptRefreshNow: true,
+                  ),
+                  builder: (context, _) {
+                    return const SMSOTPScreen();
+                  },
+                ),
+                SignupStage.none => LoginScreen(),
+              };
+            },
+          ),
         ),
       ),
     );

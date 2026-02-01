@@ -215,7 +215,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                   ), // Rounded corners like Trans Page
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05), // Soft Shadow
+                      color: Colors.black.withAlpha(12), // Soft Shadow
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
