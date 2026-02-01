@@ -8,7 +8,7 @@ import 'package:bombastic_banking/ui/login/login_screen.dart';
 class TransferSuccessScreen extends StatelessWidget {
   final User recipient;
   final double amount;
-  final String transactionId;
+  final int transactionId;
 
   const TransferSuccessScreen({
     super.key,

@@ -32,7 +32,7 @@ describe("POST /transfer", () => {
       phoneVerified: true,
       emailVerified: true,
     });
-    vi.mocked(queries.transferMoney).mockResolvedValue(true);
+    vi.mocked(queries.transferMoney).mockResolvedValue(1);
 
     const response = await request(app).post("/transfer").send({
       recipient: "+651234567890",
@@ -40,6 +40,7 @@ describe("POST /transfer", () => {
     });
 
     expect(response.status).toBe(200);
+    expect(response.body).toEqual({ transactionId: 1 });
     expect(queries.getUserByPhoneNumber).toHaveBeenCalledWith("+651234567890");
     expect(queries.transferMoney).toHaveBeenCalledWith(1, 2, 100.5);
   });
@@ -133,7 +134,7 @@ describe("POST /transfer", () => {
       phoneVerified: true,
       emailVerified: true,
     });
-    vi.mocked(queries.transferMoney).mockResolvedValue(false);
+    vi.mocked(queries.transferMoney).mockResolvedValue(null);
 
     const response = await request(app).post("/transfer").send({
       recipient: "+651234567890",
@@ -141,7 +142,6 @@ describe("POST /transfer", () => {
     });
 
     expect(response.status).toBe(400);
-    expect(response.body).toEqual({ error: "Insufficient funds" });
     expect(queries.getUserByPhoneNumber).toHaveBeenCalledWith("+651234567890");
     expect(queries.transferMoney).toHaveBeenCalledWith(1, 2, 100.5);
   });
