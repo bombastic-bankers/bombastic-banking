@@ -49,6 +49,9 @@ import 'app_constants.dart';
 final locator = GetIt.instance;
 void setupLocator() {
   locator.registerLazySingleton<NFCService>(() => NFCService());
+  locator.registerLazySingleton<ATMService>(
+    () => ATMService(baseUrl: apiBaseUrl),
+  );
 }
 
 Future main() async {
@@ -68,6 +71,7 @@ class BankApp extends StatefulWidget {
 class _BankAppState extends State<BankApp> {
   final _secureStorage = DefaultSecureStorage();
   final _nfcService = locator<NFCService>();
+  final _atmService = locator<ATMService>();
   late final AgentViewmodel _agentViewmodel;
   final _biometricService = BiometricService();
   final _navigatorKey = GlobalKey<NavigatorState>();
@@ -92,7 +96,7 @@ class _BankAppState extends State<BankApp> {
     tagMatcher: atmTagMatcher,
   );
   late final _atmRepository = ATMRepository(
-    atmService: ATMService(baseUrl: apiBaseUrl),
+    atmService: _atmService,
     secureStorage: _secureStorage,
   );
   late final _verificationRepo = VerificationRepository(
@@ -159,11 +163,6 @@ class _BankAppState extends State<BankApp> {
   @override
   void initState() {
     super.initState();
-
-    _agentViewmodel = AgentViewmodel(
-      tokenRepository: _agentRepo,
-      permissionService: PermissionService(),
-    );
   }
 
   @override
@@ -239,6 +238,7 @@ class _BankAppState extends State<BankApp> {
           create: (_) => AgentViewmodel(
             tokenRepository: _agentRepo,
             permissionService: PermissionService(),
+            secureStorage: _secureStorage,
           ),
         ),
         Provider.value(value: _sessionManager),

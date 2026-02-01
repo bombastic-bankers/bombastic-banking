@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:nfc_manager/nfc_manager.dart';
 import 'package:nfc_manager_ndef/nfc_manager_ndef.dart';
 import 'package:ndef_record/ndef_record.dart' as ndef_record;
+import 'package:flutter/foundation.dart';
 
 class NFCService {
   final _controller = StreamController<String>.broadcast();
@@ -10,6 +11,7 @@ class NFCService {
   late final ndefTextRecords = _controller.stream;
 
   Future<void> startReading() async {
+    debugPrint('service: Starting NFC reading');
     await NfcManager.instance.startSession(
       pollingOptions: {NfcPollingOption.iso14443},
       onDiscovered: (tag) async {
@@ -27,9 +29,11 @@ class NFCService {
           // TODO: Handle variable-length language codes properly.
           final text = String.fromCharCodes(record.payload.sublist(3));
           _controller.add(text);
+          debugPrint('service: Read NDEF text record: $text');
         }
       },
     );
+    debugPrint('service: NFC reading finished');
   }
 
   Future<void> stopReading() async {
