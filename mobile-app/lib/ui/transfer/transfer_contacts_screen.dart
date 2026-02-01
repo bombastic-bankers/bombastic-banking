@@ -48,7 +48,7 @@ class _TransferScreenState extends State<TransferScreen> {
       final List<String> phoneNumbersToCheck = realContacts
           .expand(
             (c) => c.phones.map(
-              (p) => p.number.replaceAll(' ', '').replaceAll('-', ''),
+              (p) => p.number.replaceAll(RegExp(r'[ ()\-]'), ''),
             ),
           )
           .where((number) => number.startsWith('+'))
@@ -116,7 +116,6 @@ class _TransferScreenState extends State<TransferScreen> {
 
           const Divider(height: 1),
 
-          // The Dynamic List
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
