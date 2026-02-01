@@ -89,7 +89,11 @@ if (!TESTING) {
 
     if (env.NGROK_AUTHTOKEN) {
       const listener = await ngrok.forward({ addr: PORT, authtoken: env.NGROK_AUTHTOKEN });
-      console.log(`Forwarding to ngrok at ${listener.url()}`);
+      const forwardedURL = listener.url();
+      if (forwardedURL !== null) {
+        env.BASE_URL = forwardedURL;
+        console.log(`Forwarding to ngrok at ${forwardedURL}`);
+      }
     }
   });
 }
