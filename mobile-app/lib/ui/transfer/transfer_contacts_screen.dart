@@ -1,3 +1,4 @@
+import 'package:bombastic_banking/app_constants.dart';
 import 'package:bombastic_banking/domain/user.dart';
 import 'package:bombastic_banking/services/user_service.dart';
 import 'package:flutter/material.dart';
@@ -15,9 +16,7 @@ class TransferScreen extends StatefulWidget {
 class _TransferScreenState extends State<TransferScreen> {
   final _storage = const FlutterSecureStorage();
 
-  final _userService = UserService(
-    baseUrl: "https://cheri-phalangeal-complicatedly.ngrok-free.dev",
-  );
+  final _userService = UserService(baseUrl: apiBaseUrl);
 
   List<User> _contacts = [];
   bool _isLoading = true;
@@ -26,7 +25,7 @@ class _TransferScreenState extends State<TransferScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchContacts(); // 1. Fetch contacts when the screen loads
+    _fetchContacts();
   }
 
   Future<void> _fetchContacts() async {
