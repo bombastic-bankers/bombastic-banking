@@ -1,6 +1,7 @@
 import 'package:bombastic_banking/ui/atm_services/atm_services_screen.dart';
 import 'package:bombastic_banking/ui/home/home_screen.dart';
 import 'package:bombastic_banking/ui/navbar_root/navbar_root_viewmodel.dart';
+import 'package:bombastic_banking/ui/profile/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -16,7 +17,7 @@ class _NavbarRootScreenState extends State<NavbarRootScreen> {
     const HomeScreen(),
     const ATMServicesScreen(),
     const Center(child: Text('Pay & Transfer Page (Placeholder)')),
-    const Center(child: Text('More Page (Placeholder)')),
+    const ProfileScreen(),
   ];
 
   @override
@@ -54,7 +55,7 @@ class _NavbarRootScreenState extends State<NavbarRootScreen> {
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.more_horiz),
-              label: 'More',
+              label: 'Profile',
             ),
           ],
         ),
