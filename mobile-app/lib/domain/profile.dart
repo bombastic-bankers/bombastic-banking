@@ -3,17 +3,13 @@ class Profile {
   final String email;
   final String phone;
 
-  Profile({
-    required this.name,
-    required this.email,
-    required this.phone,
-  });
+  Profile({required this.name, required this.email, required this.phone});
 
-  factory Profile.fromMap(Map<String, dynamic> map) {
+  factory Profile.fromJson(Map<String, dynamic> json) {
     return Profile(
-      name: map['fullName'] ?? '',
-      email: map['email'] ?? '',
-      phone: map['phoneNumber'] ?? '',
+      name: json['fullName'] ?? '',
+      email: json['email'] ?? '',
+      phone: json['phoneNumber'] ?? '',
     );
   }
 }
