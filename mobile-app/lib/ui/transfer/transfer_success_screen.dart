@@ -1,9 +1,9 @@
 import 'package:bombastic_banking/domain/user.dart';
+import 'package:bombastic_banking/ui/transactions/transactions_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:bombastic_banking/ui/navbar_root/navbar_root_screen.dart';
 import 'package:bombastic_banking/ui/login/login_screen.dart';
-import 'package:bombastic_banking/ui/transfer/transfer_contacts_screen.dart';
 
 class TransferSuccessScreen extends StatelessWidget {
   final User recipient;
@@ -138,9 +138,16 @@ class TransferSuccessScreen extends StatelessWidget {
                         Navigator.pushAndRemoveUntil(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const TransferScreen(),
+                            builder: (context) =>
+                                const NavbarRootScreen(startingIndex: 0),
                           ),
                           (route) => false,
+                        );
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const TransactionsScreen(),
+                          ),
                         );
                       },
                       style: ElevatedButton.styleFrom(
@@ -151,7 +158,7 @@ class TransferSuccessScreen extends StatelessWidget {
                         ),
                       ),
                       child: const Text(
-                        "Go to Transfers",
+                        "Go to transaction history",
                         style: TextStyle(color: Colors.white, fontSize: 16),
                       ),
                     ),

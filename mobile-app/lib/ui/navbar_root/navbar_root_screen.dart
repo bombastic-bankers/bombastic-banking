@@ -7,7 +7,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class NavbarRootScreen extends StatefulWidget {
-  const NavbarRootScreen({super.key});
+  final int startingIndex;
+
+  const NavbarRootScreen({super.key, this.startingIndex = 0});
 
   @override
   State<NavbarRootScreen> createState() => _NavbarRootScreenState();
@@ -20,6 +22,16 @@ class _NavbarRootScreenState extends State<NavbarRootScreen> {
     const TransferScreen(),
     const ProfileScreen(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final vm = context.read<NavbarRootViewModel>();
+      vm.index = widget.startingIndex;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
