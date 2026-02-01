@@ -75,7 +75,10 @@ class _BankAppState extends State<BankApp> {
   final _biometricService = BiometricService();
   final _navigatorKey = GlobalKey<NavigatorState>();
 
-  late final _transferService = TransferService(baseUrl: apiBaseUrl);
+  late final _transferService = TransferService(
+    baseUrl: apiBaseUrl,
+    secureStorage: _secureStorage,
+  );
 
   late final _authRepo = AuthRepository(
     authService: AuthService(baseUrl: apiBaseUrl),
