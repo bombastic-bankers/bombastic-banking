@@ -27,6 +27,9 @@ import 'package:bombastic_banking/ui/signup/signup_pin/signup_pin_viewmodel.dart
 import 'package:bombastic_banking/ui/signup/email_verification/email_verification_screen.dart';
 import 'package:bombastic_banking/ui/signup/sms_otp/sms_otp_screen.dart';
 import 'package:bombastic_banking/storage/signup_storage.dart';
+import 'package:bombastic_banking/ui/profile/profile_viewmodel.dart';
+import 'package:bombastic_banking/repositories/profile_repository.dart';
+import 'package:bombastic_banking/services/profile_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -146,6 +149,14 @@ class _BankAppState extends State<BankApp> {
           create: (context) => LoginViewModel(
             authRepository: _authRepo,
             sessionManager: _sessionManager,
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => ProfileViewModel(
+            repository: ProfileRepository(
+              profileService: ProfileService(baseUrl: apiBaseUrl),
+              secureStorage: _secureStorage,
+            ),
           ),
         ),
         ChangeNotifierProvider(
