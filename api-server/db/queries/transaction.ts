@@ -2,18 +2,19 @@ import { db } from "../index.js";
 import { ledger, transactions, users } from "../schema.js";
 import { eq, sql, sum, and, desc, ne } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
+
 /**
- * Transfer money from one user to another. Returns false
- * if the transfer fails due to insufficient funds.
+ * Transfer money from one user to another. Returns the transaction ID if the
+ * transfer is successful, or null if the transfer fails due to insufficient funds.
  */
 export async function transferMoney(
   fromUserId: number,
   toUserId: number,
   amount: number,
   description?: string,
-): Promise<boolean> {
+): Promise<number | null> {
   try {
-    await db.transaction(async (tx) => {
+    return await db.transaction(async (tx) => {
       const [{ balance }] = await tx
         .select({ balance: sql<number>`-sum(${ledger.change})` })
         .from(ledger)
@@ -42,14 +43,13 @@ export async function transferMoney(
           change: (-amount).toFixed(2),
         },
       ]);
+
+      return transactionId;
     });
   } catch (error) {
-    return false;
+    return null;
   }
-
-  return true;
 }
-
 
 /**
  * Retrieves the transaction history for a given user ID,
@@ -60,16 +60,18 @@ export async function transferMoney(
  *
  * Returns an empty array if the user has no transactions.
  */
-export async function getTransactionHistory(userId: number): Promise<{
-  transactionId: number;
-  timestamp: Date;
-  description: string | null;
-  myChange: string;
-  counterpartyUserId: number | null;
-  counterpartyName: string | null;
-  counterpartyIsInternal: boolean | null;
-  type: string;
-}[]> {
+export async function getTransactionHistory(userId: number): Promise<
+  {
+    transactionId: number;
+    timestamp: Date;
+    description: string | null;
+    myChange: string;
+    counterpartyUserId: number | null;
+    counterpartyName: string | null;
+    counterpartyIsInternal: boolean | null;
+    type: string;
+  }[]
+> {
   const myLedger = alias(ledger, "myLedger");
   const otherLedger = alias(ledger, "otherLedger");
   const otherUser = alias(users, "otherUser");
@@ -87,13 +89,7 @@ export async function getTransactionHistory(userId: number): Promise<{
     })
     .from(myLedger)
     .innerJoin(transactions, eq(myLedger.transactionId, transactions.transactionId))
-    .leftJoin(
-      otherLedger,
-      and(
-        eq(otherLedger.transactionId, myLedger.transactionId),
-        ne(otherLedger.userId, userId),
-      ),
-    )
+    .leftJoin(otherLedger, and(eq(otherLedger.transactionId, myLedger.transactionId), ne(otherLedger.userId, userId)))
     .leftJoin(otherUser, eq(otherUser.userId, otherLedger.userId))
     .where(eq(myLedger.userId, userId))
     .groupBy(

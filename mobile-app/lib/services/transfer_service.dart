@@ -6,7 +6,7 @@ class TransferService {
 
   TransferService({required this.baseUrl});
 
-  Future<void> transferMoney(
+  Future<int> transferMoney(
     String authToken,
     String recipientPhone,
     double amount,
@@ -26,5 +26,8 @@ class TransferService {
       final error = jsonDecode(response.body)['error'] ?? 'Transfer failed';
       throw Exception(error);
     }
+
+    final data = jsonDecode(response.body);
+    return data['transactionId'];
   }
 }

@@ -15,19 +15,18 @@ export async function transferMoney(req: Request, res: Response) {
     return res.status(400).json({ error: "No existing user with specified phone number" });
   }
 
-  const success = await queries.transferMoney(req.userId, recipient.userId, amount);
-  if (!success) {
+  const transactionId = await queries.transferMoney(req.userId, recipient.userId, amount);
+  if (transactionId === null) {
     return res.status(400).json({ error: "Insufficient funds" });
   }
 
-  return res.status(200).send();
+  return res.status(200).json({ transactionId });
 }
 
 /**
  * Returns the transaction history for a given user ID
  */
 export async function getTransactionHistory(req: Request, res: Response) {
-
   const transactionHistory = await queries.getTransactionHistory(req.userId);
 
   if (!transactionHistory) {

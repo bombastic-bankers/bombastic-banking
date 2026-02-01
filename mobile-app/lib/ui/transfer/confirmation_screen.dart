@@ -37,7 +37,7 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
       final token = await _storage.getSessionToken();
       if (token == null) throw Exception("Not logged in");
 
-      await _transferService.transferMoney(
+      final transactionId = await _transferService.transferMoney(
         token,
         widget.recipient.phoneNumber!,
         widget.amount,
@@ -50,16 +50,13 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
       ); // Short delay for visual effect
 
       if (mounted) {
-        // Generate a fake ID for demo: "260130..."
-        final fakeId = DateTime.now().millisecondsSinceEpoch.toString();
-
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (context) => TransferSuccessScreen(
               recipient: widget.recipient,
               amount: widget.amount,
-              transactionId: fakeId,
+              transactionId: transactionId,
             ),
           ),
         );
