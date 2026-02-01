@@ -1,4 +1,5 @@
 import 'package:bombastic_banking/route_observer.dart';
+import 'package:bombastic_banking/storage/signup_storage.dart';
 import 'package:bombastic_banking/ui/signup/email_verification/email_verification_viewmodel.dart';
 import 'package:bombastic_banking/ui/signup/sms_otp/sms_otp_screen.dart';
 import 'package:flutter/material.dart';
@@ -15,7 +16,13 @@ class EmailVerificationScreen extends StatefulWidget {
 }
 
 class _EmailVerificationScreenState extends State<EmailVerificationScreen>
-    with RouteAware {
+    with RouteAware, WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -24,32 +31,53 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     routeObserver.unsubscribe(this);
     super.dispose();
   }
 
   @override
   void didPush() {
+    // Defer to next frame to avoid state changes during build
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _sendAndWaitForVerification();
+      _startVerificationProcess();
     });
   }
 
   @override
-  void didPopNext() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _sendAndWaitForVerification();
-    });
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _waitForVerification();
+    }
   }
 
-  Future<void> _sendAndWaitForVerification() async {
+  Future<void> _startVerificationProcess() async {
+    await _sendVerification();
+    await _waitForVerification();
+  }
+
+  Future<void> _sendVerification() async {
     final vm = context.read<EmailVerificationViewModel>();
-    final result = await vm.sendAndWaitForEmailVerification();
+    try {
+      await vm.sendEmailVerification();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to send email: $e')));
+    }
+  }
+
+  Future<void> _waitForVerification() async {
+    final vm = context.read<EmailVerificationViewModel>();
+    final result = await vm.waitForEmailVerification();
 
     if (!mounted) return;
 
     switch (result) {
       case EmailVerificationSuccess():
+        await context.read<SignupStorage>().saveSignupStage(SignupStage.smsOtp);
+        if (!mounted) return;
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const SMSOTPScreen()),
@@ -60,6 +88,9 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
             content: Text('Email verification timed out. Please try again.'),
           ),
         );
+      case EmailVerificationWaitCancelled():
+        // Connection aborted (app backgrounded) - retry on resume
+        break;
       case EmailVerificationFailure(:final message):
         ScaffoldMessenger.of(
           context,
@@ -121,14 +152,12 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
                 child: TextButton(
                   onPressed: vm.loading
                       ? null
-                      : () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const SMSOTPScreen(),
-                            ),
-                          );
-                        },
+                      : () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const SMSOTPScreen(),
+                          ),
+                        ),
                   child: Text(
                     'Continue to SMS Verification',
                     style: TextStyle(

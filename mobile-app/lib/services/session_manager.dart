@@ -23,6 +23,7 @@ class SessionManager {
 
   DateTime? _lastActivityTime;
   Timer? _refreshTimer;
+  bool _ignoreInactivityTimeout = false;
 
   /// Creates a new SessionManager.
   ///
@@ -61,9 +62,22 @@ class SessionManager {
   }
 
   /// Start monitoring and schedule the first token refresh.
-  Future<void> startMonitoring() async {
+  ///
+  /// [ignoreInactivityTimeout] when true, disables the inactivity timeout check.
+  /// This is useful during signup flows where the user may be inactive but the session
+  /// should remain active. Defaults to false.
+  Future<void> startMonitoring({
+    bool ignoreInactivityTimeout = false,
+    bool attemptRefreshNow = false,
+  }) async {
+    _ignoreInactivityTimeout = ignoreInactivityTimeout;
     recordActivity();
-    await _scheduleNextRefresh();
+
+    if (attemptRefreshNow) {
+      await _attemptRefresh();
+    } else {
+      await _scheduleNextRefresh();
+    }
   }
 
   /// Stop monitoring and cancel any pending refresh timers.
@@ -92,7 +106,7 @@ class SessionManager {
 
   /// Attempt to refresh the session, checking for recent activity first.
   Future<void> _attemptRefresh() async {
-    if (!_isUserActive()) {
+    if (!_ignoreInactivityTimeout && !_isUserActive()) {
       return _endSession(SessionEndReason.inactivity);
     }
 
@@ -101,6 +115,7 @@ class SessionManager {
       if (success) {
         await _scheduleNextRefresh();
       } else {
+        debugPrint('Failed to refresh session');
         await _endSession(SessionEndReason.refreshFailed);
       }
     } catch (e) {

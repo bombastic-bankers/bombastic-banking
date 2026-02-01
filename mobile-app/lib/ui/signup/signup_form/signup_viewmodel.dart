@@ -13,7 +13,6 @@ class SignupViewModel extends ChangeNotifier {
   SignupViewModel({required SignupStorage signupStorage})
     : _signupStorage = signupStorage;
 
-  /// Save signup form data to SharedPreferences
   Future<void> saveSignupData() async {
     if (fullName == null || phoneNumber == null || email == null) {
       debugPrint('Cannot save incomplete signup data');

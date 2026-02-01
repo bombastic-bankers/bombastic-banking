@@ -1,14 +1,10 @@
 import 'package:bombastic_banking/ui/signup/signup_form/signup_viewmodel.dart';
-import 'package:bombastic_banking/widgets/app_button.dart';
 import 'package:bombastic_banking/ui/signup/signup_pin/signup_pin_screen.dart';
+import 'package:bombastic_banking/utils/validation_utils.dart';
+import 'package:bombastic_banking/widgets/app_button.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-
-// Email regex that the API server uses (https://colinhacks.com/essays/reasonable-email-regex)
-final emailRegex = RegExp(
-  r"^(?!\.)(?!.*\.\.)([a-z0-9_'+\-\.]*)[a-z0-9_+-]@([a-z0-9][a-z0-9\-]*\.)+[a-z]{2,}$",
-  caseSensitive: false,
-);
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -19,12 +15,59 @@ class SignupScreen extends StatefulWidget {
 
 class _SignupScreenState extends State<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _fullname = TextEditingController();
-  final _email = TextEditingController();
-  final _phoneNumber = TextEditingController();
+  final _fullnameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+
+  static const _inputDecoration = InputDecoration(
+    filled: true,
+    fillColor: Color.fromARGB(26, 128, 128, 128),
+    contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.all(Radius.circular(5)),
+      borderSide: BorderSide.none,
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.all(Radius.circular(5)),
+      borderSide: BorderSide.none,
+    ),
+    errorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.all(Radius.circular(5)),
+      borderSide: BorderSide(color: Colors.red),
+    ),
+  );
+
+  @override
+  void dispose() {
+    _fullnameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final vm = context.read<SignupViewModel>();
+    vm.fullName = _fullnameController.text.trim();
+    vm.email = _emailController.text.trim();
+    vm.phoneNumber = _phoneController.text.trim();
+
+    await vm.saveSignupData();
+
+    if (!mounted) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const PINScreen()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    // Determine loading state if needed from VM, though currently local state suffices for simple nav
+    final vm = context.watch<SignupViewModel>();
+    final isLoading = vm.loading;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Sign Up')),
       body: Padding(
@@ -34,117 +77,32 @@ class _SignupScreenState extends State<SignupScreen> {
           child: Column(
             children: [
               TextFormField(
-                controller: _fullname,
-                decoration: InputDecoration(
-                  labelText: 'Name',
-                  filled: true,
-                  fillColor: Color.fromARGB(26, 128, 128, 128),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(5),
-                    borderSide: BorderSide.none,
-                  ),
-                  errorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(5),
-                    borderSide: BorderSide(color: Colors.red),
-                  ),
-                ),
+                controller: _fullnameController,
+                decoration: _inputDecoration.copyWith(labelText: 'Full name'),
                 keyboardType: TextInputType.name,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your full name';
-                  }
-                  return null;
-                },
+                validator: (v) => Validators.required(v, 'full name'),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               TextFormField(
-                controller: _email,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  filled: true,
-                  fillColor: Color.fromARGB(26, 128, 128, 128),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(5),
-                    borderSide: BorderSide.none,
-                  ),
-                  errorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(5),
-                    borderSide: BorderSide(color: Colors.red),
-                  ),
-                ),
+                controller: _emailController,
+                decoration: _inputDecoration.copyWith(labelText: 'Email'),
                 keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your email';
-                  }
-                  if (!emailRegex.hasMatch(value)) {
-                    return 'Please enter a valid email';
-                  }
-                  return null;
-                },
+                validator: Validators.email,
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               TextFormField(
-                controller: _phoneNumber,
-                decoration: InputDecoration(
-                  labelText: 'Phone Number',
+                controller: _phoneController,
+                decoration: _inputDecoration.copyWith(
+                  labelText: 'Phone number',
                   counterText: '',
-                  filled: true,
-                  fillColor: Color.fromARGB(26, 128, 128, 128),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(5),
-                    borderSide: BorderSide.none,
-                  ),
-                  errorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(5),
-                    borderSide: BorderSide(color: Colors.red),
-                  ),
                 ),
                 keyboardType: TextInputType.number,
                 maxLength: 8,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your phone number';
-                  }
-                  if (value.length != 8) {
-                    return 'Phone number must be 8 digits';
-                  }
-                  return null;
-                },
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                validator: Validators.phone,
               ),
               const SizedBox(height: 20),
-              AppButton(
-                text: 'Next',
-                onPressed: () async {
-                  if (_formKey.currentState!.validate()) {
-                    final vm = context.read<SignupViewModel>();
-                    vm.fullName = _fullname.text;
-                    vm.email = _email.text;
-                    vm.phoneNumber = _phoneNumber.text;
-
-                    // Save signup data to SharedPreferences
-                    await vm.saveSignupData();
-
-                    if (!context.mounted) return;
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const PINScreen()),
-                    );
-                  }
-                },
-              ),
+              AppButton(text: 'Next', onPressed: isLoading ? null : _submit),
             ],
           ),
         ),

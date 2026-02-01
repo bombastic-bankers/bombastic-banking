@@ -19,6 +19,7 @@ class _SMSOTPScreenState extends State<SMSOTPScreen> with RouteAware {
     (_) => TextEditingController(),
   );
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
+  final List<String> _previousValues = List.generate(6, (_) => '');
 
   @override
   void didChangeDependencies() {
@@ -54,9 +55,21 @@ class _SMSOTPScreenState extends State<SMSOTPScreen> with RouteAware {
 
   String get _otpCode => _controllers.map((c) => c.text).join();
 
-  void _onOTPChanged(int index, String value) {
-    if (value.isNotEmpty && index < 5) {
+  void _onOTPChanged(int index, String value, String previousValue) {
+    if (value.isEmpty && previousValue.isNotEmpty) {
+      return;
+    }
+
+    if (value.length == 1 && index < 5) {
       _focusNodes[index + 1].requestFocus();
+    } else if (value.length > 1) {
+      _controllers[index].text = value[0];
+      _controllers[index].selection = TextSelection.fromPosition(
+        const TextPosition(offset: 1),
+      );
+      if (index < 5) {
+        _focusNodes[index + 1].requestFocus();
+      }
     }
   }
 
@@ -74,8 +87,9 @@ class _SMSOTPScreenState extends State<SMSOTPScreen> with RouteAware {
   }
 
   Future<void> _resendOTP() async {
-    for (var controller in _controllers) {
-      controller.clear();
+    for (var i = 0; i < _controllers.length; i++) {
+      _controllers[i].clear();
+      _previousValues[i] = '';
     }
     _focusNodes[0].requestFocus();
     await _sendOTP();
@@ -97,6 +111,8 @@ class _SMSOTPScreenState extends State<SMSOTPScreen> with RouteAware {
 
     switch (result) {
       case OTPVerificationSuccess():
+        await vm.clearSignupData();
+        if (!mounted) return;
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -120,107 +136,155 @@ class _SMSOTPScreenState extends State<SMSOTPScreen> with RouteAware {
         backgroundColor: Colors.white,
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 40),
-              const Text(
-                'Enter OTP Code',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF212121),
-                  height: 1.2,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 40),
+                const Text(
+                  'Enter OTP Code',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF212121),
+                    height: 1.2,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                'A One-Time Password (OTP) has been sent to your registered phone number. Please enter the code below to continue the verification process',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                  height: 1.5,
+                const SizedBox(height: 20),
+                Text(
+                  'A One-Time Password (OTP) has been sent to your registered phone number.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                    height: 1.5,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 40),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: List.generate(6, (index) {
-                  return SizedBox(
-                    width: 50,
-                    height: 70,
-                    child: TextField(
+                const SizedBox(height: 40),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: List.generate(
+                    6,
+                    (index) => _OTPInput(
                       controller: _controllers[index],
                       focusNode: _focusNodes[index],
-                      textAlign: TextAlign.center,
-                      keyboardType: TextInputType.number,
-                      maxLength: 1,
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      decoration: InputDecoration(
-                        counterText: '',
-                        filled: true,
-                        fillColor: const Color(0xFFF5F5F5),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFF455A64),
-                            width: 2,
-                          ),
-                        ),
-                      ),
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      onChanged: (value) => _onOTPChanged(index, value),
-                      onTap: () => _controllers[index].clear(),
+                      previousValue: _previousValues[index],
+                      onChanged: (value) {
+                        final previousValue = _previousValues[index];
+                        _previousValues[index] = value;
+                        _onOTPChanged(index, value, previousValue);
+                      },
                       onSubmitted: (_) {
                         if (index == 5) _confirmOTP();
                       },
+                      onBackspace: () {
+                        if (_controllers[index].text.isEmpty && index > 0) {
+                          _controllers[index - 1].clear();
+                          _previousValues[index - 1] = '';
+                          _focusNodes[index - 1].requestFocus();
+                        }
+                      },
                     ),
-                  );
-                }),
-              ),
-              const SizedBox(height: 30),
-              Center(
-                child: Column(
-                  children: [
-                    if (vm.resendCountdown > 0)
-                      Text(
-                        'You can resend the code in ${vm.resendCountdown} seconds',
-                        style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-                      ),
-                    const SizedBox(height: 12),
-                    TextButton(
-                      onPressed: vm.canResend ? _resendOTP : null,
-                      child: Text(
-                        'Resend code',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: vm.canResend
-                              ? const Color(0xFF212121)
-                              : Colors.grey[400],
+                  ),
+                ),
+                const SizedBox(height: 30),
+                Center(
+                  child: Column(
+                    children: [
+                      if (vm.resendCountdown > 0)
+                        Text(
+                          'You can resend the code in ${vm.resendCountdown} seconds',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                      const SizedBox(height: 12),
+                      TextButton(
+                        onPressed: vm.canResend ? _resendOTP : null,
+                        child: Text(
+                          'Resend code',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: vm.canResend
+                                ? const Color(0xFF212121)
+                                : Colors.grey[400],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              const Spacer(),
-              AppButton(
-                text: 'Confirm Code',
-                onPressed: vm.loading ? null : _confirmOTP,
-              ),
-              const SizedBox(height: 40),
-            ],
+                const SizedBox(height: 100),
+                AppButton(
+                  text: 'Confirm Code',
+                  onPressed: vm.loading ? null : _confirmOTP,
+                ),
+                const SizedBox(height: 40),
+              ],
+            ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _OTPInput extends StatelessWidget {
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final String previousValue;
+  final ValueChanged<String> onChanged;
+  final ValueChanged<String> onSubmitted;
+  final VoidCallback onBackspace;
+
+  const _OTPInput({
+    required this.controller,
+    required this.focusNode,
+    required this.onChanged,
+    required this.onSubmitted,
+    required this.previousValue,
+    required this.onBackspace,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 50,
+      height: 70,
+      child: KeyboardListener(
+        focusNode: FocusNode(),
+        onKeyEvent: (event) {
+          if (event is KeyDownEvent &&
+              event.logicalKey == LogicalKeyboardKey.backspace) {
+            onBackspace();
+          }
+        },
+        child: TextField(
+          controller: controller,
+          focusNode: focusNode,
+          textAlign: TextAlign.center,
+          keyboardType: TextInputType.number,
+          maxLength: 1,
+          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          decoration: InputDecoration(
+            counterText: '',
+            filled: true,
+            fillColor: const Color(0xFFF5F5F5),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFF455A64), width: 2),
+            ),
+          ),
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          onChanged: onChanged,
+          onSubmitted: onSubmitted,
         ),
       ),
     );

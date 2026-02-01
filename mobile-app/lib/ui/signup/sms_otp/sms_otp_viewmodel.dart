@@ -1,16 +1,21 @@
 import 'dart:async';
 import 'package:bombastic_banking/repositories/verification_repository.dart';
+import 'package:bombastic_banking/storage/signup_storage.dart';
 import 'package:flutter/material.dart';
 
 class SMSOTPViewModel extends ChangeNotifier {
   final VerificationRepository _verificationRepo;
+  final SignupStorage _signupStorage;
 
   bool loading = false;
   int resendCountdown = 0;
   Timer? _timer;
 
-  SMSOTPViewModel({required VerificationRepository verificationRepository})
-    : _verificationRepo = verificationRepository;
+  SMSOTPViewModel({
+    required VerificationRepository verificationRepository,
+    required SignupStorage signupStorage,
+  }) : _verificationRepo = verificationRepository,
+       _signupStorage = signupStorage;
 
   @override
   void dispose() {
@@ -71,6 +76,10 @@ class SMSOTPViewModel extends ChangeNotifier {
   }
 
   bool get canResend => resendCountdown == 0 && !loading;
+
+  Future<void> clearSignupData() async {
+    await _signupStorage.clearSignupData();
+  }
 }
 
 sealed class OTPVerificationResult {
