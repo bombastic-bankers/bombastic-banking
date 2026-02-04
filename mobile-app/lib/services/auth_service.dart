@@ -50,6 +50,34 @@ class AuthService {
       throw Exception('Failed to refresh session: ${response.body}');
     }
   }
+
+  /// Creates an unverified user
+  Future<AuthTokens> signUp(
+    String fullName,
+    String phoneNumber,
+    String email,
+    String pin,
+  ) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/auth/signup'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'fullName': fullName,
+        'phoneNumber': phoneNumber,
+        'email': email,
+        'pin': pin,
+      }),
+    );
+    if (response.statusCode == 201) {
+      final data = jsonDecode(response.body);
+      return AuthTokens(
+        accessToken: data['accessToken'],
+        refreshToken: data['refreshToken'],
+      );
+    } else {
+      throw Exception('Failed to sign up: ${response.body}');
+    }
+  }
 }
 
 class InvalidCredentialsException implements Exception {

@@ -3,25 +3,33 @@ import '../services/transfer_service.dart';
 
 class TransferTool implements ClientTool {
   final TransferService _transferService;
-  final void Function(String) _sendUpdate;
+  final Function(String)? onDebug;
+  final Function(String) onResult;
 
-  TransferTool(this._transferService, {required void Function(String) sendUpdate})
-      : _sendUpdate = sendUpdate;
+  TransferTool(
+    this._transferService, {
+    this.onDebug,
+    required this.onResult,
+  });
 
   @override
   Future<ClientToolResult?> execute(Map<String, dynamic> parameters) async {
+    _debug('TransferTool execution started.');
+
     // Extract parameters from Agent
     final recipientPhone = parameters['recipient_phone'];
     final amount = parameters['amount'];
 
     // Check if parameters are null
     if (recipientPhone == null) {
-      _sendUpdate('SYSTEM: Transfer failed. Recipient phone number is required.');
+      _debug('Recipient phone is null.');
+      onResult('SYSTEM: Transfer failed. Recipient phone number is required.');
       return ClientToolResult.success({});
     }
 
     if (amount == null) {
-      _sendUpdate('SYSTEM: Transfer failed. Amount is required.');
+      _debug('Amount is null.');
+      onResult('SYSTEM: Transfer failed. Amount is required.');
       return ClientToolResult.success({});
     }
 
@@ -32,12 +40,14 @@ class TransferTool implements ClientTool {
     } else if (amount is String) {
       final parsed = num.tryParse(amount);
       if (parsed == null) {
-        _sendUpdate('SYSTEM: Transfer failed. Invalid amount format.');
+        _debug('Failed to parse amount: $amount');
+        onResult('SYSTEM: Transfer failed. Invalid amount format.');
         return ClientToolResult.success({});
       }
       transferAmount = parsed;
     } else {
-      _sendUpdate('SYSTEM: Transfer failed. Invalid amount type.');
+      _debug('Invalid amount type: ${amount.runtimeType}');
+      onResult('SYSTEM: Transfer failed. Invalid amount type.');
       return ClientToolResult.success({});
     }
 
@@ -46,25 +56,34 @@ class TransferTool implements ClientTool {
     if (RegExp(r'^\d{8}$').hasMatch(formattedPhone)) {
       formattedPhone = '+65$formattedPhone';
     }
+    _debug('Formatted phone: $formattedPhone, Amount: $transferAmount');
 
     // Send processing status to Agent
-    _sendUpdate('SYSTEM: Processing transfer of \$$transferAmount to $formattedPhone...');
+    onResult('SYSTEM: Processing transfer of \$$transferAmount to $formattedPhone...');
 
     try {
       // Call the transfer service
-      await _transferService.transferMoney(
+      final transactionId = await _transferService.transferMoney(
         recipient: formattedPhone,
         amount: transferAmount,
       );
 
+      _debug('Transfer successful. Transaction ID: $transactionId');
       // Success: notify the Agent
-      _sendUpdate('SYSTEM: Transfer successful. Sent \$$transferAmount to $formattedPhone.');
+      onResult('SYSTEM: Transfer successful. Sent \$$transferAmount to $formattedPhone. Transaction ID: $transactionId.');
     } catch (e) {
+      _debug('Transfer failed: ${e.toString()}');
       // Error: notify the Agent with error details
-      _sendUpdate('SYSTEM: Transfer failed due to ${e.toString().replaceFirst('Exception: ', '')}. Please try again or contact support.');
+      onResult('SYSTEM: Transfer failed due to ${e.toString().replaceFirst('Exception: ', '')}. Please try again or contact support.');
     }
 
     // CRITICAL: Always return success with empty map to avoid crashing the voice session
     return ClientToolResult.success({});
+  }
+
+  void _debug(String message) {
+    if (onDebug != null) {
+      onDebug!(message);
+    }
   }
 }

@@ -23,7 +23,7 @@ import { ablyAuth } from "./controllers/ably.js";
 import { getContactsByPhoneNumber } from "./controllers/contacts.js";
 import env from "./env.js";
 import { atmParam } from "./middleware/atm.js";
-import { transferMoney, getTransactionHistory} from "./controllers/transaction.js";
+import { transferMoney, getTransactionHistory } from "./controllers/transaction.js";
 import ngrok from "@ngrok/ngrok";
 import { getVoiceToken } from "./controllers/voice.js";
 import {
@@ -31,6 +31,7 @@ import {
   confirmSMSVerification,
   sendEmailVerification,
   confirmEmailVerification,
+  waitForEmailVerification,
 } from "./controllers/verify.js";
 
 const TESTING = process.env.NODE_ENV === "test";
@@ -45,12 +46,16 @@ app.post("/auth/login", login);
 app.post("/auth/refresh", refreshSession);
 app.post("/auth/ably", ablyAuth);
 
+// This needs to be before authentication middleware because
+// it's the email verification link that users click on
+app.get("/verification/email/confirm", confirmEmailVerification);
+
 app.use(authenticate);
 
 app.post("/verification/sms", sendSMSVerification);
 app.post("/verification/sms/confirm", confirmSMSVerification);
 app.post("/verification/email", sendEmailVerification);
-app.get("/verification/email/confirm", confirmEmailVerification);
+app.get("/verification/email/wait", waitForEmailVerification);
 
 app.use(requireVerified);
 
@@ -69,8 +74,9 @@ touchless.post("/exit", exit);
 app.use("/touchless/:atmId", touchless);
 
 app.post("/transfer", transferMoney);
-app.get("/transaction-history", getTransactionHistory)
+app.get("/transaction-history", getTransactionHistory);
 app.get("/contacts", getContactsByPhoneNumber);
+app.post("/contacts", getContactsByPhoneNumber);
 
 app.get("/voice/token", getVoiceToken);
 
@@ -84,7 +90,11 @@ if (!TESTING) {
 
     if (env.NGROK_AUTHTOKEN) {
       const listener = await ngrok.forward({ addr: PORT, authtoken: env.NGROK_AUTHTOKEN });
-      console.log(`Forwarding to ngrok at ${listener.url()}`);
+      const forwardedURL = listener.url();
+      if (forwardedURL !== null) {
+        env.BASE_URL = forwardedURL;
+        console.log(`Forwarding to ngrok at ${forwardedURL}`);
+      }
     }
   });
 }

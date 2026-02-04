@@ -9,6 +9,7 @@ import 'package:bombastic_banking/ui/login/login_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:bombastic_banking/ui/transfer/transfer_contacts_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -131,7 +132,12 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                     QuickAction(
                       icon: Icons.swap_horiz_outlined,
                       label: 'Transfer',
-                      onPressed: () {},
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const TransferScreen(),
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -215,7 +221,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                   ), // Rounded corners like Trans Page
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05), // Soft Shadow
+                      color: Colors.black.withAlpha(12), // Soft Shadow
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),

@@ -40,6 +40,9 @@ const env = {
   get BASE_URL(): string {
     return process.env.BASE_URL ?? "http://localhost:3000";
   },
+  set BASE_URL(value: string) {
+    process.env.BASE_URL = value;
+  },
   get TWILIO_SID(): string {
     return getEnvOrThrow("TWILIO_SID");
   },

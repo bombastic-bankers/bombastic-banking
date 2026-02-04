@@ -37,6 +37,27 @@ class AuthRepository {
     }
   }
 
+  Future<bool> signUp(
+    String fullName,
+    String phoneNumber,
+    String email,
+    String pin,
+  ) async {
+    try {
+      final tokens = await _authService.signUp(
+        fullName,
+        phoneNumber,
+        email,
+        pin,
+      );
+      await _secureStorage.saveSessionToken(tokens.accessToken);
+      await _secureStorage.saveRefreshToken(tokens.refreshToken);
+      return true;
+    } on Exception {
+      return false;
+    }
+  }
+
   /// Check if biometric login is available (device supports it and refresh token exists)
   Future<bool> canUseBiometrics() async {
     final hasBiometrics = await _biometricService.canUseBiometrics();

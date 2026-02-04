@@ -1,13 +1,17 @@
 import 'package:bombastic_banking/ui/atm_services/atm_services_screen.dart';
 import 'package:bombastic_banking/ui/home/home_screen.dart';
 import 'package:bombastic_banking/ui/navbar_root/navbar_root_viewmodel.dart';
+import 'package:bombastic_banking/ui/profile/profile_screen.dart';
+import 'package:bombastic_banking/ui/transfer/transfer_contacts_screen.dart';
 import 'package:bombastic_banking/ui/Agent/agent_screen.dart';
 import 'package:bombastic_banking/ui/Agent/agent_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class NavbarRootScreen extends StatefulWidget {
-  const NavbarRootScreen({super.key});
+  final int startingIndex;
+
+  const NavbarRootScreen({super.key, this.startingIndex = 0});
 
   @override
   State<NavbarRootScreen> createState() => _NavbarRootScreenState();
@@ -18,9 +22,19 @@ class _NavbarRootScreenState extends State<NavbarRootScreen> {
     const HomeScreen(),
     const ATMServicesScreen(),
     const AgentScreen(),
-    const Center(child: Text('Pay & Transfer Page (Placeholder)')),
-    const Center(child: Text('More Page (Placeholder)')),
+    const TransferScreen(),
+    const ProfileScreen(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final vm = context.read<NavbarRootViewModel>();
+      vm.index = widget.startingIndex;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,8 +79,8 @@ class _NavbarRootScreenState extends State<NavbarRootScreen> {
               label: 'Pay & Transfer',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.more_horiz),
-              label: 'More',
+              icon: Icon(Icons.person_outlined),
+              label: 'Profile',
             ),
           ],
         ),
