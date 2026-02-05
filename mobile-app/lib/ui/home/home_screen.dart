@@ -274,16 +274,6 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                                       ),
                                       const SizedBox(height: 4),
 
-                                      // Category (Tiny)
-                                      Text(
-                                        "NETS QR",
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          color: Colors.grey[500],
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-
                                       // Merchant (Bold Black)
                                       Text(
                                         t.type == 'transfer'

@@ -193,14 +193,6 @@ class _TransactionDaySection extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "NETS QR", // You can replace this with a Category if you have one
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
-                            height: 1.5,
-                          ),
-                        ),
-                        Text(
                           t.type == 'transfer'
                               ? (t.counterpartyName ?? 'Transfer')
                               : t.type == 'atm'
