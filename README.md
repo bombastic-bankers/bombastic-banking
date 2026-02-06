@@ -1,6 +1,6 @@
-# Bombastic Banking
+![](./docs/assets/banner.png)
 
-Bombastic Banking is an accessible digital banking prototype. It consists of
+**Bombastic Banking** is an accessible digital banking prototype. It consists of:
 
 - A "touchless ATM" system that allows ATM users to interact with the ATM directly from the banking app, eliminating any need to touch the ATM screen.
 - Agentic voice assistant for performing ATM transactions and transferring money to other users without having to navigate a screen.
