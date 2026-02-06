@@ -17,10 +17,9 @@ For this prototype, we have no cash-related hardware, so all cash transactions a
 - [6. Double-entry accounting](#6-double-entry-accounting)
   - [6.1. Ledger sign convention](#61-ledger-sign-convention)
 
+## 1. Architectural Overview
 
-## 1. Touchless ATM overview
-
-![Touchless ATM architecture](./assets/system-architecture.png)
+![System architecture diagram](./assets/system-architecture.png)
 
 ## 2. Definitions
 
