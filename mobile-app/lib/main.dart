@@ -277,6 +277,7 @@ class _BankAppState extends State<BankApp> {
             ),
             useMaterial3: true,
           ),
+          debugShowCheckedModeBanner: false,
           home: FutureBuilder<SignupStage>(
             future: () async {
               return await _signupStorage.getSignupStage();
