@@ -68,13 +68,6 @@ class _AgentScreenState extends State<AgentScreen> {
             // End session button
             AppButton(text: 'End Session', onPressed: vm.endSession),
             const SizedBox(height: 24),
-
-            // Debug console header
-            const Text(
-              'NFCTool Debug Messages:',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
           ],
         ),
       ),
