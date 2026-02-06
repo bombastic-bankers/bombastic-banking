@@ -1,11 +1,11 @@
-<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0" version="29.1.0">
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:147.0) Gecko/20100101 Firefox/147.0" version="29.3.7">
   <diagram name="Page-1" id="nPbR7QaezxUtOxPHuftq">
-    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="0" fold="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="1990" dy="862" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="0" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
         <mxCell id="Nnu8WsFFuzp-oNEyyG_N-7" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;" value="" vertex="1">
-          <mxGeometry height="540" width="840" x="15" y="47" as="geometry" />
+          <mxGeometry height="540" width="960" x="-150" y="47" as="geometry" />
         </mxCell>
         <mxCell id="Ciag91xzOmL6PYNOkeX3-42" parent="1" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=#f5f5f5;fontStyle=0;fontColor=#333333;strokeColor=#666666;" value="" vertex="1">
           <mxGeometry height="61" width="106" x="230.5" y="417.5" as="geometry" />
@@ -117,6 +117,47 @@
             <mxPoint x="410" y="152.5" as="sourcePoint" />
             <mxPoint x="410" y="67.5" as="targetPoint" />
           </mxGeometry>
+        </mxCell>
+        <mxCell id="mO7DvCTgK8Zav83AGBtb-1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="&lt;div&gt;ElevenLabs voice agent&lt;/div&gt;" vertex="1">
+          <mxGeometry height="50" width="160" x="-60" y="292" as="geometry" />
+        </mxCell>
+        <mxCell id="mO7DvCTgK8Zav83AGBtb-2" edge="1" parent="1" source="Ciag91xzOmL6PYNOkeX3-36" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.75;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;startArrow=classic;startFill=1;edgeStyle=orthogonalEdgeStyle;" target="mO7DvCTgK8Zav83AGBtb-1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="20" y="456" />
+              <mxPoint x="-32" y="456" />
+            </Array>
+            <mxPoint x="260" y="577.95" as="sourcePoint" />
+            <mxPoint x="260.9100000000001" y="420" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="mO7DvCTgK8Zav83AGBtb-3" parent="1" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=0;rotation=0;" value="Stream voice audio" vertex="1">
+          <mxGeometry height="30" width="130" x="65" y="453.5" as="geometry" />
+        </mxCell>
+        <mxCell id="mO7DvCTgK8Zav83AGBtb-5" edge="1" parent="1" source="Ciag91xzOmL6PYNOkeX3-36" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.75;entryY=1;entryDx=0;entryDy=0;startArrow=classic;startFill=1;edgeStyle=orthogonalEdgeStyle;exitX=0;exitY=0.25;exitDx=0;exitDy=0;endArrow=none;endFill=0;" target="mO7DvCTgK8Zav83AGBtb-1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="57" y="437" />
+            </Array>
+            <mxPoint x="251" y="505" as="sourcePoint" />
+            <mxPoint x="-30" y="390" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="mO7DvCTgK8Zav83AGBtb-8" parent="1" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=0;rotation=0;" value="Call client tools" vertex="1">
+          <mxGeometry height="30" width="102" x="93" y="409" as="geometry" />
+        </mxCell>
+        <mxCell id="mO7DvCTgK8Zav83AGBtb-10" edge="1" parent="1" source="Ciag91xzOmL6PYNOkeX3-1" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.75;entryY=0;entryDx=0;entryDy=0;startArrow=classic;startFill=1;edgeStyle=orthogonalEdgeStyle;exitX=0;exitY=0.5;exitDx=0;exitDy=0;endArrow=none;endFill=0;" target="mO7DvCTgK8Zav83AGBtb-1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="60" y="247" />
+              <mxPoint x="60" y="292" />
+            </Array>
+            <mxPoint x="257" y="251" as="sourcePoint" />
+            <mxPoint x="65" y="155" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="mO7DvCTgK8Zav83AGBtb-11" parent="1" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=0;rotation=0;" value="Call webhook API" vertex="1">
+          <mxGeometry height="30" width="102" x="81" y="217" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
